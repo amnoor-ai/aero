@@ -30,7 +30,7 @@ interface DashboardProps {
 
 export default function Dashboard({ metrics, activeSprint, recentProjects = [] }: DashboardProps) {
     return (
-        <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }]}>
+        <>
             <Head title="Dashboard - Aero DevPM" />
 
             <div className="p-6 space-y-6 bg-background min-h-screen text-foreground">
@@ -216,6 +216,10 @@ export default function Dashboard({ metrics, activeSprint, recentProjects = [] }
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }
+
+Dashboard.layout = () => ({
+    breadcrumbs: [{ title: 'Dashboard', href: '/dashboard' }],
+});

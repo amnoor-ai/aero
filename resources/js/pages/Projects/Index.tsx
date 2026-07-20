@@ -66,7 +66,7 @@ export default function ProjectsIndex({ projects = [], filters = {} }: ProjectsI
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Projects Directory', href: '/projects' }]}>
+        <>
             <Head title="Projects Directory - Aero DevPM" />
 
             <div className="p-6 space-y-6 bg-background min-h-screen text-foreground">
@@ -272,6 +272,10 @@ export default function ProjectsIndex({ projects = [], filters = {} }: ProjectsI
                     </div>
                 </div>
             )}
-        </AppLayout>
+        </>
     );
 }
+
+ProjectsIndex.layout = () => ({
+    breadcrumbs: [{ title: 'Projects Directory', href: '/projects' }],
+});

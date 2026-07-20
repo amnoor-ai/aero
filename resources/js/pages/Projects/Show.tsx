@@ -37,12 +37,7 @@ export default function ProjectShow({ project, workspaceUsers = [], stats }: Pro
     };
 
     return (
-        <AppLayout
-            breadcrumbs={[
-                { title: 'Projects', href: '/projects' },
-                { title: project.name, href: `/projects/${project.id}` },
-            ]}
-        >
+        <>
             <Head title={`${project.name} - Aero DevPM`} />
 
             <div className="p-6 space-y-6 bg-background min-h-screen text-foreground">
@@ -203,6 +198,13 @@ export default function ProjectShow({ project, workspaceUsers = [], stats }: Pro
                     </div>
                 )}
             </div>
-        </AppLayout>
+        </>
     );
 }
+
+ProjectShow.layout = (page: any) => ({
+    breadcrumbs: [
+        { title: 'Projects', href: '/projects' },
+        { title: page.props.project.name, href: `/projects/${page.props.project.id}` },
+    ],
+});

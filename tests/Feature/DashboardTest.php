@@ -44,7 +44,7 @@ test('dashboard includes pending invitations for the authenticated user', functi
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('dashboard')
+        ->component('Dashboard/Index')
         ->has('pendingInvitations', 1)
         ->where('pendingInvitations.0.code', $invitation->code)
         ->where('pendingInvitations.0.inviterName', 'Taylor Otwell')
@@ -73,7 +73,7 @@ test('dashboard does not include accepted invitations', function () {
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('dashboard')
+        ->component('Dashboard/Index')
         ->has('pendingInvitations', 0),
     );
 });
@@ -97,7 +97,7 @@ test('dashboard excludes expired invitations without deleting them', function ()
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('dashboard')
+        ->component('Dashboard/Index')
         ->has('pendingInvitations', 0),
     );
 
@@ -125,7 +125,7 @@ test('dashboard does not include or delete other users invitations', function ()
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('dashboard')
+        ->component('Dashboard/Index')
         ->has('pendingInvitations', 0),
     );
 
