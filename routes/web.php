@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
-});
+})->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard & My Desk Command Center

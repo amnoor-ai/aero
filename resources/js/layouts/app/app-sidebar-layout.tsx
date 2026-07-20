@@ -1,5 +1,3 @@
-import { AppContent } from '@/components/app-content';
-import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import type { AppLayoutProps } from '@/types';
@@ -9,12 +7,12 @@ export default function AppSidebarLayout({
     breadcrumbs = [],
 }: AppLayoutProps) {
     return (
-        <AppShell variant="sidebar">
+        <div className="flex h-screen w-full bg-background overflow-hidden text-foreground font-sans">
             <AppSidebar />
-            <AppContent variant="sidebar" className="overflow-x-hidden">
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-background">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
-                {children}
-            </AppContent>
-        </AppShell>
+                <main className="flex-1 min-w-0">{children}</main>
+            </div>
+        </div>
     );
 }
