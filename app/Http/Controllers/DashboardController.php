@@ -15,23 +15,39 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $workspaceId = 1; // Default V1 workspace
+        $timeframe = $request->input('timeframe', 'month');
+
+        $query = Task::where('workspace_id', $workspaceId);
+
+        if ($timeframe === 'today') {
+            $query->whereDate('created_at', now()->today());
+        } elseif ($timeframe === 'week') {
+            $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+        }
+
+        $totalTasks = (clone $query)->count();
+        $completedTasks = (clone $query)
+            ->whereHas('boardColumn', fn ($q) => $q->where('name', 'Done'))
+            ->count();
+
+        $overdueTasks = (clone $query)
+            ->where('due_date', '<', now()->startOfDay())
+            ->whereDoesntHave('boardColumn', fn ($q) => $q->where('name', 'Done'))
+            ->count();
+
+        $todoCount = (clone $query)
+            ->whereHas('boardColumn', fn ($q) => $q->whereIn('name', ['Backlog', 'To Do']))
+            ->count();
+
+        $inProgressCount = (clone $query)
+            ->whereHas('boardColumn', fn ($q) => $q->where('name', 'In Progress'))
+            ->count();
+
+        $inReviewCount = (clone $query)
+            ->whereHas('boardColumn', fn ($q) => $q->where('name', 'In Review'))
+            ->count();
 
         $totalProjects = Project::where('workspace_id', $workspaceId)->count();
-        $totalTasks = Task::where('workspace_id', $workspaceId)->count();
-
-        $completedTasks = Task::where('workspace_id', $workspaceId)
-            ->whereHas('boardColumn', function ($query) {
-                $query->where('name', 'Done');
-            })
-            ->count();
-
-        $overdueTasks = Task::where('workspace_id', $workspaceId)
-            ->where('due_date', '<', now()->startOfDay())
-            ->whereDoesntHave('boardColumn', function ($query) {
-                $query->where('name', 'Done');
-            })
-            ->count();
-
         $completionRate = $totalTasks > 0 ? (int) round(($completedTasks / $totalTasks) * 100) : 0;
         $overdueRatio = $totalTasks > 0 ? (int) round(($overdueTasks / $totalTasks) * 100) : 0;
 
@@ -56,7 +72,12 @@ class DashboardController extends Controller
                 'completionRate' => $completionRate,
                 'onTimeRate' => max(0, 100 - $overdueRatio),
                 'overdueRatio' => $overdueRatio,
+                'todoCount' => $todoCount,
+                'inProgressCount' => $inProgressCount,
+                'inReviewCount' => $inReviewCount,
+                'doneCount' => $completedTasks,
             ],
+            'timeframe' => $timeframe,
             'activeSprint' => $activeSprint,
             'recentProjects' => $recentProjects,
         ]);
