@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import {
     AlertCircle,
@@ -13,6 +13,7 @@ import {
 
 interface TaskItem {
     id: number;
+    project_id: number;
     title: string;
     description?: string;
     type: 'bug' | 'feature' | 'improvement' | 'task';
@@ -43,6 +44,13 @@ interface MyDeskProps {
 }
 
 export default function MyDesk({ tasks, counts, projects = [], filters = {} }: MyDeskProps) {
+    const { auth } = usePage<any>().props;
+    const userName = auth.user.name.split(' ')[0];
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const today = new Date().toLocaleDateString('en-US', dateOptions);
+
     const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -70,20 +78,20 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
         <>
             <Head title="My Desk - Aero DevPM" />
 
-            <div className="p-6 space-y-6 bg-background min-h-screen text-foreground">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">My Desk</h1>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Your personalized task command center grouped by deadline urgency.
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{today}</p>
+                        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">{greeting}, {userName}!</h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Here is a summary of your activities and urgent tasks.
                         </p>
                     </div>
-
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                         <select
                             value={filters.scope || 'me'}
                             onChange={(e) => handleFilterChange('scope', e.target.value)}
-                            className="bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-ring"
+                            className="bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary transition"
                         >
                             <option value="me">Assigned to Me</option>
                             <option value="all">All Workspace Tasks</option>
@@ -117,7 +125,7 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                             <span className="text-xs font-semibold text-primary">Due Tomorrow</span>
                             <span className="block text-2xl font-extrabold text-foreground mt-1">{counts.dueTomorrow}</span>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-blue-500/20 text-primary">
+                        <div className="p-2.5 rounded-xl bg-primary/20 text-primary">
                             <Calendar className="w-5 h-5" />
                         </div>
                     </div>
@@ -185,7 +193,7 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                         </button>
 
                         {openSections.overdue && (
-                            <div className="divide-y divide-slate-800/60">
+                            <div className="divide-y divide-border">
                                 {tasks.overdue.length === 0 ? (
                                     <div className="p-4 text-center text-muted-foreground text-xs">No overdue activities! 🎉</div>
                                 ) : (
@@ -237,7 +245,7 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                         </button>
 
                         {openSections.dueToday && (
-                            <div className="divide-y divide-slate-800/60">
+                            <div className="divide-y divide-border">
                                 {tasks.dueToday.length === 0 ? (
                                     <div className="p-4 text-center text-muted-foreground text-xs">No tasks due today.</div>
                                 ) : (
@@ -284,7 +292,7 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                         </button>
 
                         {openSections.upcoming && (
-                            <div className="divide-y divide-slate-800/60">
+                            <div className="divide-y divide-border">
                                 {tasks.upcoming.length === 0 ? (
                                     <div className="p-4 text-center text-muted-foreground text-xs">No upcoming tasks.</div>
                                 ) : (
@@ -326,4 +334,11 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
     );
 }
 
-MyDesk.layout = (page: React.ReactNode) => page;
+MyDesk.layout = {
+    breadcrumbs: [
+        {
+            title: 'My Desk',
+            href: '/my-desk',
+        },
+    ],
+};

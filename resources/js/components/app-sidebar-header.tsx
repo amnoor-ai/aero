@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { CommandPalette } from '@/components/navigation/CommandPalette';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
 export function AppSidebarHeader({
@@ -33,9 +34,11 @@ export function AppSidebarHeader({
 
     return (
         <>
-            <header className="h-16 px-4 sm:px-6 lg:px-8 mt-3 mb-2 bg-background border border-border/80 rounded-xl mx-4 flex items-center justify-between sticky top-0 z-40 select-none shadow-sm">
-                {/* 1. Brand Logo Pill */}
+            <header className="h-16 px-4 sm:px-6 lg:px-8 bg-transparent flex items-center justify-between sticky top-0 z-40 select-none">
+                {/* 1. Left Controls: Collapse Toggle & Breadcrumbs */}
                 <div className="flex items-center space-x-3">
+                    <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg p-1.5 transition" />
+                    
                     {/* Breadcrumbs */}
                     {breadcrumbs.length > 0 && (
                         <div className="hidden sm:block text-xs text-muted-foreground">
@@ -50,9 +53,9 @@ export function AppSidebarHeader({
                         onClick={() => setIsCommandPaletteOpen(true)}
                         className="w-full max-w-sm flex items-center justify-between px-4 py-2 bg-muted/50 border border-border hover:border-border/80 rounded-full text-xs text-muted-foreground hover:text-foreground transition shadow-sm group"
                     >
-                        <span className="flex items-center">
-                            <Search className="w-3.5 h-3.5 mr-2 text-muted-foreground group-hover:text-primary" />
-                            <span>Search here...</span>
+                        <span className="flex items-center text-left truncate pr-2">
+                            <Search className="w-3.5 h-3.5 mr-2 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                            <span className="truncate">Search tasks, projects, users, inventory...</span>
                         </span>
                         <kbd className="px-1.5 py-0.5 text-[10px] bg-muted border border-border text-muted-foreground rounded-md font-mono">
                             ⌘K

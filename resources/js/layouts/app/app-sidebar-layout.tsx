@@ -9,11 +9,15 @@ export default function AppSidebarLayout({
 }: AppLayoutProps) {
     return (
         <SidebarProvider>
-            <div className="flex h-screen w-full bg-background overflow-hidden text-foreground font-sans">
+            <div className="flex h-screen w-full bg-muted/20 overflow-hidden text-foreground font-sans">
                 <AppSidebar />
-                <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-background">
+                <div className="flex-1 flex flex-col min-w-0 h-screen">
                     <AppSidebarHeader breadcrumbs={breadcrumbs} />
-                    <main className="flex-1 min-w-0">{children}</main>
+                    <div className="flex-1 flex flex-col px-2 pb-2 min-h-0">
+                        <main className="flex-1 min-w-0 bg-background rounded-xl border border-border/60 shadow-sm overflow-y-auto">
+                            {children}
+                        </main>
+                    </div>
                 </div>
             </div>
         </SidebarProvider>

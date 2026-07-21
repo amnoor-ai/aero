@@ -5,11 +5,29 @@ import {
     CheckCircle2,
     AlertTriangle,
     Clock,
-    Zap,
-    ArrowUpRight,
-    Plus,
-    PieChart,
+    TrendingUp,
+    ListTodo,
+    Activity,
+    Info,
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import PendingInvitationsModal from '@/components/pending-invitations-modal';
+
+// Mock data for the chart
+const chartData = [
+    { name: 'Aug', completed: 0, pending: 0 },
+    { name: 'Sep', completed: 0, pending: 0 },
+    { name: 'Oct', completed: 0, pending: 0 },
+    { name: 'Nov', completed: 2, pending: 4 },
+    { name: 'Dec', completed: 28, pending: 35 },
+    { name: 'Jan', completed: 4, pending: 15 },
+    { name: 'Feb', completed: 1, pending: 4 },
+    { name: 'Mar', completed: 0, pending: 2 },
+    { name: 'Apr', completed: 0, pending: 1 },
+    { name: 'May', completed: 0, pending: 0 },
+    { name: 'Jun', completed: 1, pending: 2 },
+    { name: 'Jul', completed: 4, pending: 3 },
+];
 
 interface Metrics {
     totalProjects: number;
@@ -30,9 +48,10 @@ interface DashboardProps {
     timeframe?: string;
     activeSprint?: any;
     recentProjects: any[];
+    pendingInvitations?: any[];
 }
 
-export default function Dashboard({ metrics, timeframe = 'month', activeSprint, recentProjects = [] }: DashboardProps) {
+export default function Dashboard({ metrics, timeframe = 'month', activeSprint, recentProjects = [], pendingInvitations = [] }: DashboardProps) {
     const handleTimeframeChange = (tf: string) => {
         router.get('/dashboard', { timeframe: tf }, { preserveState: true, replace: true });
     };
@@ -43,285 +62,255 @@ export default function Dashboard({ metrics, timeframe = 'month', activeSprint, 
     const inReviewPct = Math.round((metrics.inReviewCount / total) * 100);
     const donePct = Math.round((metrics.doneCount / total) * 100);
 
+    const [isInvitationsModalOpen, setIsInvitationsModalOpen] = React.useState(pendingInvitations.length > 0);
+
     return (
         <>
             <Head title="Dashboard - Aero DevPM" />
+            <PendingInvitationsModal 
+                invitations={pendingInvitations} 
+                open={isInvitationsModalOpen}
+                onOpenChange={setIsInvitationsModalOpen}
+            />
 
-            <div className="p-6 space-y-6 bg-background min-h-screen text-foreground select-none">
+            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground">
                 {/* Header with Timeframe Pills */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 pb-5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-6">
                     <div>
-                        <div className="flex items-center space-x-3">
-                            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Workspace Overview</h1>
-
-                            <div className="flex bg-card p-1 rounded-full border border-border text-xs">
-                                <button
-                                    onClick={() => handleTimeframeChange('today')}
-                                    className={`px-3 py-1 font-semibold rounded-full transition ${
-                                        timeframe === 'today'
-                                            ? 'bg-primary text-foreground shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    Today
-                                </button>
-                                <button
-                                    onClick={() => handleTimeframeChange('week')}
-                                    className={`px-3 py-1 font-semibold rounded-full transition ${
-                                        timeframe === 'week'
-                                            ? 'bg-primary text-foreground shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    This Week
-                                </button>
-                                <button
-                                    onClick={() => handleTimeframeChange('month')}
-                                    className={`px-3 py-1 font-semibold rounded-full transition ${
-                                        timeframe === 'month'
-                                            ? 'bg-primary text-foreground shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    This Month
-                                </button>
-                            </div>
-                        </div>
-
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Execution health, sprint velocity, and active project analytics.
+                        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">Workspace Overview</h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Execution health, operational load, and recent organization updates.
                         </p>
                     </div>
-
-                    <div className="flex items-center space-x-3">
-                        <Link
-                            href="/projects"
-                            className="px-4 py-2 bg-primary hover:bg-primary/90 text-xs font-semibold text-foreground rounded-full shadow-lg shadow-primary/20 transition flex items-center"
-                        >
-                            <Plus className="w-4 h-4 mr-1.5" /> New Project
-                        </Link>
+                    <div className="flex items-center gap-3">
+                        <div className="flex bg-card p-1 rounded-full border border-border text-xs">
+                            <button
+                                onClick={() => handleTimeframeChange('today')}
+                                className={`px-3 py-1 font-semibold rounded-full transition ${
+                                    timeframe === 'today'
+                                        ? 'bg-primary text-primary-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                Today
+                            </button>
+                            <button
+                                onClick={() => handleTimeframeChange('week')}
+                                className={`px-3 py-1 font-semibold rounded-full transition ${
+                                    timeframe === 'week'
+                                        ? 'bg-primary text-primary-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                This Week
+                            </button>
+                            <button
+                                onClick={() => handleTimeframeChange('month')}
+                                className={`px-3 py-1 font-semibold rounded-full transition ${
+                                    timeframe === 'month'
+                                        ? 'bg-primary text-primary-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                This Month
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Metric Summary Cards Grid */}
+                {/* Top Row: Metric Summary Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="p-5 bg-card border border-border rounded-2xl relative overflow-hidden group hover:border-border transition shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">Completion Rate</span>
-                            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                                <CheckCircle2 className="w-4 h-4" />
+                    {/* Completion Rate */}
+                    <div className="p-5 bg-card/40 border border-border/50 rounded-lg flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-muted-foreground">Completion Rate</span>
+                                <div className="p-1.5 rounded-md border border-border text-emerald-500">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                </div>
                             </div>
+                            <span className="text-2xl font-bold text-foreground">{metrics.completionRate}%</span>
                         </div>
-                        <div className="mt-4 flex items-baseline justify-between">
-                            <span className="text-3xl font-extrabold text-foreground">{metrics.completionRate}%</span>
-                            <span className="text-xs text-muted-foreground font-mono">
-                                {metrics.completedTasks}/{metrics.totalTasks} tasks
-                            </span>
-                        </div>
-                        <div className="mt-3 w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                            <div
-                                className="bg-primary h-full rounded-full transition-all duration-500"
-                                style={{ width: `${metrics.completionRate}%` }}
-                            />
+                        <div className="mt-4">
+                            <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
+                                <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${metrics.completionRate}%` }} />
+                            </div>
+                            <span className="text-[10px] text-muted-foreground mt-2 block">{metrics.completedTasks} of {metrics.totalTasks} activities completed</span>
                         </div>
                     </div>
 
-                    <div className="p-5 bg-card border border-border rounded-2xl relative overflow-hidden group hover:border-border transition shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">On-Time Execution Rate</span>
-                            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                                <Clock className="w-4 h-4" />
+                    {/* On-time Rate */}
+                    <div className="p-5 bg-card/40 border border-border/50 rounded-lg flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-muted-foreground">On-time Rate</span>
+                                <div className="p-1.5 rounded-md border border-border text-blue-500">
+                                    <Clock className="w-3.5 h-3.5" />
+                                </div>
                             </div>
+                            <span className="text-2xl font-bold text-foreground">{metrics.onTimeRate}%</span>
                         </div>
-                        <div className="mt-4 flex items-baseline justify-between">
-                            <span className="text-3xl font-extrabold text-foreground">{metrics.onTimeRate}%</span>
-                            <span className="text-xs text-primary font-semibold">On Schedule</span>
-                        </div>
-                        <div className="mt-3 w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                            <div
-                                className="bg-primary h-full rounded-full transition-all duration-500"
-                                style={{ width: `${metrics.onTimeRate}%` }}
-                            />
+                        <div className="mt-4">
+                            <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
+                                <div className="bg-blue-500 h-full rounded-full" style={{ width: `${metrics.onTimeRate}%` }} />
+                            </div>
+                            <span className="text-[10px] text-muted-foreground mt-2 block">Completed on or before due date</span>
                         </div>
                     </div>
 
-                    <div className="p-5 bg-card border border-border rounded-2xl relative overflow-hidden group hover:border-border transition shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">Overdue Tasks Ratio</span>
-                            <div className="p-2 rounded-xl bg-destructive/10 text-destructive">
-                                <AlertTriangle className="w-4 h-4" />
+                    {/* Overdue Ratio */}
+                    <div className="p-5 bg-card/40 border border-border/50 rounded-lg flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-muted-foreground">Overdue Ratio</span>
+                                <div className="p-1.5 rounded-md border border-border text-destructive">
+                                    <AlertTriangle className="w-3.5 h-3.5" />
+                                </div>
                             </div>
+                            <span className="text-2xl font-bold text-foreground">{metrics.overdueRatio}%</span>
                         </div>
-                        <div className="mt-4 flex items-baseline justify-between">
-                            <span className="text-3xl font-extrabold text-foreground">{metrics.overdueRatio}%</span>
-                            <span className="text-xs text-destructive font-mono font-bold">{metrics.overdueTasks} tasks overdue</span>
-                        </div>
-                        <div className="mt-3 w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                            <div
-                                className="bg-destructive h-full rounded-full transition-all duration-500"
-                                style={{ width: `${metrics.overdueRatio}%` }}
-                            />
+                        <div className="mt-4">
+                            <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
+                                <div className="bg-destructive h-full rounded-full" style={{ width: `${metrics.overdueRatio}%` }} />
+                            </div>
+                            <span className="text-[10px] text-muted-foreground mt-2 block">{metrics.overdueTasks} of {metrics.totalTasks - metrics.completedTasks} open activities overdue</span>
                         </div>
                     </div>
 
-                    <div className="p-5 bg-card border border-border rounded-2xl relative overflow-hidden group hover:border-border transition shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">Active Projects</span>
-                            <div className="p-2 rounded-xl bg-accent/10 text-accent-foreground">
-                                <Folder className="w-4 h-4" />
+                    {/* Throughput */}
+                    <div className="p-5 bg-card/40 border border-border/50 rounded-lg flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-muted-foreground">Throughput</span>
+                                <div className="p-1.5 rounded-md border border-border text-emerald-500">
+                                    <TrendingUp className="w-3.5 h-3.5" />
+                                </div>
                             </div>
+                            <span className="text-2xl font-bold text-foreground">{metrics.doneCount}</span>
                         </div>
-                        <div className="mt-4 flex items-baseline justify-between">
-                            <span className="text-3xl font-extrabold text-foreground">{metrics.totalProjects}</span>
-                            <span className="text-xs text-accent-foreground font-semibold">Core Workspace</span>
-                        </div>
-                        <div className="mt-3 flex items-center text-[11px] text-muted-foreground">
-                            <span>Managed in multi-user team</span>
+                        <div className="mt-4 flex items-center text-[10px] text-muted-foreground">
+                            <span className="bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded mr-1">↗ 100%</span> vs 0 last month
                         </div>
                     </div>
                 </div>
 
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="p-6 bg-card border border-border rounded-2xl space-y-5">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                    <Zap className="w-5 h-5 text-accent-foreground" />
-                                    <h2 className="text-base font-bold text-foreground">Active Sprint Status</h2>
-                                </div>
-                                <span className="text-xs px-3 py-1 rounded-full bg-accent/10 text-accent-foreground border border-accent/30 font-bold">
-                                    Active Sprint
-                                </span>
-                            </div>
-
-                            {activeSprint ? (
-                                <div className="space-y-4">
-                                    <div>
-                                        <h3 className="text-lg font-extrabold text-primary">{activeSprint.name}</h3>
-                                        <p className="text-xs text-muted-foreground mt-1">{activeSprint.goal}</p>
-                                    </div>
-
-                                    <div className="p-4 bg-background/60 rounded-xl border border-border/80 space-y-2">
-                                        <div className="flex justify-between text-xs">
-                                            <span className="text-muted-foreground font-medium">Sprint Completion Progress</span>
-                                            <span className="text-primary font-mono font-bold">
-                                                {activeSprint.tasks ? Math.round((activeSprint.tasks.filter((t: any) => t.board_column?.name === 'Done').length / activeSprint.tasks.length) * 100) : 0}%
-                                            </span>
-                                        </div>
-                                        <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-                                            <div
-                                                className="bg-primary h-full rounded-full transition-all duration-500"
-                                                style={{
-                                                    width: `${activeSprint.tasks ? Math.round((activeSprint.tasks.filter((t: any) => t.board_column?.name === 'Done').length / activeSprint.tasks.length) * 100) : 0}%`,
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 bg-background/60 rounded-xl border border-border/80 grid grid-cols-3 gap-4 text-center">
-                                        <div>
-                                            <span className="block text-[10px] text-muted-foreground font-bold uppercase">Total Tasks</span>
-                                            <span className="text-lg font-bold text-foreground mt-1 block">{activeSprint.tasks?.length || 0}</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-[10px] text-muted-foreground font-bold uppercase">Project</span>
-                                            <span className="text-xs font-semibold text-muted-foreground truncate block mt-1">
-                                                {activeSprint.project?.name || 'Core'}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-[10px] text-muted-foreground font-bold uppercase">Ends In</span>
-                                            <span className="text-xs font-mono font-bold text-primary block mt-1">11 days</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="py-8 text-center text-muted-foreground text-sm">No active sprint running currently.</div>
-                            )}
+                {/* Bottom Row: Additional Stat Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-5 bg-card/40 border border-border/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-2 bg-primary/10 text-primary rounded-lg"><Folder className="w-4 h-4" /></div>
+                            <span className="bg-emerald-500/10 text-emerald-500 text-[10px] px-1.5 py-0.5 rounded">↑ 0%</span>
                         </div>
+                        <span className="text-xs text-muted-foreground block mb-1">Total Projects</span>
+                        <span className="text-2xl font-bold text-foreground block mb-3">{metrics.totalProjects}</span>
+                        <span className="text-[10px] text-muted-foreground">vs last month</span>
+                    </div>
 
-                        <div className="p-6 bg-card border border-border rounded-2xl space-y-4">
-                            <div className="flex items-center space-x-2">
-                                <PieChart className="w-5 h-5 text-primary" />
-                                <h2 className="text-base font-bold text-foreground">Task Status Distribution</h2>
+                    <div className="p-5 bg-card/40 border border-border/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg"><ListTodo className="w-4 h-4" /></div>
+                            <span className="bg-emerald-500/10 text-emerald-500 text-[10px] px-1.5 py-0.5 rounded">↑ 50%</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground block mb-1">Total Activities</span>
+                        <span className="text-2xl font-bold text-foreground block mb-3">{metrics.totalTasks}</span>
+                        <span className="text-[10px] text-muted-foreground">vs last month</span>
+                    </div>
+
+                    <div className="p-5 bg-card/40 border border-border/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg"><CheckCircle2 className="w-4 h-4" /></div>
+                            <span className="bg-emerald-500/10 text-emerald-500 text-[10px] px-1.5 py-0.5 rounded">↑ 14.3%</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground block mb-1">Completed Activities</span>
+                        <span className="text-2xl font-bold text-foreground block mb-3">{metrics.completedTasks}</span>
+                        <span className="text-[10px] text-muted-foreground">vs last month</span>
+                    </div>
+
+                    <div className="p-5 bg-card/40 border border-border/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg"><AlertTriangle className="w-4 h-4" /></div>
+                            <span className="bg-emerald-500/10 text-emerald-500 text-[10px] px-1.5 py-0.5 rounded">↑ 15%</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground block mb-1">Overdue Activities</span>
+                        <span className="text-2xl font-bold text-foreground block mb-3">{metrics.overdueTasks}</span>
+                        <span className="text-[10px] text-muted-foreground">vs last month</span>
+                    </div>
+                </div>
+
+                {/* Main Content Grid: Chart & Announcements */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                        <div className="p-6 bg-card/40 border border-border/50 rounded-lg h-[400px] flex flex-col">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-sm font-bold text-foreground">Activities</h2>
+                                <div className="flex items-center space-x-2 text-xs">
+                                    <span className="text-muted-foreground">Time Frame:</span>
+                                    <select className="bg-background border border-border rounded-md px-2 py-1 text-foreground focus:outline-none focus:border-primary">
+                                        <option>Last Year</option>
+                                        <option>This Year</option>
+                                    </select>
+                                </div>
                             </div>
-
-                            <div className="w-full h-3 bg-muted rounded-full overflow-hidden flex">
-                                <div className="bg-muted-foreground h-full transition-all duration-300" style={{ width: `${todoPct}%` }} title={`To Do: ${metrics.todoCount}`} />
-                                <div className="bg-accent h-full transition-all duration-300" style={{ width: `${inProgressPct}%` }} title={`In Progress: ${metrics.inProgressCount}`} />
-                                <div className="bg-accent h-full transition-all duration-300" style={{ width: `${inReviewPct}%` }} title={`In Review: ${metrics.inReviewCount}`} />
-                                <div className="bg-primary h-full transition-all duration-300" style={{ width: `${donePct}%` }} title={`Done: ${metrics.doneCount}`} />
+                            
+                            <div className="flex-1 w-full min-h-0">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                            </linearGradient>
+                                            <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                                                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dx={-10} />
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.5} />
+                                        <Tooltip 
+                                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', fontSize: '12px' }}
+                                            itemStyle={{ color: '#e2e8f0' }}
+                                        />
+                                        <Area type="monotone" dataKey="pending" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#colorPending)" />
+                                        <Area type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorCompleted)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-3 h-3 rounded-full bg-muted-foreground" />
-                                    <span className="text-muted-foreground font-medium">To Do ({metrics.todoCount})</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-3 h-3 rounded-full bg-accent" />
-                                    <span className="text-muted-foreground font-medium">In Progress ({metrics.inProgressCount})</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-3 h-3 rounded-full bg-accent" />
-                                    <span className="text-muted-foreground font-medium">In Review ({metrics.inReviewCount})</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-3 h-3 rounded-full bg-primary" />
-                                    <span className="text-muted-foreground font-medium">Done ({metrics.doneCount})</span>
-                                </div>
+                            <div className="flex items-center justify-center space-x-6 mt-4 text-[11px] text-muted-foreground">
+                                <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>Completed</div>
+                                <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-amber-500 mr-2"></div>Pending</div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="p-6 bg-card border border-border rounded-2xl space-y-4 flex flex-col">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-base font-bold text-foreground">Recent Projects</h2>
-                            <Link href="/projects" className="text-xs text-primary hover:underline flex items-center font-semibold">
-                                View all <ArrowUpRight className="w-3.5 h-3.5 ml-0.5" />
-                            </Link>
-                        </div>
-
-                        <div className="space-y-3 flex-1">
-                            {recentProjects.map((project) => (
-                                <Link
-                                    key={project.id}
-                                    href={`/projects/${project.id}`}
-                                    className="block p-4 bg-background/60 hover:bg-background border border-border hover:border-primary/40 rounded-xl transition group"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-2">
-                                            <span className="font-semibold text-sm text-foreground group-hover:text-primary transition">
-                                                {project.name}
-                                            </span>
-                                            <span
-                                                className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${
-                                                    project.status === 'ongoing'
-                                                        ? 'bg-primary/10 text-primary border-primary/30'
-                                                        : 'bg-accent/10 text-accent-foreground border-accent/30'
-                                                }`}
-                                            >
-                                                {project.status}
-                                            </span>
+                    <div className="lg:col-span-1">
+                        <div className="p-6 bg-card/40 border border-border/50 rounded-lg h-[400px]">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-sm font-bold text-foreground">Announcements</h2>
+                                <button className="text-[10px] px-3 py-1 border border-border rounded-md hover:bg-muted transition">View All</button>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                {/* Sample Announcement */}
+                                <div className="p-4 bg-background/50 border border-border/50 rounded-lg">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="p-1.5 bg-blue-500/10 text-blue-500 rounded-md">
+                                                <Info className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xs font-bold text-foreground">System Maintenance Scheduled</h3>
+                                                <p className="text-[10px] text-muted-foreground mt-0.5">Downtime expected for v1.2 release</p>
+                                            </div>
                                         </div>
-
-                                        <span className="text-xs font-mono font-semibold text-muted-foreground bg-muted/80 px-2 py-0.5 rounded-md border border-border">
-                                            {project.tasks_count || 0} tasks
-                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">2 days ago</span>
                                     </div>
-
-                                    <div className="mt-3 flex items-center space-x-2">
-                                        <div className="flex-1 bg-muted h-1.5 rounded-full overflow-hidden">
-                                            <div
-                                                className="bg-primary h-full rounded-full transition-all duration-300"
-                                                style={{ width: `${project.progress || 0}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs font-mono font-bold text-muted-foreground">{project.progress || 0}%</span>
+                                    <div className="mt-3">
+                                        <span className="text-[9px] px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20">maintenance</span>
                                     </div>
-                                </Link>
-                            ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -330,4 +319,11 @@ export default function Dashboard({ metrics, timeframe = 'month', activeSprint, 
     );
 }
 
-Dashboard.layout = (page: React.ReactNode) => page;
+Dashboard.layout = {
+    breadcrumbs: [
+        {
+            title: 'Dashboard',
+            href: '/dashboard',
+        },
+    ],
+};

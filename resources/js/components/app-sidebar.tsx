@@ -4,7 +4,6 @@ import {
     LayoutGrid,
     CheckSquare,
     Folder,
-    Star,
     Plus,
     ChevronRight,
     Sliders,
@@ -12,6 +11,18 @@ import {
 import { NavUser } from '@/components/nav-user';
 import { ProjectDrawer } from '@/components/navigation/ProjectDrawer';
 import { useCurrentUrl } from '@/hooks/use-current-url';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
 
 export function AppSidebar() {
     const { props } = usePage<any>();
@@ -23,146 +34,129 @@ export function AppSidebar() {
 
     return (
         <>
-            <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col h-screen shrink-0 text-slate-300 select-none">
+            <Sidebar collapsible="icon" className="border-r border-border">
                 {/* Brand Header */}
-                <div className="p-4 border-b border-slate-800/80">
-                    <Link href="/dashboard" className="flex items-center space-x-3 group">
-                        <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-blue-600/30 group-hover:scale-105 transition">
-                            ⚡
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="font-extrabold text-slate-100 text-base tracking-tight group-hover:text-blue-400 transition">
-                                Aero DevPM
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-mono">v1.0 • Core Workspace</span>
-                        </div>
-                    </Link>
-                </div>
+                <SidebarHeader className="border-b border-border p-4">
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg" asChild>
+                                <Link href="/dashboard" className="flex items-center space-x-3 group">
+                                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-extrabold text-lg shadow-lg shadow-primary/30 group-hover:scale-105 transition">
+                                        ⚡
+                                    </div>
+                                    <div className="flex flex-col flex-1">
+                                        <span className="font-extrabold text-foreground text-sm tracking-tight group-hover:text-primary transition">
+                                            Aero DevPM
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground font-mono">v1.0 • Core</span>
+                                    </div>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarHeader>
 
-                {/* Navigation Sections */}
-                <div className="flex-1 overflow-y-auto p-3 space-y-6">
+                <SidebarContent>
                     {/* WORKSPACE SECTION */}
-                    <div className="space-y-1">
-                        <div className="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                            Workspace
-                        </div>
-                        <nav className="space-y-1 pt-1">
-                            <Link
-                                href="/dashboard"
-                                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium transition ${
-                                    isCurrentUrl('/dashboard')
-                                        ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 font-semibold shadow-sm'
-                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                                }`}
-                            >
-                                <LayoutGrid className="w-4 h-4 text-blue-400" />
-                                <span>Dashboard</span>
-                            </Link>
-
-                            <Link
-                                href="/my-desk"
-                                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium transition ${
-                                    isCurrentUrl('/my-desk')
-                                        ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 font-semibold shadow-sm'
-                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                                }`}
-                            >
-                                <CheckSquare className="w-4 h-4 text-emerald-400" />
-                                <span>My Desk</span>
-                            </Link>
-                        </nav>
-                    </div>
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/dashboard')} asChild>
+                                        <Link href="/dashboard">
+                                            <LayoutGrid className="w-4 h-4 text-primary" />
+                                            <span>Dashboard</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/my-desk')} asChild>
+                                        <Link href="/my-desk">
+                                            <CheckSquare className="w-4 h-4 text-emerald-500" />
+                                            <span>My Desk</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
 
                     {/* PROJECTS SECTION */}
-                    <div className="space-y-1">
-                        <div className="flex items-center justify-between px-3">
-                            <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                Starred Projects
-                            </span>
+                    <SidebarGroup>
+                        <SidebarGroupLabel className="flex items-center justify-between w-full pr-0">
+                            <span>Starred Projects</span>
                             <button
                                 onClick={() => setIsProjectDrawerOpen(true)}
-                                className="text-[11px] text-blue-400 hover:text-blue-300 font-medium transition flex items-center"
+                                className="text-[10px] text-primary hover:text-primary/80 font-medium transition flex items-center mr-1"
                             >
                                 Browse <ChevronRight className="w-3 h-3 ml-0.5" />
                             </button>
-                        </div>
-
-                        <nav className="space-y-1 pt-1">
-                            {starredProjects.length > 0 ? (
-                                starredProjects.slice(0, 5).map((project: any) => (
-                                    <Link
-                                        key={project.id}
-                                        href={`/projects/${project.id}`}
-                                        className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium transition ${
-                                            isCurrentUrl(`/projects/${project.id}`)
-                                                ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 font-semibold shadow-sm'
-                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                                        }`}
-                                    >
-                                        <Folder className="w-4 h-4 text-amber-400 shrink-0" />
-                                        <span className="truncate">{project.name}</span>
-                                    </Link>
-                                ))
-                            ) : (
-                                <Link
-                                    href="/projects"
-                                    className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition"
-                                >
-                                    <Folder className="w-4 h-4 text-slate-400" />
-                                    <span>All Projects Hub</span>
-                                </Link>
-                            )}
-
-                            <button
-                                onClick={() => setIsProjectDrawerOpen(true)}
-                                className="w-full flex items-center space-x-3 px-3 py-2.5 text-xs text-slate-400 hover:text-white hover:bg-slate-900 rounded-xl transition text-left"
-                            >
-                                <Plus className="w-4 h-4 text-slate-400" />
-                                <span>Projects Drawer</span>
-                            </button>
-                        </nav>
-                    </div>
+                        </SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {starredProjects.length > 0 ? (
+                                    starredProjects.slice(0, 5).map((project: any) => (
+                                        <SidebarMenuItem key={project.id}>
+                                            <SidebarMenuButton isActive={isCurrentUrl(`/projects/${project.id}`)} asChild>
+                                                <Link href={`/projects/${project.id}`}>
+                                                    <Folder className="w-4 h-4 text-amber-500 shrink-0" />
+                                                    <span className="truncate">{project.name}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    ))
+                                ) : (
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild>
+                                            <Link href="/projects" className="text-muted-foreground">
+                                                <Folder className="w-4 h-4" />
+                                                <span>All Projects Hub</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )}
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton onClick={() => setIsProjectDrawerOpen(true)} className="text-muted-foreground">
+                                        <Plus className="w-4 h-4" />
+                                        <span>Projects Drawer</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
 
                     {/* SYSTEM SECTION */}
-                    <div className="space-y-1">
-                        <div className="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                            System
-                        </div>
-                        <nav className="space-y-1 pt-1">
-                            <Link
-                                href="/projects"
-                                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium transition ${
-                                    isCurrentUrl('/projects')
-                                        ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 font-semibold shadow-sm'
-                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                                }`}
-                            >
-                                <Folder className="w-4 h-4 text-indigo-400" />
-                                <span>Projects Directory</span>
-                            </Link>
+                    <SidebarGroup>
+                        <SidebarGroupLabel>System</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/projects')} asChild>
+                                        <Link href="/projects">
+                                            <Folder className="w-4 h-4 text-indigo-500" />
+                                            <span>Projects Directory</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/settings/profile')} asChild>
+                                        <Link href="/settings/profile">
+                                            <Sliders className="w-4 h-4 text-muted-foreground" />
+                                            <span>Settings</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                </SidebarContent>
 
-                            <Link
-                                href="/settings/profile"
-                                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium transition ${
-                                    isCurrentUrl('/settings/profile')
-                                        ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 font-semibold shadow-sm'
-                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-                                }`}
-                            >
-                                <Sliders className="w-4 h-4 text-slate-400" />
-                                <span>Settings</span>
-                            </Link>
-                        </nav>
-                    </div>
-                </div>
-
-                {/* Footer User Profile */}
-                <div className="p-3 border-t border-slate-800/80 bg-slate-950">
+                <SidebarFooter className="border-t border-border p-3">
                     <NavUser />
-                </div>
-            </aside>
+                </SidebarFooter>
+            </Sidebar>
 
-            {/* Global Project Drawer */}
             <ProjectDrawer
                 isOpen={isProjectDrawerOpen}
                 onClose={() => setIsProjectDrawerOpen(false)}

@@ -7,8 +7,10 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use Illuminate\Support\Facades\Route;
 
+use Inertia\Inertia;
+
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return Inertia::render('welcome');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
