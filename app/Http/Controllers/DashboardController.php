@@ -63,6 +63,24 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $pendingInvitations = \App\Models\TeamInvitation::where('email', $user->email)
+            ->whereNull('accepted_at')
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->with(['team', 'inviter'])
+            ->get()
+            ->map(fn ($invitation) => [
+                'id' => $invitation->id,
+                'email' => $invitation->email,
+                'role' => $invitation->role?->value,
+                'code' => $invitation->code,
+                'team' => [
+                    'id' => $invitation->team->id,
+                    'name' => $invitation->team->name,
+                    'slug' => $invitation->team->slug,
+                ],
+                'inviterName' => $invitation->inviter?->name,
+            ]);
+
         return Inertia::render('Dashboard/Index', [
             'metrics' => [
                 'totalProjects' => $totalProjects,
@@ -80,6 +98,7 @@ class DashboardController extends Controller
             'timeframe' => $timeframe,
             'activeSprint' => $activeSprint,
             'recentProjects' => $recentProjects,
+            'pendingInvitations' => $pendingInvitations,
         ]);
     }
 }
