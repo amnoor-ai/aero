@@ -45,7 +45,9 @@ class ProjectController extends Controller
         $project->load([
             'lead',
             'members',
-            'sprints',
+            'sprints' => function ($q) {
+                $q->orderBy('created_at', 'desc');
+            },
             'boardColumns' => function ($query) {
                 $query->orderBy('position')->with([
                     'tasks' => function ($t) {
@@ -58,6 +60,18 @@ class ProjectController extends Controller
 
         $users = User::select('id', 'name', 'email')->get();
 
+        // Product Backlog tasks (tasks not assigned to any sprint or assigned to future sprints)
+        $backlogTasks = $project->tasks()
+            ->whereNull('sprint_id')
+            ->with(['assignee', 'boardColumn'])
+            ->get();
+
+        // Active sprint details
+        $activeSprint = $project->sprints->firstWhere('status', 'active');
+        if ($activeSprint) {
+            $activeSprint->load(['tasks.assignee', 'tasks.boardColumn']);
+        }
+
         // Count task stats for Header Strip
         $allTasks = $project->boardColumns->flatMap->tasks;
         $totalCount = $allTasks->count();
@@ -69,6 +83,9 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Show', [
             'project' => $project,
             'workspaceUsers' => $users,
+            'activeSprint' => $activeSprint,
+            'allSprints' => $project->sprints,
+            'backlogTasks' => $backlogTasks,
             'stats' => [
                 'total' => $totalCount,
                 'todo' => $todoCount,

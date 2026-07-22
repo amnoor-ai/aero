@@ -15,6 +15,7 @@ class Project extends Model
 
     protected $fillable = [
         'workspace_id',
+        'department_id',
         'name',
         'slug',
         'description',
@@ -36,6 +37,11 @@ class Project extends Model
     public function workspace(): BelongsTo
     {
         return $this->belongsTo(Workspace::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function lead(): BelongsTo

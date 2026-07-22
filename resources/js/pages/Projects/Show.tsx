@@ -34,10 +34,17 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SprintHeaderStrip } from '@/components/sprints/SprintHeaderStrip';
+import { SprintBacklogDrawer } from '@/components/sprints/SprintBacklogDrawer';
+import { CreateSprintModal } from '@/components/sprints/CreateSprintModal';
+import { CompleteSprintModal } from '@/components/sprints/CompleteSprintModal';
 
 interface ProjectProps {
     project: any;
     workspaceUsers: any[];
+    activeSprint?: any;
+    allSprints?: any[];
+    backlogTasks?: any[];
     stats: {
         total: number;
         todo: number;
@@ -50,8 +57,11 @@ interface ProjectProps {
 
 type TabType = 'board' | 'list' | 'discussions' | 'milestones' | 'timeline' | 'team' | 'files';
 
-export default function ProjectShow({ project, workspaceUsers = [], stats }: ProjectProps) {
+export default function ProjectShow({ project, workspaceUsers = [], activeSprint, allSprints = [], backlogTasks = [], stats }: ProjectProps) {
     const [activeTab, setActiveTab] = useState<TabType>('board');
+    const [isBacklogDrawerOpen, setIsBacklogDrawerOpen] = useState(false);
+    const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
+    const [isCompleteSprintOpen, setIsCompleteSprintOpen] = useState(false);
 
     const handleToggleStar = () => {
         router.post(`/projects/${project.id}/toggle-star`, {}, { preserveScroll: true });
@@ -204,6 +214,14 @@ export default function ProjectShow({ project, workspaceUsers = [], stats }: Pro
                         </div>
                     </div>
                 </div>
+
+                {/* Active Sprint Banner */}
+                <SprintHeaderStrip
+                    sprint={activeSprint}
+                    onOpenBacklogDrawer={() => setIsBacklogDrawerOpen(true)}
+                    onOpenCreateSprint={() => setIsCreateSprintOpen(true)}
+                    onOpenCompleteSprint={() => setIsCompleteSprintOpen(true)}
+                />
 
                 {/* Tabbed Navigation */}
                 <div className="flex flex-wrap border-b border-border text-sm font-medium gap-x-8 gap-y-2">
@@ -370,6 +388,33 @@ export default function ProjectShow({ project, workspaceUsers = [], stats }: Pro
                     </div>
                 )}
             </div>
+
+            {/* Sprint Planning Drawer */}
+            <SprintBacklogDrawer
+                isOpen={isBacklogDrawerOpen}
+                onClose={() => setIsBacklogDrawerOpen(false)}
+                backlogTasks={backlogTasks}
+                sprints={allSprints}
+                onOpenCreateSprint={() => {
+                    setIsBacklogDrawerOpen(false);
+                    setIsCreateSprintOpen(true);
+                }}
+            />
+
+            {/* Create Sprint Modal */}
+            <CreateSprintModal
+                isOpen={isCreateSprintOpen}
+                onClose={() => setIsCreateSprintOpen(false)}
+                projectId={project.id}
+            />
+
+            {/* Complete Sprint Modal */}
+            <CompleteSprintModal
+                isOpen={isCompleteSprintOpen}
+                onClose={() => setIsCompleteSprintOpen(false)}
+                sprint={activeSprint}
+                futureSprints={allSprints.filter((s: any) => s.status === 'future')}
+            />
         </>
     );
 }
