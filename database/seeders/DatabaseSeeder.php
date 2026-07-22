@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\BoardColumn;
+use App\Models\Department;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
@@ -63,9 +64,49 @@ class DatabaseSeeder extends Seeder
             $sarah->id => ['role' => 'member'],
         ]);
 
+        // 2b. Create Departments
+        $deptEng = Department::create([
+            'workspace_id' => $workspace->id,
+            'name' => 'Engineering & Infrastructure',
+            'code' => 'ENG',
+            'slug' => 'engineering-infrastructure',
+            'description' => 'Responsible for core web platform architecture, cloud systems, and real-time backend microservices.',
+            'director_id' => $admin->id,
+            'location' => 'Building A - 3rd Floor (HQ)',
+            'status' => 'active',
+        ]);
+
+        $deptProduct = Department::create([
+            'workspace_id' => $workspace->id,
+            'name' => 'Product Design & UX',
+            'code' => 'PDX',
+            'slug' => 'product-design-ux',
+            'description' => 'Crafting high-density visual interfaces, user experience workflows, and design token design systems.',
+            'director_id' => $amir->id,
+            'location' => 'Building B - 2nd Floor',
+            'status' => 'active',
+        ]);
+
+        $deptOps = Department::create([
+            'workspace_id' => $workspace->id,
+            'name' => 'Operations & Strategy',
+            'code' => 'OPS',
+            'slug' => 'operations-strategy',
+            'description' => 'Managing sprint coordination, client onboarding, and organizational growth compliance.',
+            'director_id' => $omar->id,
+            'location' => 'Remote / Distributed',
+            'status' => 'active',
+        ]);
+
+        $admin->update(['department_id' => $deptEng->id]);
+        $amir->update(['department_id' => $deptProduct->id]);
+        $omar->update(['department_id' => $deptOps->id]);
+        $sarah->update(['department_id' => $deptEng->id]);
+
         // 3. Create Projects
         $project1 = Project::create([
             'workspace_id' => $workspace->id,
+            'department_id' => $deptEng->id,
             'name' => 'Aero Web App Redesign',
             'slug' => 'aero-web-app-redesign',
             'description' => 'Rebuilding the frontend platform with Inertia.js v3, React 19, and Tailwind CSS v4.',
@@ -78,6 +119,7 @@ class DatabaseSeeder extends Seeder
 
         $project2 = Project::create([
             'workspace_id' => $workspace->id,
+            'department_id' => $deptEng->id,
             'name' => 'API Service v2 Architecture',
             'slug' => 'api-service-v2-architecture',
             'description' => 'High-throughput microservice backend for core real-time events.',
@@ -90,6 +132,7 @@ class DatabaseSeeder extends Seeder
 
         $project3 = Project::create([
             'workspace_id' => $workspace->id,
+            'department_id' => $deptProduct->id,
             'name' => 'Payment & Billing Gateway',
             'slug' => 'payment-billing-gateway',
             'description' => 'Integrating multi-currency subscription billing and Stripe webhooks.',
