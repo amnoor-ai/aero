@@ -7,6 +7,7 @@ import {
     Plus,
     ChevronRight,
     Sliders,
+    Building2,
 } from 'lucide-react';
 import { NavUser } from '@/components/nav-user';
 import { ProjectDrawer } from '@/components/navigation/ProjectDrawer';
@@ -75,6 +76,14 @@ export function AppSidebar() {
                                         <Link href="/my-desk">
                                             <CheckSquare className="w-4 h-4 text-emerald-500" />
                                             <span>My Desk</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/departments')} asChild>
+                                        <Link href="/departments">
+                                            <Building2 className="w-4 h-4 text-purple-400" />
+                                            <span>Departments</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>

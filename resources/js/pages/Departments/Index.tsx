@@ -1,0 +1,402 @@
+import React, { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    Building2,
+    Search,
+    Plus,
+    MoreVertical,
+    Users,
+    Folder,
+    FileText,
+    Download,
+    Pencil,
+    Trash2,
+    Eye,
+    MapPin,
+    LayoutGrid,
+    List,
+} from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { CreateDepartmentModal } from '@/components/departments/CreateDepartmentModal';
+import { EditDepartmentModal } from '@/components/departments/EditDepartmentModal';
+
+interface DepartmentItem {
+    id: number;
+    name: string;
+    code: string;
+    slug: string;
+    description: string | null;
+    director_id: number | null;
+    director?: { id: number; name: string; email: string };
+    location: string | null;
+    mandate_file_path: string | null;
+    mandate_file_name: string | null;
+    status: string;
+    members_count: number;
+    projects_count: number;
+}
+
+interface DepartmentsIndexProps {
+    departments: DepartmentItem[];
+    workspaceUsers: any[];
+    filters: any;
+}
+
+export default function DepartmentsIndex({ departments = [], workspaceUsers = [], filters = {} }: DepartmentsIndexProps) {
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [editingDepartment, setEditingDepartment] = useState<DepartmentItem | null>(null);
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
+
+    const handleSearch = (query: string) => {
+        router.get('/departments', { ...filters, search: query }, { preserveState: true, replace: true });
+    };
+
+    const handleStatusFilter = (val: string) => {
+        router.get('/departments', { ...filters, status: val }, { preserveState: true, replace: true });
+    };
+
+    const handleDelete = (departmentId: number) => {
+        if (confirm('Are you sure you want to delete this department?')) {
+            router.delete(`/departments/${departmentId}`);
+        }
+    };
+
+    return (
+        <>
+            <Head title="Departments & Org Structure - Aero DevPM" />
+
+            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-6">
+                    <div>
+                        <div className="flex items-center space-x-2">
+                            <span className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                <Building2 className="w-6 h-6" />
+                            </span>
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+                                    Departments & Org Structure
+                                </h1>
+                                <p className="text-sm text-muted-foreground mt-0.5">
+                                    Workspace organizational units, leadership assignments, location management, and mandate documentation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Button
+                            onClick={() => setIsCreateOpen(true)}
+                            className="bg-primary text-primary-foreground font-semibold text-xs shadow-lg"
+                        >
+                            <Plus className="w-4 h-4 mr-1.5" /> Add Department
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Filter & View Mode Bar */}
+                <div className="p-3 bg-card border border-border rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                    <div className="flex items-center space-x-3 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-72">
+                            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+                            <input
+                                type="text"
+                                placeholder="Search departments by name, code, location..."
+                                value={filters.search || ''}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                            />
+                        </div>
+                        <span className="text-xs text-muted-foreground font-medium hidden sm:inline-block">
+                            {departments.length} Departments
+                        </span>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                        <div className="flex bg-muted/50 p-1 rounded-lg border border-border">
+                            <button
+                                onClick={() => handleStatusFilter('')}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${!filters.status ? 'bg-background shadow-sm text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                            >
+                                All
+                            </button>
+                            <button
+                                onClick={() => handleStatusFilter('active')}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${filters.status === 'active' ? 'bg-background shadow-sm text-emerald-400 font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                            >
+                                Active
+                            </button>
+                            <button
+                                onClick={() => handleStatusFilter('archived')}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${filters.status === 'archived' ? 'bg-background shadow-sm text-amber-400 font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                            >
+                                Archived
+                            </button>
+                        </div>
+
+                        <div className="hidden sm:flex items-center space-x-1 border-l border-border pl-4">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md border transition ${viewMode === 'grid' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-muted/50 text-muted-foreground hover:text-foreground border-border'}`}
+                            >
+                                <LayoutGrid className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('table')}
+                                className={`p-1.5 rounded-md border transition ${viewMode === 'table' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-muted/50 text-muted-foreground hover:text-foreground border-border'}`}
+                            >
+                                <List className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Grid or Table */}
+                {departments.length === 0 ? (
+                    <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+                            <Building2 className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-base font-semibold text-foreground">No Departments Found</h3>
+                        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                            No departments match your current filter parameters. Create a department to map out workspace leadership and resources.
+                        </p>
+                        <Button onClick={() => setIsCreateOpen(true)} size="sm" className="bg-primary text-primary-foreground mt-2">
+                            <Plus className="w-4 h-4 mr-1.5" /> Create Department
+                        </Button>
+                    </div>
+                ) : viewMode === 'grid' ? (
+                    /* GRID VIEW */
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {departments.map((dept) => (
+                            <div
+                                key={dept.id}
+                                className="bg-card border border-border rounded-2xl p-5 hover:border-purple-500/40 transition-all duration-200 group flex flex-col justify-between space-y-4 shadow-sm"
+                            >
+                                {/* Card Header */}
+                                <div>
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-400 font-mono font-bold text-xs border border-purple-500/20">
+                                                {dept.code}
+                                            </div>
+                                            <div>
+                                                <Link href={`/departments/${dept.id}`} className="font-bold text-foreground text-base group-hover:text-purple-400 transition truncate block max-w-[180px]">
+                                                    {dept.name}
+                                                </Link>
+                                                {dept.location && (
+                                                    <div className="flex items-center text-[11px] text-muted-foreground mt-0.5">
+                                                        <MapPin className="w-3 h-3 mr-1 text-muted-foreground/70 shrink-0" />
+                                                        <span className="truncate">{dept.location}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition">
+                                                    <MoreVertical className="w-4 h-4" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-44">
+                                                <DropdownMenuItem onClick={() => router.visit(`/departments/${dept.id}`)}>
+                                                    <Eye className="w-4 h-4 mr-2" /> View Details
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setEditingDepartment(dept)}>
+                                                    <Pencil className="w-4 h-4 mr-2" /> Edit Department
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleDelete(dept.id)} className="text-destructive focus:bg-destructive/10">
+                                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+
+                                    {dept.description && (
+                                        <p className="text-xs text-muted-foreground mt-3 line-clamp-2 leading-relaxed">
+                                            {dept.description}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Director Info */}
+                                <div className="pt-3 border-t border-border/50 flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold border border-primary/30">
+                                            {dept.director ? dept.director.name.charAt(0) : '?'}
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Director</p>
+                                            <p className="text-xs font-semibold text-foreground truncate max-w-[120px]">
+                                                {dept.director ? dept.director.name : 'Unassigned'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Stats Badges */}
+                                    <div className="flex items-center space-x-3 text-xs text-muted-foreground">
+                                        <div className="flex items-center space-x-1" title="Team Members">
+                                            <Users className="w-3.5 h-3.5 text-blue-400" />
+                                            <span className="font-semibold text-foreground">{dept.members_count}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-1" title="Active Projects">
+                                            <Folder className="w-3.5 h-3.5 text-amber-400" />
+                                            <span className="font-semibold text-foreground">{dept.projects_count}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Mandate Attachment Download Strip */}
+                                <div className="pt-2">
+                                    {dept.mandate_file_name ? (
+                                        <a
+                                            href={`/departments/${dept.id}/mandate`}
+                                            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-purple-500/5 hover:bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:text-purple-200 transition group/btn text-xs font-medium"
+                                        >
+                                            <div className="flex items-center space-x-2 truncate">
+                                                <FileText className="w-4 h-4 text-purple-400 shrink-0" />
+                                                <span className="truncate">{dept.mandate_file_name}</span>
+                                            </div>
+                                            <Download className="w-3.5 h-3.5 text-purple-400 group-hover/btn:scale-110 transition shrink-0 ml-1" />
+                                        </a>
+                                    ) : (
+                                        <div className="p-2 text-center rounded-xl border border-dashed border-border text-[11px] text-muted-foreground font-mono">
+                                            No Mandate Attached
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    /* TABLE VIEW */
+                    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs text-muted-foreground">
+                                <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
+                                    <tr>
+                                        <th className="p-4 font-semibold">Code / Department</th>
+                                        <th className="p-4 font-semibold">Director</th>
+                                        <th className="p-4 font-semibold">Location</th>
+                                        <th className="p-4 font-semibold">Members</th>
+                                        <th className="p-4 font-semibold">Projects</th>
+                                        <th className="p-4 font-semibold">Mandate Document</th>
+                                        <th className="p-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {departments.map((dept) => (
+                                        <tr
+                                            key={dept.id}
+                                            onClick={() => router.visit(`/departments/${dept.id}`)}
+                                            className="hover:bg-muted/50 cursor-pointer transition group"
+                                        >
+                                            <td className="p-4 font-semibold text-foreground">
+                                                <div className="flex items-center space-x-3">
+                                                    <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 font-mono text-[11px] border border-purple-500/20">
+                                                        {dept.code}
+                                                    </span>
+                                                    <div>
+                                                        <span className="group-hover:text-purple-400 transition font-bold">{dept.name}</span>
+                                                        {dept.description && (
+                                                            <span className="block text-[11px] text-muted-foreground font-normal line-clamp-1">
+                                                                {dept.description}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td className="p-4 text-foreground font-medium">
+                                                {dept.director ? dept.director.name : <span className="text-muted-foreground">Unassigned</span>}
+                                            </td>
+
+                                            <td className="p-4 text-muted-foreground">
+                                                {dept.location || '—'}
+                                            </td>
+
+                                            <td className="p-4 font-semibold text-foreground">
+                                                {dept.members_count}
+                                            </td>
+
+                                            <td className="p-4 font-semibold text-foreground">
+                                                {dept.projects_count}
+                                            </td>
+
+                                            <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                                                {dept.mandate_file_name ? (
+                                                    <a
+                                                        href={`/departments/${dept.id}/mandate`}
+                                                        className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 text-[11px] font-medium border border-purple-500/30 transition"
+                                                    >
+                                                        <FileText className="w-3 h-3 text-purple-400" />
+                                                        <span className="truncate max-w-[120px]">{dept.mandate_file_name}</span>
+                                                        <Download className="w-3 h-3 text-purple-400 ml-1" />
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-[11px] text-muted-foreground font-mono">None</span>
+                                                )}
+                                            </td>
+
+                                            <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <button className="p-1 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
+                                                            <MoreVertical className="w-4 h-4" />
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-44">
+                                                        <DropdownMenuItem onClick={() => router.visit(`/departments/${dept.id}`)}>
+                                                            <Eye className="w-4 h-4 mr-2" /> View Details
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => setEditingDepartment(dept)}>
+                                                            <Pencil className="w-4 h-4 mr-2" /> Edit Department
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleDelete(dept.id)} className="text-destructive focus:bg-destructive/10">
+                                                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Create Department Modal */}
+            <CreateDepartmentModal
+                isOpen={isCreateOpen}
+                onClose={() => setIsCreateOpen(false)}
+                workspaceUsers={workspaceUsers}
+            />
+
+            {/* Edit Department Modal */}
+            <EditDepartmentModal
+                isOpen={!!editingDepartment}
+                onClose={() => setEditingDepartment(null)}
+                department={editingDepartment}
+                workspaceUsers={workspaceUsers}
+            />
+        </>
+    );
+}
+
+DepartmentsIndex.layout = {
+    breadcrumbs: [
+        {
+            title: 'Departments',
+            href: '/departments',
+        },
+    ],
+};

@@ -35,6 +35,11 @@ class Workspace extends Model
         return $this->hasMany(Project::class);
     }
 
+    public function departments(): HasMany
+    {
+        return $this->hasMany(Department::class);
+    }
+
     public function sprints(): HasMany
     {
         return $this->hasMany(Sprint::class);
