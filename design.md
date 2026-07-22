@@ -136,6 +136,7 @@ All entities maintain a `workspace_id` foreign key from Day 1 to ensure seamless
 ```
 workspaces (id, name, slug, owner_id)
   └─ workspace_members (workspace_id, user_id, role)
+  └─ departments (id, workspace_id, name, director_id, team_id, email, phone, location, mandate_path, description, status)
   └─ projects (id, workspace_id, name, slug, status, lead_id, start_date, due_date, is_starred)
        └─ project_members (project_id, user_id, role)
        └─ board_columns (id, project_id, name, color, position)
