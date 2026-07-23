@@ -74,6 +74,29 @@ class ProjectController extends Controller
             },
         ]);
 
+        if ($project->boardColumns->isEmpty()) {
+            $defaultColumns = [
+                ['name' => 'Backlog', 'position' => 1, 'color' => '#64748b'],
+                ['name' => 'To Do', 'position' => 2, 'color' => '#3b82f6'],
+                ['name' => 'In Progress', 'position' => 3, 'color' => '#f59e0b'],
+                ['name' => 'In Review', 'position' => 4, 'color' => '#8b5cf6'],
+                ['name' => 'Done', 'position' => 5, 'color' => '#10b981'],
+            ];
+
+            foreach ($defaultColumns as $colData) {
+                $project->boardColumns()->create($colData);
+            }
+
+            $project->load(['boardColumns' => function ($query) {
+                $query->orderBy('position')->with([
+                    'tasks' => function ($t) {
+                        $t->orderBy('position')
+                            ->with(['assignee', 'checklists', 'comments.user', 'activities.user']);
+                    },
+                ]);
+            }]);
+        }
+
         $users = User::select('id', 'name', 'email')->get();
 
         // Product Backlog tasks (tasks not assigned to any sprint or assigned to future sprints)

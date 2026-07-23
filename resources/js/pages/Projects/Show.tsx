@@ -329,14 +329,73 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 {activeTab === 'board' && (
                     <KanbanBoard
                         projectId={project.id}
-                        columns={project.board_columns || []}
+                        columns={project.board_columns || project.boardColumns || []}
                         users={workspaceUsers}
                     />
                 )}
 
                 {activeTab === 'list' && (
-                    <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted-foreground text-sm">
-                        Dense list view rendering tasks...
+                    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                        <div className="p-4 border-b border-border/60 bg-muted/20 flex items-center justify-between">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Project Task Registry</h3>
+                            <span className="text-xs text-muted-foreground font-mono">
+                                {project.boardColumns?.flatMap((c: any) => c.tasks || [])?.length || 0} Tasks
+                            </span>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs text-muted-foreground">
+                                <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
+                                    <tr>
+                                        <th className="p-4">Task Title</th>
+                                        <th className="p-4">Type</th>
+                                        <th className="p-4">Priority</th>
+                                        <th className="p-4">Column Status</th>
+                                        <th className="p-4">Assignee</th>
+                                        <th className="p-4">Target Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {(!project.boardColumns || project.boardColumns.flatMap((c: any) => c.tasks || []).length === 0) ? (
+                                        <tr>
+                                            <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                                                No tasks found in this project. Create a task in the Board view to get started.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        project.boardColumns.flatMap((col: any) =>
+                                            (col.tasks || []).map((task: any) => (
+                                                <tr key={task.id} className="hover:bg-muted/40 transition">
+                                                    <td className="p-4 font-semibold text-foreground">
+                                                        {task.title}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                                                            {task.type}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className={`text-[10px] font-bold uppercase ${task.priority === 'urgent' ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                                            {task.priority}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 font-medium text-foreground">
+                                                        <span className="px-2.5 py-0.5 rounded-full bg-muted text-[11px] font-mono border border-border">
+                                                            {col.name}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-foreground font-medium">
+                                                        {task.assignee ? task.assignee.name : <span className="text-muted-foreground italic">Unassigned</span>}
+                                                    </td>
+                                                    <td className="p-4 font-mono text-[11px]">
+                                                        {task.due_date ? new Date(task.due_date).toLocaleDateString() : '—'}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
 
@@ -365,16 +424,36 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 )}
 
                 {activeTab === 'discussions' && (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground text-sm">
-                        No active discussions for this project. Start a new topic to keep everyone aligned.
+                    <div className="space-y-4">
+                        <div className="p-6 bg-card border border-border rounded-2xl space-y-4">
+                            <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                                <div>
+                                    <h3 className="font-bold text-base text-foreground">Project Team Discussions</h3>
+                                    <p className="text-xs text-muted-foreground">Architectural RFCs, sprint retrospectives, and technical syncs</p>
+                                </div>
+                                <Button size="sm" className="bg-primary text-primary-foreground text-xs">
+                                    + Start Discussion
+                                </Button>
+                            </div>
+
+                            <div className="p-8 text-center text-muted-foreground space-y-2 bg-muted/20 border border-dashed border-border rounded-xl">
+                                <MessageSquare className="w-8 h-8 text-muted-foreground/50 mx-auto" />
+                                <h4 className="text-xs font-bold text-foreground">No Discussion Threads Active</h4>
+                                <p className="text-[11px] text-muted-foreground max-w-md mx-auto">
+                                    Post technical notes or architectural decisions to keep all team members aligned.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 )}
 
                 {activeTab === 'milestones' && (
                     <div className="space-y-4">
                         {(!project.milestones || project.milestones.length === 0) ? (
-                            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground text-sm">
-                                No milestones defined for this project yet. Create release targets to track project phase progress.
+                            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground text-sm space-y-2">
+                                <Target className="w-8 h-8 text-muted-foreground/50 mx-auto" />
+                                <h4 className="font-bold text-foreground text-sm">No Milestones Defined Yet</h4>
+                                <p className="text-xs text-muted-foreground max-w-sm mx-auto">Create release gates to track phase progress.</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -404,8 +483,37 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 )}
 
                 {activeTab === 'timeline' && (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground text-sm">
-                        Timeline view coming soon. A visual Gantt chart of your activities.
+                    <div className="p-6 bg-card border border-border rounded-2xl space-y-4">
+                        <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                            <div>
+                                <h3 className="font-bold text-base text-foreground">Project Sprint & Milestone Roadmap</h3>
+                                <p className="text-xs text-muted-foreground font-mono">
+                                    📅 {project.start_date ? new Date(project.start_date).toLocaleDateString() : 'Start Date'} → {project.due_date ? new Date(project.due_date).toLocaleDateString() : 'Target Date'}
+                                </p>
+                            </div>
+                            <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                {stats.progress}% Complete
+                            </span>
+                        </div>
+
+                        <div className="space-y-3 pt-2">
+                            <h4 className="text-xs font-bold text-muted-foreground uppercase">Sprint Iterations</h4>
+                            {(!project.sprints || project.sprints.length === 0) ? (
+                                <p className="text-xs text-muted-foreground italic">No active sprints created for this project.</p>
+                            ) : (
+                                project.sprints.map((sprint: any) => (
+                                    <div key={sprint.id} className="p-3 rounded-xl bg-muted/30 border border-border flex items-center justify-between text-xs">
+                                        <div className="flex items-center space-x-2">
+                                            <Zap className="w-4 h-4 text-emerald-400" />
+                                            <span className="font-bold text-foreground">{sprint.name}</span>
+                                        </div>
+                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${sprint.status === 'active' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-muted text-muted-foreground border-border'}`}>
+                                            {sprint.status}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 )}
 
