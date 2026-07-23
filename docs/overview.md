@@ -65,3 +65,12 @@ Aero is a modern, high-density, developer-focused Project Management & Issue Tra
 ### 📅 Projects & Planning Suite
 * **Completion Date**: July 23, 2026
 * **Details**: Restructured left navigation sidebar under Projects & Planning group. Built global Activities timeline feed (`/activities`), Milestones dashboard (`/milestones`) with project phase gates and dynamic progress, Work Plan Gantt roadmap (`/work-plan`), and Pest feature tests.
+
+### 📅 Global Tasks Directory & Data Grid Controls
+* **Completion Date**: July 23, 2026
+* **Details**: Built global Tasks directory (`/tasks`), multi-column sorting headers (`Asc`/`Desc`/`Hide`), column visibility checklist manager, advanced filter popovers, streamed CSV export (`/tasks/export-csv`), universal server-side pagination across Tasks, Projects, and Departments, and Pest tests (`TaskDirectoryTest.php`).
+
+### 📅 Multi-Step Project Creation Wizard
+* **Completion Date**: July 23, 2026
+* **Details**: Created 3-step interactive project creation wizard (`CreateProjectWizardModal.tsx`) with Info & Timeline, Branding & Team Member assignments with role selection, Review & Governance compliance confirmation, database schema extensions (`budget`, `tags`, `logo_path`, `draft` status), and Pest tests (`ProjectWizardTest.php`).
+
