@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BoardColumn;
+use App\Models\Department;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +18,7 @@ class ProjectController extends Controller
     {
         $workspaceId = 1;
         $query = Project::where('workspace_id', $workspaceId)
-            ->with(['lead', 'members'])
+            ->with(['lead', 'members', 'department'])
             ->withCount('tasks');
 
         if ($request->filled('search')) {
@@ -42,9 +43,13 @@ class ProjectController extends Controller
         }
 
         $projects = $query->paginate(12)->withQueryString();
+        $departments = Department::select('id', 'name', 'code')->orderBy('name')->get();
+        $workspaceUsers = User::select('id', 'name', 'email')->orderBy('name')->get();
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
+            'departments' => $departments,
+            'workspaceUsers' => $workspaceUsers,
             'filters' => $request->only(['search', 'status', 'starred', 'sort_by', 'order']),
         ]);
     }
@@ -54,6 +59,7 @@ class ProjectController extends Controller
         $project->load([
             'lead',
             'members',
+            'department',
             'milestones',
             'sprints' => function ($q) {
                 $q->orderBy('created_at', 'desc');
@@ -111,10 +117,18 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'department_id' => 'nullable|exists:departments,id',
+            'lead_id' => 'nullable|exists:users,id',
             'description' => 'nullable|string',
-            'status' => 'required|string|in:planned,ongoing,completed,archived',
+            'status' => 'required|string|in:draft,planned,ongoing,completed,archived',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
+            'budget' => 'nullable|numeric|min:0',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string',
+            'members' => 'nullable|array',
+            'members.*.user_id' => 'required|exists:users,id',
+            'members.*.role' => 'nullable|string',
         ]);
 
         $workspaceId = 1;
@@ -122,13 +136,16 @@ class ProjectController extends Controller
 
         $project = Project::create([
             'workspace_id' => $workspaceId,
+            'department_id' => $validated['department_id'] ?? null,
             'name' => $validated['name'],
             'slug' => $slug,
             'description' => $validated['description'] ?? null,
             'status' => $validated['status'],
-            'lead_id' => $request->user()?->id ?? 1,
+            'lead_id' => $validated['lead_id'] ?? ($request->user()?->id ?? 1),
             'start_date' => $validated['start_date'] ?? null,
             'due_date' => $validated['due_date'] ?? null,
+            'budget' => $validated['budget'] ?? null,
+            'tags' => $validated['tags'] ?? [],
             'is_starred' => false,
         ]);
 
@@ -150,8 +167,21 @@ class ProjectController extends Controller
             ]);
         }
 
-        // Attach owner as lead member
-        $project->members()->attach($project->lead_id, ['role' => 'lead']);
+        // Attach lead
+        $project->members()->syncWithoutDetaching([
+            $project->lead_id => ['role' => 'lead'],
+        ]);
+
+        // Attach selected members
+        if (! empty($validated['members'])) {
+            foreach ($validated['members'] as $m) {
+                if ($m['user_id'] != $project->lead_id) {
+                    $project->members()->syncWithoutDetaching([
+                        $m['user_id'] => ['role' => $m['role'] ?? 'developer'],
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('projects.show', $project->id)
             ->with('success', 'Project created successfully.');

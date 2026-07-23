@@ -23,6 +23,9 @@ class Project extends Model
         'lead_id',
         'start_date',
         'due_date',
+        'budget',
+        'tags',
+        'logo_path',
         'is_starred',
     ];
 
@@ -30,6 +33,8 @@ class Project extends Model
         'is_starred' => 'boolean',
         'start_date' => 'date',
         'due_date' => 'date',
+        'budget' => 'decimal:2',
+        'tags' => 'array',
     ];
 
     protected $appends = ['progress'];
