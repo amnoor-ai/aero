@@ -54,3 +54,13 @@
   - [x] Restructure left navigation sidebar under `Projects & Planning` group
   - [x] Write Pest feature tests (`ProjectsAndPlanningTest.php`)
 
+- [x] **Phase 8: Global Tasks Directory & Advanced Data Grid**
+  - [x] Build `Tasks/Index.tsx` page (All Issues / Activities view)
+  - [x] Implement column-level dropdown sorting (`Asc` / `Desc` / `Hide`)
+  - [x] Create `View` dropdown manager checklist to toggle column visibility back on
+  - [x] Create advanced `Filters` popover (Status, Project, Team, Department, Assignee, Date Range)
+  - [x] Add View Type dropdown selection (All, Subtasks, Project, Department)
+  - [x] Build CSV data export action (`Export to CSV`)
+  - [x] Universal server-side pagination & sorting across Tasks, Projects, and Departments
+  - [x] Write Pest feature tests (`TaskDirectoryTest.php`)
+

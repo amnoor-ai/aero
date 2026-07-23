@@ -19,6 +19,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { DataTableHeader } from '@/components/ui/data-table-header';
+import { PaginationBar } from '@/components/ui/pagination-bar';
 
 interface ProjectItem {
     id: number;
@@ -33,11 +35,20 @@ interface ProjectItem {
 }
 
 interface ProjectsIndexProps {
-    projects: ProjectItem[];
+    projects: {
+        data: ProjectItem[];
+        current_page: number;
+        last_page: number;
+        from: number | null;
+        to: number | null;
+        total: number;
+        links: any[];
+    };
     filters: any;
 }
 
-export default function ProjectsIndex({ projects = [], filters = {} }: ProjectsIndexProps) {
+export default function ProjectsIndex({ projects, filters = {} }: ProjectsIndexProps) {
+    const projectList = projects.data || [];
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -72,6 +83,10 @@ export default function ProjectsIndex({ projects = [], filters = {} }: ProjectsI
                 },
             }
         );
+    };
+
+    const handleSort = (columnKey: string, order: 'asc' | 'desc') => {
+        router.get('/projects', { ...filters, sort_by: columnKey, order }, { preserveState: true, replace: true });
     };
 
     return (
@@ -110,7 +125,7 @@ export default function ProjectsIndex({ projects = [], filters = {} }: ProjectsI
                             />
                         </div>
                         <span className="text-xs text-muted-foreground font-medium hidden sm:inline-block">
-                            {projects.length} projects
+                            {projects.total || 0} projects
                         </span>
                     </div>
 
@@ -135,40 +150,37 @@ export default function ProjectsIndex({ projects = [], filters = {} }: ProjectsI
                                 Archived
                             </button>
                         </div>
-                        
-                        <div className="hidden sm:flex items-center space-x-1 border-l border-border pl-4">
-                            <button className="p-1.5 text-muted-foreground hover:text-foreground bg-muted/50 rounded-md border border-border transition">
-                                <LayoutGrid className="w-4 h-4" />
-                            </button>
-                            <button className="p-1.5 text-primary bg-primary/10 rounded-md border border-primary/20 transition">
-                                <List className="w-4 h-4" />
-                            </button>
-                        </div>
                     </div>
                 </div>
 
-                <div className="bg-card border border-border rounded-2xl overflow-hidden">
+                <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs text-muted-foreground">
                             <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
                                 <tr>
-                                    <th className="p-4 font-semibold">Name</th>
-                                    <th className="p-4 font-semibold">Status</th>
+                                    <th className="p-4">
+                                        <DataTableHeader title="Name" columnKey="name" currentSortBy={filters.sort_by} currentOrder={filters.order} onSort={handleSort} />
+                                    </th>
+                                    <th className="p-4">
+                                        <DataTableHeader title="Status" columnKey="status" currentSortBy={filters.sort_by} currentOrder={filters.order} onSort={handleSort} />
+                                    </th>
                                     <th className="p-4 font-semibold">Members</th>
                                     <th className="p-4 font-semibold">Progress</th>
-                                    <th className="p-4 font-semibold">Last modified</th>
+                                    <th className="p-4">
+                                        <DataTableHeader title="Last modified" columnKey="updated_at" currentSortBy={filters.sort_by} currentOrder={filters.order} onSort={handleSort} />
+                                    </th>
                                     <th className="p-4 text-right"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                                {projects.length === 0 ? (
+                                {projectList.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                                        <td colSpan={6} className="p-8 text-center text-muted-foreground">
                                             No projects found matching your criteria.
                                         </td>
                                     </tr>
                                 ) : (
-                                    projects.map((project) => (
+                                    projectList.map((project) => (
                                         <tr
                                             key={project.id}
                                             onClick={() => router.visit(`/projects/${project.id}`)}
@@ -286,6 +298,9 @@ export default function ProjectsIndex({ projects = [], filters = {} }: ProjectsI
                                 )}
                             </tbody>
                         </table>
+                    </div>
+                    <div className="p-4 border-t border-border/50 bg-muted/20">
+                        <PaginationBar pagination={projects} />
                     </div>
                 </div>
             </div>

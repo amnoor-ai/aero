@@ -25,6 +25,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { CreateDepartmentModal } from '@/components/departments/CreateDepartmentModal';
 import { EditDepartmentModal } from '@/components/departments/EditDepartmentModal';
+import { DataTableHeader } from '@/components/ui/data-table-header';
+import { PaginationBar } from '@/components/ui/pagination-bar';
 
 interface DepartmentItem {
     id: number;
@@ -43,15 +45,28 @@ interface DepartmentItem {
 }
 
 interface DepartmentsIndexProps {
-    departments: DepartmentItem[];
+    departments: {
+        data: DepartmentItem[];
+        current_page: number;
+        last_page: number;
+        from: number | null;
+        to: number | null;
+        total: number;
+        links: any[];
+    };
     workspaceUsers: any[];
     filters: any;
 }
 
-export default function DepartmentsIndex({ departments = [], workspaceUsers = [], filters = {} }: DepartmentsIndexProps) {
+export default function DepartmentsIndex({ departments, workspaceUsers = [], filters = {} }: DepartmentsIndexProps) {
+    const departmentList = departments.data || [];
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingDepartment, setEditingDepartment] = useState<DepartmentItem | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
+
+    const handleSort = (columnKey: string, order: 'asc' | 'desc') => {
+        router.get('/departments', { ...filters, sort_by: columnKey, order }, { preserveState: true, replace: true });
+    };
 
     const handleSearch = (query: string) => {
         router.get('/departments', { ...filters, search: query }, { preserveState: true, replace: true });
@@ -114,7 +129,7 @@ export default function DepartmentsIndex({ departments = [], workspaceUsers = []
                             />
                         </div>
                         <span className="text-xs text-muted-foreground font-medium hidden sm:inline-block">
-                            {departments.length} Departments
+                            {departments.total || 0} Departments
                         </span>
                     </div>
 
@@ -158,7 +173,7 @@ export default function DepartmentsIndex({ departments = [], workspaceUsers = []
                 </div>
 
                 {/* Content Grid or Table */}
-                {departments.length === 0 ? (
+                {departmentList.length === 0 ? (
                     <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
                         <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto text-muted-foreground">
                             <Building2 className="w-6 h-6" />
@@ -173,71 +188,47 @@ export default function DepartmentsIndex({ departments = [], workspaceUsers = []
                     </div>
                 ) : viewMode === 'grid' ? (
                     /* GRID VIEW */
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {departments.map((dept) => (
-                            <div
-                                key={dept.id}
-                                className="bg-card border border-border rounded-2xl p-5 hover:border-purple-500/40 transition-all duration-200 group flex flex-col justify-between space-y-4 shadow-sm"
-                            >
-                                {/* Card Header */}
-                                <div>
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-400 font-mono font-bold text-xs border border-purple-500/20">
-                                                {dept.code}
-                                            </div>
-                                            <div>
-                                                <Link href={`/departments/${dept.id}`} className="font-bold text-foreground text-base group-hover:text-purple-400 transition truncate block max-w-[180px]">
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {departmentList.map((dept) => (
+                                <div
+                                    key={dept.id}
+                                    className="bg-card border border-border rounded-2xl p-5 hover:border-purple-500/40 transition-all duration-200 group flex flex-col justify-between space-y-4 shadow-sm"
+                                >
+                                    {/* Card Header */}
+                                    <div>
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center space-x-3">
+                                                <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-400 font-mono text-xs font-bold border border-purple-500/20">
+                                                    {dept.code}
+                                                </span>
+                                                <h3 className="font-bold text-foreground text-base group-hover:text-purple-400 transition">
                                                     {dept.name}
-                                                </Link>
-                                                {dept.location && (
-                                                    <div className="flex items-center text-[11px] text-muted-foreground mt-0.5">
-                                                        <MapPin className="w-3 h-3 mr-1 text-muted-foreground/70 shrink-0" />
-                                                        <span className="truncate">{dept.location}</span>
-                                                    </div>
-                                                )}
+                                                </h3>
                                             </div>
+
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <button className="p-1 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
+                                                        <MoreVertical className="w-4 h-4" />
+                                                    </button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-40">
+                                                    <DropdownMenuItem onClick={() => router.visit(`/departments/${dept.id}`)}>
+                                                        <Eye className="w-3.5 h-3.5 mr-2 text-muted-foreground" /> View Overview
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setEditingDepartment(dept)}>
+                                                        <Pencil className="w-3.5 h-3.5 mr-2 text-muted-foreground" /> Edit
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
 
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition">
-                                                    <MoreVertical className="w-4 h-4" />
-                                                </button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-44">
-                                                <DropdownMenuItem onClick={() => router.visit(`/departments/${dept.id}`)}>
-                                                    <Eye className="w-4 h-4 mr-2" /> View Details
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => setEditingDepartment(dept)}>
-                                                    <Pencil className="w-4 h-4 mr-2" /> Edit Department
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDelete(dept.id)} className="text-destructive focus:bg-destructive/10">
-                                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
-
-                                    {dept.description && (
-                                        <p className="text-xs text-muted-foreground mt-3 line-clamp-2 leading-relaxed">
-                                            {dept.description}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {/* Director Info */}
-                                <div className="pt-3 border-t border-border/50 flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <div className="w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold border border-primary/30">
-                                            {dept.director ? dept.director.name.charAt(0) : '?'}
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Director</p>
-                                            <p className="text-xs font-semibold text-foreground truncate max-w-[120px]">
-                                                {dept.director ? dept.director.name : 'Unassigned'}
+                                        {dept.description && (
+                                            <p className="text-xs text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                                                {dept.description}
                                             </p>
-                                        </div>
+                                        )}
                                     </div>
 
                                     {/* Stats Badges */}
@@ -251,29 +242,30 @@ export default function DepartmentsIndex({ departments = [], workspaceUsers = []
                                             <span className="font-semibold text-foreground">{dept.projects_count}</span>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Mandate Attachment Download Strip */}
-                                <div className="pt-2">
-                                    {dept.mandate_file_name ? (
-                                        <a
-                                            href={`/departments/${dept.id}/mandate`}
-                                            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-purple-500/5 hover:bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:text-purple-200 transition group/btn text-xs font-medium"
-                                        >
-                                            <div className="flex items-center space-x-2 truncate">
-                                                <FileText className="w-4 h-4 text-purple-400 shrink-0" />
-                                                <span className="truncate">{dept.mandate_file_name}</span>
+                                    {/* Mandate Attachment Download Strip */}
+                                    <div className="pt-2">
+                                        {dept.mandate_file_name ? (
+                                            <a
+                                                href={`/departments/${dept.id}/mandate`}
+                                                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-purple-500/5 hover:bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:text-purple-200 transition group/btn text-xs font-medium"
+                                            >
+                                                <div className="flex items-center space-x-2 truncate">
+                                                    <FileText className="w-4 h-4 text-purple-400 shrink-0" />
+                                                    <span className="truncate">{dept.mandate_file_name}</span>
+                                                </div>
+                                                <Download className="w-3.5 h-3.5 text-purple-400 group-hover/btn:scale-110 transition shrink-0 ml-1" />
+                                            </a>
+                                        ) : (
+                                            <div className="p-2 text-center rounded-xl border border-dashed border-border text-[11px] text-muted-foreground font-mono">
+                                                No Mandate Attached
                                             </div>
-                                            <Download className="w-3.5 h-3.5 text-purple-400 group-hover/btn:scale-110 transition shrink-0 ml-1" />
-                                        </a>
-                                    ) : (
-                                        <div className="p-2 text-center rounded-xl border border-dashed border-border text-[11px] text-muted-foreground font-mono">
-                                            No Mandate Attached
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                        <PaginationBar pagination={departments} />
                     </div>
                 ) : (
                     /* TABLE VIEW */
@@ -282,9 +274,13 @@ export default function DepartmentsIndex({ departments = [], workspaceUsers = []
                             <table className="w-full text-left text-xs text-muted-foreground">
                                 <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
                                     <tr>
-                                        <th className="p-4 font-semibold">Code / Department</th>
+                                        <th className="p-4">
+                                            <DataTableHeader title="Code / Department" columnKey="name" currentSortBy={filters.sort_by} currentOrder={filters.order} onSort={handleSort} />
+                                        </th>
                                         <th className="p-4 font-semibold">Director</th>
-                                        <th className="p-4 font-semibold">Location</th>
+                                        <th className="p-4">
+                                            <DataTableHeader title="Location" columnKey="location" currentSortBy={filters.sort_by} currentOrder={filters.order} onSort={handleSort} />
+                                        </th>
                                         <th className="p-4 font-semibold">Members</th>
                                         <th className="p-4 font-semibold">Projects</th>
                                         <th className="p-4 font-semibold">Mandate Document</th>
@@ -292,7 +288,7 @@ export default function DepartmentsIndex({ departments = [], workspaceUsers = []
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
-                                    {departments.map((dept) => (
+                                    {departmentList.map((dept) => (
                                         <tr
                                             key={dept.id}
                                             onClick={() => router.visit(`/departments/${dept.id}`)}
@@ -369,6 +365,9 @@ export default function DepartmentsIndex({ departments = [], workspaceUsers = []
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                        <div className="p-4 border-t border-border/50 bg-muted/20">
+                            <PaginationBar pagination={departments} />
                         </div>
                     </div>
                 )}
