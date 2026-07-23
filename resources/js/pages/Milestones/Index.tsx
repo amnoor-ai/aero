@@ -169,7 +169,8 @@ export default function MilestonesIndex({ milestones = [], projects = [], filter
                         {milestones.map((m) => (
                             <div
                                 key={m.id}
-                                className="bg-card border border-border rounded-2xl p-5 hover:border-rose-500/40 transition-all duration-200 space-y-4 flex flex-col justify-between shadow-sm"
+                                onClick={() => m.project && router.visit(`/projects/${m.project.id}`)}
+                                className="bg-card border border-border rounded-2xl p-5 hover:border-rose-500/40 cursor-pointer transition-all duration-200 space-y-4 flex flex-col justify-between shadow-sm group"
                             >
                                 <div className="space-y-3">
                                     <div className="flex items-start justify-between">
@@ -180,7 +181,7 @@ export default function MilestonesIndex({ milestones = [], projects = [], filter
                                                     {m.project.name}
                                                 </span>
                                             )}
-                                            <h3 className="font-bold text-foreground text-base leading-snug">{m.name}</h3>
+                                            <h3 className="font-bold text-foreground text-base leading-snug group-hover:text-rose-400 transition">{m.name}</h3>
                                         </div>
 
                                         <span
@@ -227,7 +228,10 @@ export default function MilestonesIndex({ milestones = [], projects = [], filter
                                         </div>
 
                                         <button
-                                            onClick={() => handleDelete(m.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(m.id);
+                                            }}
                                             className="text-muted-foreground hover:text-destructive transition p-1"
                                             title="Delete Milestone"
                                         >
