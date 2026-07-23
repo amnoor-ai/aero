@@ -32,11 +32,20 @@ class ProjectController extends Controller
             $query->where('is_starred', true);
         }
 
-        $projects = $query->latest('updated_at')->get();
+        $sortBy = $request->input('sort_by', 'updated_at');
+        $order = strtolower($request->input('order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if (in_array($sortBy, ['name', 'status', 'created_at', 'updated_at'])) {
+            $query->orderBy($sortBy, $order);
+        } else {
+            $query->latest('updated_at');
+        }
+
+        $projects = $query->paginate(12)->withQueryString();
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
-            'filters' => $request->only(['search', 'status', 'starred']),
+            'filters' => $request->only(['search', 'status', 'starred', 'sort_by', 'order']),
         ]);
     }
 

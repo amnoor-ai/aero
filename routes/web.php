@@ -8,6 +8,7 @@ use App\Http\Controllers\MyDeskController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SprintController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskDirectoryController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\WorkPlanController;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +50,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/projects/{project}/toggle-star', [ProjectController::class, 'toggleStar'])->name('projects.toggle-star');
 
     // Tasks Routes
+    Route::get('/tasks', [TaskDirectoryController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks/export-csv', [TaskDirectoryController::class, 'exportCsv'])->name('tasks.export-csv');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::patch('/tasks/{task}/position', [TaskController::class, 'updatePosition'])->name('tasks.update-position');
