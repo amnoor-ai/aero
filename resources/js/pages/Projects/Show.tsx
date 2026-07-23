@@ -205,12 +205,12 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                                 style={{ width: `${stats.progress}%` }}
                             />
                         </div>
-                        <div className="flex items-center space-x-6 text-[11px] font-medium text-muted-foreground pt-1">
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[11px] font-medium text-muted-foreground pt-1">
                             <span><strong className="text-foreground">{stats.todo}</strong> To Do</span>
                             <span><strong className="text-foreground">{stats.inProgress}</strong> In Progress</span>
                             <span><strong className="text-foreground">{stats.inReview}</strong> In Review</span>
                             <span><strong className="text-foreground">{stats.completed}</strong> Completed</span>
-                            <span className="ml-auto"><strong className="text-foreground">{stats.total}</strong> Total Activities</span>
+                            <span className="sm:ml-auto"><strong className="text-foreground">{stats.total}</strong> Total Activities</span>
                         </div>
                     </div>
                 </div>

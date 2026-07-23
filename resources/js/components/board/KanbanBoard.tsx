@@ -74,11 +74,11 @@ export function KanbanBoard({ projectId, columns = [], users = [] }: KanbanBoard
     return (
         <div className="space-y-6">
             {/* Kanban Columns Grid */}
-            <div className="flex gap-4 overflow-x-auto pb-6">
+            <div className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scroll-smooth touch-pan-x min-h-[500px] max-w-full">
                 {columns.map((column) => (
                     <div
                         key={column.id}
-                        className="w-72 shrink-0 bg-secondary/80 border border-border/80 rounded-2xl p-4 flex flex-col max-h-[75vh]"
+                        className="w-72 sm:w-80 shrink-0 snap-start bg-secondary/80 border border-border/80 rounded-2xl p-4 flex flex-col max-h-[75vh]"
                     >
                         {/* Column Header */}
                         <div className="flex items-center justify-between pb-3 border-b border-border mb-3">
