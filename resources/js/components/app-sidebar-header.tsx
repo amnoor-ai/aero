@@ -13,6 +13,7 @@ import { CommandPalette } from '@/components/navigation/CommandPalette';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { useAppearance } from '@/hooks/use-appearance';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
@@ -24,12 +25,11 @@ export function AppSidebarHeader({
     const allProjects = props.allProjects || [];
 
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(true);
+    const { resolvedAppearance, updateAppearance } = useAppearance();
+    const isDarkMode = resolvedAppearance === 'dark';
 
     const toggleTheme = () => {
-        setIsDarkMode(!isDarkMode);
-        // Toggle dark mode class on document element if needed
-        document.documentElement.classList.toggle('dark');
+        updateAppearance(isDarkMode ? 'light' : 'dark');
     };
 
     return (
