@@ -100,6 +100,14 @@ export function AppSidebar() {
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/tasks')} asChild>
+                                        <Link href="/tasks">
+                                            <CheckSquare className="w-4 h-4 text-emerald-400" />
+                                            <span>Tasks Directory</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
                                     <SidebarMenuButton isActive={isCurrentUrl('/activities')} asChild>
                                         <Link href="/activities">
                                             <Activity className="w-4 h-4 text-cyan-400" />
