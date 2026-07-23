@@ -36,16 +36,21 @@
   - [x] Run `npm run build` to compile Vite assets (Passed)
   - [x] Execute Pest test suite (Passed - 5/5 tests)
 
-- [ ] **Phase 6: Departments & Org Structure**
-  - [ ] Create migration for `departments` table & update `users` table
-  - [ ] Build `Department` model and relationships
-  - [ ] Implement `DepartmentController` CRUD endpoints
-  - [ ] Create `Departments/Index.tsx` page (Table grid + add/edit modals)
-  - [ ] Integrate Departments in Sidebar navigation
-  - [ ] Write Pest feature tests for Department workflows
+- [x] **Phase 6: Departments & Org Structure**
+  - [x] Create migration for `departments` table & update `users` table
+  - [x] Build `Department` model and relationships
+  - [x] Implement `DepartmentController` CRUD endpoints & private mandate download
+  - [x] Create `Departments/Index.tsx` & `Departments/Show.tsx` pages (Table grid + add/edit modals)
+  - [x] Integrate Departments in Sidebar navigation
+  - [x] Write Pest feature tests for Department workflows (`DepartmentTest.php`)
 
-- [ ] **Phase 7: Project Assets & Branding**
-  - [ ] Add `logo_path` and `cover_image_path` columns to `projects` table
-  - [ ] Implement file upload storage logic for project logos and banner images
-  - [ ] Build "Docs & Assets" tab inside Project Show page (`Projects/Show.tsx`)
-  - [ ] Add file upload attachment list and external link inputs (e.g. Figma, API docs)
+- [x] **Phase 7: Projects & Planning Feature Suite**
+  - [x] Create migration for `milestones` table & add `milestone_id` to `tasks`
+  - [x] Build `Milestone` model with dynamic progress and overdue attributes
+  - [x] Implement `ActivityController`, `MilestoneController`, `WorkPlanController`
+  - [x] Build `Activities/Index.tsx` (Chronological task audit feed)
+  - [x] Build `Milestones/Index.tsx` (Phase gates & progress dashboard)
+  - [x] Build `WorkPlan/Index.tsx` (Horizontal Gantt roadmap)
+  - [x] Restructure left navigation sidebar under `Projects & Planning` group
+  - [x] Write Pest feature tests (`ProjectsAndPlanningTest.php`)
+

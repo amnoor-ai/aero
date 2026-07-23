@@ -61,3 +61,7 @@ Aero is a modern, high-density, developer-focused Project Management & Issue Tra
 ### 📅 Sprint Planning & Iterations
 * **Completion Date**: July 22, 2026
 * **Details**: Built end-to-end sprint iteration lifecycle (`future` → `active` → `completed`), SprintController, Backlog planning drawer, active sprint banner with story point metrics, completion rollover dialog, and Pest feature tests.
+
+### 📅 Projects & Planning Suite
+* **Completion Date**: July 23, 2026
+* **Details**: Restructured left navigation sidebar under Projects & Planning group. Built global Activities timeline feed (`/activities`), Milestones dashboard (`/milestones`) with project phase gates and dynamic progress, Work Plan Gantt roadmap (`/work-plan`), and Pest feature tests.
