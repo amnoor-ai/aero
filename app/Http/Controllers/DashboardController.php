@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
+use App\Models\TeamInvitation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -63,7 +64,7 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        $pendingInvitations = \App\Models\TeamInvitation::where('email', $user->email)
+        $pendingInvitations = TeamInvitation::where('email', $user->email)
             ->whereNull('accepted_at')
             ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
             ->with(['team', 'inviter'])
