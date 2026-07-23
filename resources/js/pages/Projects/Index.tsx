@@ -21,16 +21,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DataTableHeader } from '@/components/ui/data-table-header';
 import { PaginationBar } from '@/components/ui/pagination-bar';
+import { CreateProjectWizardModal } from '@/components/projects/CreateProjectWizardModal';
 
 interface ProjectItem {
     id: number;
     name: string;
     description?: string;
-    status: 'planned' | 'ongoing' | 'completed' | 'archived';
+    status: 'draft' | 'planned' | 'ongoing' | 'completed' | 'archived';
     is_starred: boolean;
     progress: number;
     tasks_count: number;
+    budget?: number;
+    tags?: string[];
     lead?: { name: string };
+    department?: { name: string; code: string };
     members?: any[];
 }
 
@@ -44,15 +48,14 @@ interface ProjectsIndexProps {
         total: number;
         links: any[];
     };
+    departments?: any[];
+    workspaceUsers?: any[];
     filters: any;
 }
 
-export default function ProjectsIndex({ projects, filters = {} }: ProjectsIndexProps) {
+export default function ProjectsIndex({ projects, departments = [], workspaceUsers = [], filters = {} }: ProjectsIndexProps) {
     const projectList = projects.data || [];
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [status, setStatus] = useState('ongoing');
 
     const handleSearch = (query: string) => {
         router.get('/projects', { ...filters, search: query }, { preserveState: true, replace: true });
@@ -66,23 +69,6 @@ export default function ProjectsIndex({ projects, filters = {} }: ProjectsIndexP
         e.preventDefault();
         e.stopPropagation();
         router.post(`/projects/${projectId}/toggle-star`, {}, { preserveScroll: true });
-    };
-
-    const handleCreateProject = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!name.trim()) return;
-
-        router.post(
-            '/projects',
-            { name, description, status },
-            {
-                onSuccess: () => {
-                    setIsCreateModalOpen(false);
-                    setName('');
-                    setDescription('');
-                },
-            }
-        );
     };
 
     const handleSort = (columnKey: string, order: 'asc' | 'desc') => {
@@ -305,67 +291,12 @@ export default function ProjectsIndex({ projects, filters = {} }: ProjectsIndexP
                 </div>
             </div>
 
-            {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 space-y-4">
-                        <h2 className="text-lg font-bold text-foreground">Create New Project</h2>
-
-                        <form onSubmit={handleCreateProject} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">Project Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="e.g. Payment Gateway Integration"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-lg p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
-                                <textarea
-                                    rows={3}
-                                    placeholder="Short summary of project goals..."
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-lg p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">Initial Status</label>
-                                <select
-                                    value={status}
-                                    onChange={(e) => setStatus(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-lg p-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
-                                >
-                                    <option value="planned">Planned</option>
-                                    <option value="ongoing">Ongoing</option>
-                                    <option value="completed">Completed</option>
-                                </select>
-                            </div>
-
-                            <div className="flex justify-end space-x-2 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCreateModalOpen(false)}
-                                    className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-primary hover:bg-primary/90 text-xs font-semibold text-foreground rounded-lg shadow-md shadow-sm"
-                                >
-                                    Create Project
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <CreateProjectWizardModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                departments={departments}
+                workspaceUsers={workspaceUsers}
+            />
         </>
     );
 }

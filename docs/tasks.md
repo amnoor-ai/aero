@@ -64,3 +64,11 @@
   - [x] Universal server-side pagination & sorting across Tasks, Projects, and Departments
   - [x] Write Pest feature tests (`TaskDirectoryTest.php`)
 
+- [x] **Phase 9: Multi-Step Project Creation Wizard**
+  - [x] Create wizard layout container with 3-step progress steppers
+  - [x] Build Step 1: Info & Timeline form (Double-column grid, focus tags, budget, date pickers)
+  - [x] Build Step 2: Attachments & Team (Branding logo/cover uploads and membership links)
+  - [x] Build Step 3: Review Panel (Structured summaries, Draft status default, and policy checkbox)
+  - [x] Update project save controller to support `draft` status and tag mappings
+  - [x] Write Pest feature tests (`ProjectWizardTest.php`)
+
