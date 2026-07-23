@@ -8,6 +8,9 @@ import {
     ChevronRight,
     Sliders,
     Building2,
+    Activity,
+    Target,
+    BarChart3,
 } from 'lucide-react';
 import { NavUser } from '@/components/nav-user';
 import { ProjectDrawer } from '@/components/navigation/ProjectDrawer';
@@ -91,7 +94,48 @@ export function AppSidebar() {
                         </SidebarGroupContent>
                     </SidebarGroup>
 
-                    {/* PROJECTS SECTION */}
+                    {/* PROJECTS & PLANNING SECTION */}
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Projects & Planning</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/activities')} asChild>
+                                        <Link href="/activities">
+                                            <Activity className="w-4 h-4 text-cyan-400" />
+                                            <span>Activities Feed</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/projects')} asChild>
+                                        <Link href="/projects">
+                                            <Folder className="w-4 h-4 text-indigo-400" />
+                                            <span>Projects Hub</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/milestones')} asChild>
+                                        <Link href="/milestones">
+                                            <Target className="w-4 h-4 text-rose-400" />
+                                            <span>Milestones</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive={isCurrentUrl('/work-plan')} asChild>
+                                        <Link href="/work-plan">
+                                            <BarChart3 className="w-4 h-4 text-amber-400" />
+                                            <span>Work Plan (Roadmap)</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+
+                    {/* STARRED PROJECTS SECTION */}
                     <SidebarGroup>
                         <SidebarGroupLabel className="flex items-center justify-between w-full pr-0">
                             <span>Starred Projects</span>
@@ -140,14 +184,6 @@ export function AppSidebar() {
                         <SidebarGroupLabel>System</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/projects')} asChild>
-                                        <Link href="/projects">
-                                            <Folder className="w-4 h-4 text-indigo-500" />
-                                            <span>Projects Directory</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
                                 <SidebarMenuItem>
                                     <SidebarMenuButton isActive={isCurrentUrl('/settings/profile')} asChild>
                                         <Link href="/settings/profile">

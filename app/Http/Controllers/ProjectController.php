@@ -45,6 +45,7 @@ class ProjectController extends Controller
         $project->load([
             'lead',
             'members',
+            'milestones',
             'sprints' => function ($q) {
                 $q->orderBy('created_at', 'desc');
             },

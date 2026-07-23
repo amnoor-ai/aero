@@ -66,6 +66,11 @@ class Project extends Model
         return $this->hasMany(Sprint::class);
     }
 
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(Milestone::class);
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);

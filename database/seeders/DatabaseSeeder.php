@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\BoardColumn;
 use App\Models\Department;
+use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
@@ -115,6 +116,25 @@ class DatabaseSeeder extends Seeder
             'start_date' => now()->subDays(10),
             'due_date' => now()->addDays(30),
             'is_starred' => true,
+        ]);
+
+        // 3b. Create Milestones
+        $milestone1 = Milestone::create([
+            'workspace_id' => $workspace->id,
+            'project_id' => $project1->id,
+            'name' => 'Beta V1.0 Core Release Gate',
+            'description' => 'Shipped core navigation, task details, and sprint planning engine.',
+            'due_date' => now()->addDays(15),
+            'status' => 'active',
+        ]);
+
+        $milestone2 = Milestone::create([
+            'workspace_id' => $workspace->id,
+            'project_id' => $project1->id,
+            'name' => 'Production V1.5 Hardening',
+            'description' => 'Perform load testing, security audits, and multi-tenant workspace isolation tests.',
+            'due_date' => now()->addDays(40),
+            'status' => 'active',
         ]);
 
         $project2 = Project::create([

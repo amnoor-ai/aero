@@ -371,8 +371,35 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 )}
 
                 {activeTab === 'milestones' && (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground text-sm">
-                        No milestones defined yet. Break your project into major phases to track progress.
+                    <div className="space-y-4">
+                        {(!project.milestones || project.milestones.length === 0) ? (
+                            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground text-sm">
+                                No milestones defined for this project yet. Create release targets to track project phase progress.
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {project.milestones.map((m: any) => (
+                                    <div key={m.id} className="bg-card border border-border rounded-2xl p-5 space-y-3 shadow-sm">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-bold text-foreground text-sm">{m.name}</h4>
+                                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${m.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
+                                                {m.status}
+                                            </span>
+                                        </div>
+                                        {m.description && <p className="text-xs text-muted-foreground line-clamp-2">{m.description}</p>}
+                                        <div className="space-y-1.5 pt-2 border-t border-border/50">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-muted-foreground">Progress</span>
+                                                <span className="font-mono font-bold text-foreground">{m.progress || 0}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted h-2 rounded-full overflow-hidden border border-border/40">
+                                                <div className="bg-rose-500 h-full rounded-full transition-all duration-500" style={{ width: `${m.progress || 0}%` }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 

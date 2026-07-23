@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\MyDeskController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SprintController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\Teams\TeamInvitationController;
+use App\Http\Controllers\WorkPlanController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -18,6 +21,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard & My Desk Command Center
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/my-desk', MyDeskController::class)->name('my-desk');
+
+    // Projects & Planning Suite Routes
+    Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
+    Route::get('/milestones', [MilestoneController::class, 'globalIndex'])->name('milestones.global');
+    Route::get('/work-plan', [WorkPlanController::class, 'index'])->name('work-plan.index');
+
+    Route::post('/projects/{project}/milestones', [MilestoneController::class, 'store'])->name('projects.milestones.store');
+    Route::patch('/milestones/{milestone}', [MilestoneController::class, 'update'])->name('milestones.update');
+    Route::delete('/milestones/{milestone}', [MilestoneController::class, 'destroy'])->name('milestones.destroy');
 
     // Departments & Org Structure Routes
     Route::resource('departments', DepartmentController::class);
