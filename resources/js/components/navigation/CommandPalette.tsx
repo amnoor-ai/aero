@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
-import { Search, Folder, CheckSquare, Plus, ArrowRight } from 'lucide-react';
+import { Search, Folder, CheckSquare, LayoutGrid, Activity, Target, BarChart3, Building2, Sliders } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface ProjectItem {
     id: number;
@@ -14,6 +14,21 @@ interface CommandPaletteProps {
     projects?: ProjectItem[];
 }
 
+const systemPages = [
+    { title: 'Dashboard Overview', href: '/dashboard', icon: LayoutGrid, group: 'Pages' },
+    { title: 'My Desk (Personal Tasks)', href: '/my-desk', icon: CheckSquare, group: 'Pages' },
+    { title: 'Tasks Directory', href: '/tasks', icon: CheckSquare, group: 'Pages' },
+    { title: 'Activities Feed', href: '/activities', icon: Activity, group: 'Pages' },
+    { title: 'Projects Hub', href: '/projects', icon: Folder, group: 'Pages' },
+    { title: 'Milestones Dashboard', href: '/milestones', icon: Target, group: 'Pages' },
+    { title: 'Work Plan (Roadmap)', href: '/work-plan', icon: BarChart3, group: 'Pages' },
+    { title: 'Workspace Departments', href: '/departments', icon: Building2, group: 'Pages' },
+    { title: 'Account Settings', href: '/settings/profile', icon: Sliders, group: 'Settings' },
+    { title: 'Security Settings', href: '/settings/security', icon: Sliders, group: 'Settings' },
+    { title: 'Appearance Settings', href: '/settings/appearance', icon: Sliders, group: 'Settings' },
+    { title: 'Teams Settings', href: '/settings/teams', icon: Sliders, group: 'Settings' },
+];
+
 export function CommandPalette({ isOpen, onClose, projects = [] }: CommandPaletteProps) {
     const [query, setQuery] = useState('');
 
@@ -21,6 +36,7 @@ export function CommandPalette({ isOpen, onClose, projects = [] }: CommandPalett
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
+
                 if (isOpen) {
                     onClose();
                 } else {
@@ -32,101 +48,115 @@ export function CommandPalette({ isOpen, onClose, projects = [] }: CommandPalett
         };
 
         window.addEventListener('keydown', handleKeyDown);
+
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, onClose]);
 
-    if (!isOpen) return null;
+    if (!isOpen) {
+return null;
+}
 
-    const filteredProjects = projects.filter(p =>
-        p.name.toLowerCase().includes(query.toLowerCase())
+    const trimmedQuery = query.toLowerCase().trim();
+
+    const filteredPages = systemPages.filter((p) =>
+        p.title.toLowerCase().includes(trimmedQuery)
+    );
+
+    const filteredProjects = projects.filter((p) =>
+        p.name.toLowerCase().includes(trimmedQuery)
     );
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/60 backdrop-blur-sm">
             <div
-                className="w-full max-w-xl bg-card border border-border rounded-xl shadow-2xl overflow-hidden"
+                className="w-full max-w-xl bg-card border border-border rounded-xl shadow-2xl overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Search Header */}
                 <div className="flex items-center px-4 py-3 border-b border-border">
-                    <Search className="w-5 h-5 text-muted-foreground mr-3" />
+                    <Search className="w-4 h-4 text-muted-foreground mr-3 shrink-0" />
                     <input
                         type="text"
                         autoFocus
-                        placeholder="Search tasks, projects, or actions... (Ctrl+K)"
+                        placeholder="Search pages, projects, or actions..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        className="w-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-sm"
+                        className="w-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-xs"
                     />
-                    <kbd className="px-2 py-0.5 text-xs text-muted-foreground bg-muted border border-border rounded shadow-sm">
+                    <kbd className="px-2 py-0.5 text-[10px] text-muted-foreground bg-muted border border-border rounded">
                         ESC
                     </kbd>
                 </div>
 
                 {/* Content Items */}
-                <div className="max-h-80 overflow-y-auto p-2 space-y-1">
-                    {/* Quick Navigation Section */}
-                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Quick Views
-                    </div>
-                    
-                    <button
-                        onClick={() => { router.visit('/dashboard'); onClose(); }}
-                        className="w-full flex items-center px-3 py-2 text-sm text-muted-foreground rounded-lg hover:bg-accent/80 hover:text-accent-foreground transition group"
-                    >
-                        <Folder className="w-4 h-4 text-primary mr-3" />
-                        <span>Dashboard Overview</span>
-                        <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 text-muted-foreground" />
-                    </button>
+                <div className="max-h-80 overflow-y-auto p-2 space-y-3">
+                    {/* Navigation Pages */}
+                    {filteredPages.length > 0 && (
+                        <div>
+                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                Navigation & Pages ({filteredPages.length})
+                            </div>
+                            {filteredPages.map((page) => {
+                                const Icon = page.icon;
 
-                    <button
-                        onClick={() => { router.visit('/my-desk'); onClose(); }}
-                        className="w-full flex items-center px-3 py-2 text-sm text-muted-foreground rounded-lg hover:bg-accent/80 hover:text-accent-foreground transition group"
-                    >
-                        <CheckSquare className="w-4 h-4 text-primary mr-3" />
-                        <span>My Desk (Personal Tasks)</span>
-                        <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 text-muted-foreground" />
-                    </button>
-
-                    <button
-                        onClick={() => { router.visit('/projects'); onClose(); }}
-                        className="w-full flex items-center px-3 py-2 text-sm text-muted-foreground rounded-lg hover:bg-accent/80 hover:text-accent-foreground transition group"
-                    >
-                        <Plus className="w-4 h-4 text-primary mr-3" />
-                        <span>All Projects Hub</span>
-                        <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 text-muted-foreground" />
-                    </button>
+                                return (
+                                    <button
+                                        key={page.href}
+                                        onClick={() => {
+                                            router.visit(page.href);
+                                            onClose();
+                                        }}
+                                        className="w-full flex items-center px-3 py-2 text-xs text-muted-foreground rounded-lg hover:bg-muted/80 hover:text-foreground transition group"
+                                    >
+                                        <Icon className="w-3.5 h-3.5 text-muted-foreground mr-3 shrink-0 group-hover:text-foreground" />
+                                        <span>{page.title}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* Filtered Projects Section */}
                     {filteredProjects.length > 0 && (
-                        <>
-                            <div className="px-2 pt-3 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <div>
+                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                                 Projects ({filteredProjects.length})
                             </div>
                             {filteredProjects.map((project) => (
                                 <button
                                     key={project.id}
-                                    onClick={() => { router.visit(`/projects/${project.id}`); onClose(); }}
-                                    className="w-full flex items-center px-3 py-2 text-sm text-muted-foreground rounded-lg hover:bg-accent/80 hover:text-accent-foreground transition group"
+                                    onClick={() => {
+                                        router.visit(`/projects/${project.id}`);
+                                        onClose();
+                                    }}
+                                    className="w-full flex items-center justify-between px-3 py-2 text-xs text-muted-foreground rounded-lg hover:bg-muted/80 hover:text-foreground transition group"
                                 >
-                                    <Folder className="w-4 h-4 text-muted-foreground mr-3 group-hover:text-primary" />
-                                    <span className="font-medium">{project.name}</span>
-                                    <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+                                    <div className="flex items-center space-x-3 truncate">
+                                        <Folder className="w-3.5 h-3.5 text-muted-foreground shrink-0 group-hover:text-foreground" />
+                                        <span className="font-medium text-foreground truncate">{project.name}</span>
+                                    </div>
+                                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-muted border border-border text-muted-foreground">
                                         {project.status}
                                     </span>
                                 </button>
                             ))}
-                        </>
+                        </div>
+                    )}
+
+                    {filteredPages.length === 0 && filteredProjects.length === 0 && (
+                        <div className="p-8 text-center text-xs text-muted-foreground">
+                            No matching results found for "{query}".
+                        </div>
                     )}
                 </div>
 
                 {/* Footer hint */}
-                <div className="px-4 py-2 border-t border-border/80 bg-background/40 text-xs text-muted-foreground flex items-center justify-between">
-                    <span>Press <kbd className="text-muted-foreground">ESC</kbd> to close</span>
-                    <span>Aero Command Center</span>
+                <div className="px-4 py-2 border-t border-border bg-muted/20 text-[11px] text-muted-foreground flex items-center justify-between">
+                    <span>Press <kbd className="text-foreground font-semibold">ESC</kbd> to exit</span>
+                    <span>Global Search</span>
                 </div>
             </div>
-            
+
             {/* Backdrop click dismiss */}
             <div className="fixed inset-0 -z-10" onClick={onClose} />
         </div>

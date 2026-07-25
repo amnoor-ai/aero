@@ -1,7 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     Search,
-    SlidersHorizontal,
     Sun,
     Moon,
     User,
@@ -60,28 +59,14 @@ export function AppSidebarHeader({
                     )}
                 </div>
 
-                {/* 2. Centralized Search Bar + Filter Button */}
+                {/* 2. Centralized Search Bar */}
                 <div className="flex items-center space-x-2 flex-1 max-w-md mx-4 justify-center">
                     <button
                         onClick={() => setIsCommandPaletteOpen(true)}
-                        className="w-full max-w-sm flex items-center justify-between px-4 py-2 bg-muted/50 border border-border hover:border-border/80 rounded-full text-xs text-muted-foreground hover:text-foreground transition shadow-sm group"
+                        className="w-full max-w-sm flex items-center px-4 py-2 bg-muted/50 border border-border hover:border-border/80 rounded-full text-xs text-muted-foreground hover:text-foreground transition shadow-sm group"
                     >
-                        <span className="flex items-center text-left truncate pr-2">
-                            <Search className="w-3.5 h-3.5 mr-2 text-muted-foreground group-hover:text-primary flex-shrink-0" />
-                            <span className="truncate">Search tasks, projects, users, inventory...</span>
-                        </span>
-                        <kbd className="px-1.5 py-0.5 text-[10px] bg-muted border border-border text-muted-foreground rounded-md font-mono">
-                            ⌘K
-                        </kbd>
-                    </button>
-
-                    {/* Filter Icon Button */}
-                    <button
-                        onClick={() => setIsCommandPaletteOpen(true)}
-                        className="p-2 rounded-full bg-muted/50 border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition"
-                        title="Filters"
-                    >
-                        <SlidersHorizontal className="w-4 h-4" />
+                        <Search className="w-3.5 h-3.5 mr-2.5 text-muted-foreground group-hover:text-foreground flex-shrink-0" />
+                        <span className="truncate">Search anything...</span>
                     </button>
                 </div>
 

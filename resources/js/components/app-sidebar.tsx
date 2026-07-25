@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutGrid,
@@ -12,9 +11,9 @@ import {
     Target,
     BarChart3,
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { NavUser } from '@/components/nav-user';
 import { ProjectDrawer } from '@/components/navigation/ProjectDrawer';
-import { useCurrentUrl } from '@/hooks/use-current-url';
 import {
     Sidebar,
     SidebarContent,
@@ -27,6 +26,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useCurrentUrl } from '@/hooks/use-current-url';
 
 export function AppSidebar() {
     const { props } = usePage<any>();
@@ -67,26 +67,38 @@ export function AppSidebar() {
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/dashboard')} asChild>
-                                        <Link href="/dashboard">
-                                            <LayoutGrid className="w-4 h-4 text-primary" />
-                                            <span>Dashboard</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/dashboard')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/dashboard" className="group/link flex items-center gap-2">
+                                            <LayoutGrid className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Dashboard</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/my-desk')} asChild>
-                                        <Link href="/my-desk">
-                                            <CheckSquare className="w-4 h-4 text-emerald-500" />
-                                            <span>My Desk</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/my-desk')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/my-desk" className="group/link flex items-center gap-2">
+                                            <CheckSquare className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">My Desk</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/departments')} asChild>
-                                        <Link href="/departments">
-                                            <Building2 className="w-4 h-4 text-purple-400" />
-                                            <span>Departments</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/departments')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/departments" className="group/link flex items-center gap-2">
+                                            <Building2 className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Departments</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -100,42 +112,62 @@ export function AppSidebar() {
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/tasks')} asChild>
-                                        <Link href="/tasks">
-                                            <CheckSquare className="w-4 h-4 text-emerald-400" />
-                                            <span>Tasks Directory</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/tasks')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/tasks" className="group/link flex items-center gap-2">
+                                            <CheckSquare className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Tasks Directory</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/activities')} asChild>
-                                        <Link href="/activities">
-                                            <Activity className="w-4 h-4 text-cyan-400" />
-                                            <span>Activities Feed</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/activities')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/activities" className="group/link flex items-center gap-2">
+                                            <Activity className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Activities Feed</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/projects')} asChild>
-                                        <Link href="/projects">
-                                            <Folder className="w-4 h-4 text-indigo-400" />
-                                            <span>Projects Hub</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/projects')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/projects" className="group/link flex items-center gap-2">
+                                            <Folder className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Projects Hub</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/milestones')} asChild>
-                                        <Link href="/milestones">
-                                            <Target className="w-4 h-4 text-rose-400" />
-                                            <span>Milestones</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/milestones')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/milestones" className="group/link flex items-center gap-2">
+                                            <Target className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Milestones</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/work-plan')} asChild>
-                                        <Link href="/work-plan">
-                                            <BarChart3 className="w-4 h-4 text-amber-400" />
-                                            <span>Work Plan (Roadmap)</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/work-plan')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/work-plan" className="group/link flex items-center gap-2">
+                                            <BarChart3 className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Work Plan (Roadmap)</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -159,10 +191,14 @@ export function AppSidebar() {
                                 {starredProjects.length > 0 ? (
                                     starredProjects.slice(0, 5).map((project: any) => (
                                         <SidebarMenuItem key={project.id}>
-                                            <SidebarMenuButton isActive={isCurrentUrl(`/projects/${project.id}`)} asChild>
-                                                <Link href={`/projects/${project.id}`}>
-                                                    <Folder className="w-4 h-4 text-amber-500 shrink-0" />
-                                                    <span className="truncate">{project.name}</span>
+                                            <SidebarMenuButton 
+                                                isActive={isCurrentUrl(`/projects/${project.id}`)} 
+                                                className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                                asChild
+                                            >
+                                                <Link href={`/projects/${project.id}`} className="group/link flex items-center gap-2">
+                                                    <Folder className="w-4 h-4 text-muted-foreground group-hover/link:text-primary shrink-0 transition-colors" />
+                                                    <span className="truncate font-medium">{project.name}</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
@@ -170,16 +206,16 @@ export function AppSidebar() {
                                 ) : (
                                     <SidebarMenuItem>
                                         <SidebarMenuButton asChild>
-                                            <Link href="/projects" className="text-muted-foreground">
-                                                <Folder className="w-4 h-4" />
+                                            <Link href="/projects" className="group/link text-muted-foreground hover:text-foreground">
+                                                <Folder className="w-4 h-4 text-muted-foreground group-hover/link:text-primary" />
                                                 <span>All Projects Hub</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                 )}
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton onClick={() => setIsProjectDrawerOpen(true)} className="text-muted-foreground">
-                                        <Plus className="w-4 h-4" />
+                                    <SidebarMenuButton onClick={() => setIsProjectDrawerOpen(true)} className="text-muted-foreground hover:text-foreground">
+                                        <Plus className="w-4 h-4 text-muted-foreground" />
                                         <span>Projects Drawer</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -193,10 +229,14 @@ export function AppSidebar() {
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton isActive={isCurrentUrl('/settings/profile')} asChild>
-                                        <Link href="/settings/profile">
-                                            <Sliders className="w-4 h-4 text-muted-foreground" />
-                                            <span>Settings</span>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/settings/profile')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/settings/profile" className="group/link flex items-center gap-2">
+                                            <Sliders className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Settings</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
