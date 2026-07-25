@@ -44,6 +44,16 @@ This document provides a comprehensive day-by-day record of all features built, 
   - Bound `Status`, `Priority`, `Assigned To`, and `Dates` in `TaskDetailModal.tsx` to reactive component state (`assigneeId`, `statusId`, `priority`, `dueDate`, `gitBranch`) that updates immediately on selection.
   - Added a dedicated **Git Branch** input field with auto-save (`router.patch('/tasks/' + task.id, { git_branch })`).
   - Removed hardcoded `"SA "` prefix from user select options and formatted with name & email (`Name (email)`).
+
+### 6. Functional User Avatar, Profile Upload, User Header Dropdown & Notification Bell
+
+- **Feature & Architecture**:
+  1. **Settings Separation**: Structurally separated settings into **Account Settings** (`/settings/profile`, `/settings/security`) vs **App Settings** (`/settings/appearance`, `/settings/teams`).
+  2. **User Avatar Migration & Storage**: Created migration `2026_07_25_130000_add_avatar_to_users_table.php`, added `$appends = ['avatar_url']` to `User.php`, connected `php artisan storage:link`, and updated `ProfileController.php` to handle avatar image uploads & removals.
+  3. **Profile Picture Uploader UI**: Updated `resources/js/pages/settings/profile.tsx` with an interactive avatar upload component (image preview, file chooser, remove photo action).
+  4. **User Header Dropdown Menu**: Converted the top header user pill in `AppSidebarHeader.tsx` into a styled `<DropdownMenu>` featuring user identity details, Account Settings links, App Settings links, and a functional **Log Out** button (`POST /logout`).
+  5. **Notification Bell Dropdown**: Created `NotificationDropdown.tsx` with an unread badge counter, activity feed (task assignments, sprint launches, milestone progress), "Mark all as read" button, and direct navigation links.
+- **Files Modified**: `database/migrations/2026_07_25_130000_add_avatar_to_users_table.php`, `app/Models/User.php`, `app/Concerns/ProfileValidationRules.php`, `app/Http/Controllers/Settings/ProfileController.php`, `resources/js/pages/settings/profile.tsx`, `resources/js/components/app-sidebar-header.tsx`, `resources/js/components/navigation/NotificationDropdown.tsx`, `docs/dev-log.md`.
 - **Files Modified**: `routes/web.php`, `app/Http/Controllers/ProjectController.php`, `resources/js/pages/Projects/Show.tsx`, `resources/js/components/tasks/TaskDetailModal.tsx`, `resources/js/components/projects/CreateProjectWizardModal.tsx`, `resources/js/components/sprints/CreateSprintModal.tsx`, `resources/js/pages/Milestones/Index.tsx`.
 
 ---

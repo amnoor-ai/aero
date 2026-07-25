@@ -1,14 +1,29 @@
-import { usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Search,
     SlidersHorizontal,
     Sun,
     Moon,
-    Bell,
+    User,
+    ShieldCheck,
+    Palette,
+    Users,
+    LogOut,
+    ChevronDown,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { CommandPalette } from '@/components/navigation/CommandPalette';
+import { NotificationDropdown } from '@/components/navigation/NotificationDropdown';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppearance } from '@/hooks/use-appearance';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
@@ -45,7 +60,7 @@ export function AppSidebarHeader({
                     )}
                 </div>
 
-                {/* 2. Centralized Search Bar + Filter Button (Inspired by Taskly) */}
+                {/* 2. Centralized Search Bar + Filter Button */}
                 <div className="flex items-center space-x-2 flex-1 max-w-md mx-4 justify-center">
                     <button
                         onClick={() => setIsCommandPaletteOpen(true)}
@@ -76,7 +91,7 @@ export function AppSidebarHeader({
                     <button
                         onClick={toggleTheme}
                         suppressHydrationWarning
-                        className="flex items-center p-1 bg-muted/50 border border-border rounded-full text-muted-foreground hover:text-foreground transition"
+                        className="flex items-center p-1 bg-muted/50 border border-border rounded-full text-muted-foreground hover:text-foreground transition cursor-pointer"
                         title="Toggle theme"
                     >
                         <div
@@ -97,21 +112,103 @@ export function AppSidebarHeader({
                         </div>
                     </button>
 
-                    {/* Notification Bell Button */}
-                    <button className="relative p-2 rounded-full bg-muted/50 border border-border text-muted-foreground hover:text-foreground transition">
-                        <Bell className="w-4 h-4" />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
-                    </button>
+                    {/* Notification Bell Dropdown */}
+                    <NotificationDropdown />
 
-                    {/* User Profile Pill */}
-                    <div className="flex items-center space-x-2.5 pl-2 pr-3 py-1 bg-muted/50 border border-border rounded-full">
-                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-bold uppercase">
-                            {user.name.charAt(0)}
-                        </div>
-                        <span className="text-xs font-semibold text-foreground hidden md:inline truncate max-w-[100px]">
-                            {user.name}
-                        </span>
-                    </div>
+                    {/* User Profile Dropdown Menu */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="flex items-center space-x-2.5 pl-2 pr-3 py-1 bg-muted/50 border border-border hover:border-primary/50 rounded-full cursor-pointer transition shadow-sm group">
+                                {user.avatar_url ? (
+                                    <img
+                                        src={user.avatar_url}
+                                        alt={user.name}
+                                        className="w-6 h-6 rounded-full object-cover border border-primary/30"
+                                    />
+                                ) : (
+                                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-bold uppercase">
+                                        {user.name.charAt(0)}
+                                    </div>
+                                )}
+                                <span className="text-xs font-semibold text-foreground hidden md:inline truncate max-w-[100px]">
+                                    {user.name}
+                                </span>
+                                <ChevronDown className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition" />
+                            </button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end" className="w-64 p-1.5 rounded-2xl shadow-xl border border-border">
+                            {/* User Identity Header */}
+                            <div className="flex items-center space-x-3 p-2.5 border-b border-border mb-1">
+                                {user.avatar_url ? (
+                                    <img
+                                        src={user.avatar_url}
+                                        alt={user.name}
+                                        className="w-9 h-9 rounded-full object-cover border border-primary/30"
+                                    />
+                                ) : (
+                                    <div className="w-9 h-9 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center border border-primary/20">
+                                        {user.name.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-xs font-bold text-foreground truncate">{user.name}</h4>
+                                    <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                                </div>
+                            </div>
+
+                            {/* Category 1: Account Settings */}
+                            <DropdownMenuGroup>
+                                <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-1">
+                                    Account Settings
+                                </DropdownMenuLabel>
+                                <DropdownMenuItem asChild className="cursor-pointer text-xs rounded-xl">
+                                    <Link href="/settings/profile" className="flex items-center w-full px-2 py-1.5">
+                                        <User className="w-4 h-4 mr-2.5 text-primary" />
+                                        Profile Settings
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild className="cursor-pointer text-xs rounded-xl">
+                                    <Link href="/settings/security" className="flex items-center w-full px-2 py-1.5">
+                                        <ShieldCheck className="w-4 h-4 mr-2.5 text-emerald-500" />
+                                        Security & Passwords
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+
+                            <DropdownMenuSeparator className="my-1" />
+
+                            {/* Category 2: App Settings */}
+                            <DropdownMenuGroup>
+                                <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-1">
+                                    App Settings
+                                </DropdownMenuLabel>
+                                <DropdownMenuItem asChild className="cursor-pointer text-xs rounded-xl">
+                                    <Link href="/settings/appearance" className="flex items-center w-full px-2 py-1.5">
+                                        <Palette className="w-4 h-4 mr-2.5 text-violet-500" />
+                                        Appearance & Theme
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild className="cursor-pointer text-xs rounded-xl">
+                                    <Link href="/settings/teams" className="flex items-center w-full px-2 py-1.5">
+                                        <Users className="w-4 h-4 mr-2.5 text-amber-500" />
+                                        Team & Members
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+
+                            <DropdownMenuSeparator className="my-1" />
+
+                            {/* Logout Button */}
+                            <DropdownMenuItem
+                                onClick={() => router.post('/logout')}
+                                className="cursor-pointer text-xs rounded-xl text-destructive focus:text-destructive focus:bg-destructive/10 px-2 py-1.5"
+                            >
+                                <LogOut className="w-4 h-4 mr-2.5 text-destructive" />
+                                Log Out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </header>
 
