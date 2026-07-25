@@ -1,19 +1,17 @@
-import React, { useState } from 'react';
-import { usePage, Link } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import {
     Search,
     SlidersHorizontal,
     Sun,
     Moon,
     Bell,
-    User as UserIcon,
-    Zap,
 } from 'lucide-react';
-import { CommandPalette } from '@/components/navigation/CommandPalette';
+import React, { useState } from 'react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { CommandPalette } from '@/components/navigation/CommandPalette';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import { useAppearance } from '@/hooks/use-appearance';
+import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
@@ -77,10 +75,12 @@ export function AppSidebarHeader({
                     {/* Dark/Light Mode Switch Pill */}
                     <button
                         onClick={toggleTheme}
+                        suppressHydrationWarning
                         className="flex items-center p-1 bg-muted/50 border border-border rounded-full text-muted-foreground hover:text-foreground transition"
                         title="Toggle theme"
                     >
                         <div
+                            suppressHydrationWarning
                             className={`p-1.5 rounded-full transition ${
                                 isDarkMode ? 'bg-muted text-primary shadow-sm' : 'text-muted-foreground'
                             }`}
@@ -88,6 +88,7 @@ export function AppSidebarHeader({
                             <Moon className="w-3.5 h-3.5" />
                         </div>
                         <div
+                            suppressHydrationWarning
                             className={`p-1.5 rounded-full transition ${
                                 !isDarkMode ? 'bg-muted text-primary shadow-sm' : 'text-muted-foreground'
                             }`}

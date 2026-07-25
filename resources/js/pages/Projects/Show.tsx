@@ -1,23 +1,21 @@
-import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { KanbanBoard } from '@/components/board/KanbanBoard';
 import {
-    Folder,
     Star,
-    LayoutGrid,
-    ListFilter,
-    Users,
     FileText,
     MessageSquare,
-    MapPin,
-    Calendar,
     Pencil,
     Plus,
     Paperclip,
     Upload,
-    File,
-    X,
+    Target,
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { KanbanBoard } from '@/components/board/KanbanBoard';
+import { CompleteSprintModal } from '@/components/sprints/CompleteSprintModal';
+import { CreateSprintModal } from '@/components/sprints/CreateSprintModal';
+import { SprintBacklogDrawer } from '@/components/sprints/SprintBacklogDrawer';
+import { SprintHeaderStrip } from '@/components/sprints/SprintHeaderStrip';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -25,6 +23,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
     Sheet,
     SheetContent,
@@ -32,12 +31,6 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { SprintHeaderStrip } from '@/components/sprints/SprintHeaderStrip';
-import { SprintBacklogDrawer } from '@/components/sprints/SprintBacklogDrawer';
-import { CreateSprintModal } from '@/components/sprints/CreateSprintModal';
-import { CompleteSprintModal } from '@/components/sprints/CompleteSprintModal';
 
 interface ProjectProps {
     project: any;
@@ -63,8 +56,44 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
     const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
     const [isCompleteSprintOpen, setIsCompleteSprintOpen] = useState(false);
 
+    const [isEditInfoOpen, setIsEditInfoOpen] = useState(false);
+    const [editName, setEditName] = useState(project.name);
+    const [editDescription, setEditDescription] = useState(project.description || '');
+
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const [statusValue, setStatusValue] = useState(project.status);
+
+    const [isDiscussionOpen, setIsDiscussionOpen] = useState(false);
+    const [discussionTitle, setDiscussionTitle] = useState('');
+
+    const [isUploadOpen, setIsUploadOpen] = useState(false);
+
     const handleToggleStar = () => {
         router.post(`/projects/${project.id}/toggle-star`, {}, { preserveScroll: true });
+    };
+
+    const handleEditInfoSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.put(
+            `/projects/${project.id}`,
+            { name: editName, description: editDescription },
+            {
+                preserveScroll: true,
+                onSuccess: () => setIsEditInfoOpen(false),
+            }
+        );
+    };
+
+    const handleUpdateStatusSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.put(
+            `/projects/${project.id}`,
+            { status: statusValue },
+            {
+                preserveScroll: true,
+                onSuccess: () => setIsStatusOpen(false),
+            }
+        );
     };
 
     return (
@@ -78,31 +107,37 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                         <div className="space-y-2">
                             <div className="flex items-center gap-3">
                                 <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">{project.name}</h1>
-                                <Dialog>
+                                <Dialog open={isEditInfoOpen} onOpenChange={setIsEditInfoOpen}>
                                     <DialogTrigger asChild>
                                         <button className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition">
                                             <Pencil className="w-4 h-4" />
                                         </button>
                                     </DialogTrigger>
                                     <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Edit Project Details</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="space-y-4 py-4">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium">Project Name</label>
-                                                <Input defaultValue={project.name} />
+                                        <form onSubmit={handleEditInfoSubmit}>
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Project Details</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-4 py-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium">Project Name</label>
+                                                    <Input
+                                                        value={editName}
+                                                        onChange={(e) => setEditName(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium">Description</label>
+                                                    <textarea 
+                                                        className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm"
+                                                        value={editDescription}
+                                                        onChange={(e) => setEditDescription(e.target.value)}
+                                                        placeholder="Enter a brief overview of this project..."
+                                                    />
+                                                </div>
+                                                <Button type="submit" className="w-full">Save Changes</Button>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium">Description</label>
-                                                <textarea 
-                                                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background"
-                                                    defaultValue={project.description || ''}
-                                                    placeholder="Enter a brief overview of this project..."
-                                                />
-                                            </div>
-                                            <Button className="w-full">Save Changes</Button>
-                                        </div>
+                                        </form>
                                     </DialogContent>
                                 </Dialog>
                                 <span
@@ -162,7 +197,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                                 </SheetContent>
                             </Sheet>
 
-                            <Dialog>
+                            <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
                                 <DialogTrigger asChild>
                                     <button className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center">
                                         <Plus className="w-4 h-4 mr-2" />
@@ -170,24 +205,28 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                                     </button>
                                 </DialogTrigger>
                                 <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Update Project Status</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-4 py-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium">Status</label>
-                                            <select className="w-full p-2 rounded-md border border-input bg-background" defaultValue={project.status}>
-                                                <option value="planned">Planned</option>
-                                                <option value="ongoing">Ongoing</option>
-                                                <option value="completed">Completed</option>
-                                            </select>
+                                    <form onSubmit={handleUpdateStatusSubmit}>
+                                        <DialogHeader>
+                                            <DialogTitle>Update Project Status</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4 py-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Status</label>
+                                                <select
+                                                    className="w-full p-2 rounded-md border border-input bg-background text-sm"
+                                                    value={statusValue}
+                                                    onChange={(e) => setStatusValue(e.target.value)}
+                                                >
+                                                    <option value="draft">Draft</option>
+                                                    <option value="planned">Planned</option>
+                                                    <option value="ongoing">Ongoing</option>
+                                                    <option value="completed">Completed</option>
+                                                    <option value="archived">Archived</option>
+                                                </select>
+                                            </div>
+                                            <Button type="submit" className="w-full">Update Status</Button>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium">Progress Update (%)</label>
-                                            <Input type="number" min="0" max="100" defaultValue={stats.progress} />
-                                        </div>
-                                        <Button className="w-full">Update Status</Button>
-                                    </div>
+                                    </form>
                                 </DialogContent>
                             </Dialog>
                         </div>
@@ -307,10 +346,29 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
                             <h3 className="text-lg font-bold text-foreground">Project Documents</h3>
-                            <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                                <Upload className="w-4 h-4 mr-2" />
-                                Add Attachment
-                            </Button>
+                            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+                                <DialogTrigger asChild>
+                                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        Add Attachment
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Upload Project File</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="border-2 border-dashed border-border rounded-xl p-8 text-center space-y-2">
+                                            <Upload className="w-8 h-8 text-muted-foreground mx-auto" />
+                                            <p className="text-xs text-muted-foreground font-medium">Drag & drop files here or click to browse</p>
+                                            <input type="file" className="hidden" id="file-upload-input" onChange={() => setIsUploadOpen(false)} />
+                                            <Button size="sm" variant="outline" onClick={() => document.getElementById('file-upload-input')?.click()}>
+                                                Select Local File
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
                         </div>
                         <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground flex flex-col items-center">
                             <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
@@ -318,7 +376,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                             </div>
                             <h4 className="text-foreground font-semibold mb-1">No Attachments Available yet</h4>
                             <p className="text-sm">Upload files, documents, and images to share with your team.</p>
-                            <Button variant="outline" className="mt-6">
+                            <Button variant="outline" className="mt-6" onClick={() => setIsUploadOpen(true)}>
                                 <Plus className="w-4 h-4 mr-2" />
                                 Browse Files
                             </Button>
@@ -431,9 +489,38 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                                     <h3 className="font-bold text-base text-foreground">Project Team Discussions</h3>
                                     <p className="text-xs text-muted-foreground">Architectural RFCs, sprint retrospectives, and technical syncs</p>
                                 </div>
-                                <Button size="sm" className="bg-primary text-primary-foreground text-xs">
-                                    + Start Discussion
-                                </Button>
+                                <Dialog open={isDiscussionOpen} onOpenChange={setIsDiscussionOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button size="sm" className="bg-primary text-primary-foreground text-xs">
+                                            + Start Discussion
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Start Discussion Topic</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4 py-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Topic Title</label>
+                                                <Input
+                                                    placeholder="e.g. Architecture decision RFC for microservices"
+                                                    value={discussionTitle}
+                                                    onChange={(e) => setDiscussionTitle(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Initial Message</label>
+                                                <textarea
+                                                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm"
+                                                    placeholder="Share context and initial notes for discussion..."
+                                                />
+                                            </div>
+                                            <Button className="w-full" onClick={() => setIsDiscussionOpen(false)}>
+                                                Post Topic
+                                            </Button>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
 
                             <div className="p-8 text-center text-muted-foreground space-y-2 bg-muted/20 border border-dashed border-border rounded-xl">

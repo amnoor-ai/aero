@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import {
-    Folder,
     Calendar,
     DollarSign,
     Tag as TagIcon,
@@ -14,9 +12,9 @@ import {
     Building2,
     User as UserIcon,
     ShieldCheck,
-    FileText,
     Sparkles,
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface Department {
@@ -61,12 +59,15 @@ export function CreateProjectWizardModal({
         members: [] as { user_id: number; role: string }[],
     });
 
-    if (!isOpen) return null;
+    if (!isOpen) {
+return null;
+}
 
     const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
         if (('key' in e && e.key === 'Enter') || e.type === 'click') {
             e.preventDefault();
             const trimmed = tagInput.trim();
+
             if (trimmed && !data.tags.includes(trimmed)) {
                 setData('tags', [...data.tags, trimmed]);
                 setTagInput('');
@@ -80,6 +81,7 @@ export function CreateProjectWizardModal({
 
     const handleToggleMember = (userId: number) => {
         const exists = data.members.find((m) => m.user_id === userId);
+
         if (exists) {
             setData('members', data.members.filter((m) => m.user_id !== userId));
         } else {
@@ -221,6 +223,7 @@ export function CreateProjectWizardModal({
                                     </label>
                                     <input
                                         type="date"
+                                        min="2000-01-01"
                                         value={data.start_date}
                                         onChange={(e) => setData('start_date', e.target.value)}
                                         className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary"
@@ -233,6 +236,7 @@ export function CreateProjectWizardModal({
                                     </label>
                                     <input
                                         type="date"
+                                        min="2000-01-01"
                                         value={data.due_date}
                                         onChange={(e) => setData('due_date', e.target.value)}
                                         className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary"

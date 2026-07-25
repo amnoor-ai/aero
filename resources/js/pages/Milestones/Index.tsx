@@ -1,22 +1,14 @@
-import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     Target,
     Search,
     Plus,
     Calendar,
-    CheckCircle2,
-    AlertCircle,
     Folder,
-    MoreVertical,
-    Pencil,
     Trash2,
-    Clock,
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import {
     Dialog,
     DialogContent,
@@ -25,6 +17,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ProjectItem {
     id: number;
@@ -66,7 +61,10 @@ export default function MilestonesIndex({ milestones = [], projects = [], filter
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedProject || !name.trim()) return;
+
+        if (!selectedProject || !name.trim()) {
+return;
+}
 
         router.post(
             `/projects/${selectedProject}/milestones`,
@@ -306,6 +304,7 @@ export default function MilestonesIndex({ milestones = [], projects = [], filter
                                 <Input
                                     id="due_date"
                                     type="date"
+                                    min="2000-01-01"
                                     value={dueDate}
                                     onChange={(e) => setDueDate(e.target.value)}
                                 />

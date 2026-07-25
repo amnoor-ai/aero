@@ -1,5 +1,7 @@
-import React from 'react';
 import { useForm } from '@inertiajs/react';
+import { Zap } from 'lucide-react';
+import React from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -8,11 +10,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Zap } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CreateSprintModalProps {
     isOpen: boolean;
@@ -20,16 +20,21 @@ interface CreateSprintModalProps {
     projectId: number;
 }
 
-export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintModalProps) {
-    const defaultStartDate = new Date().toISOString().split('T')[0];
-    const defaultEndDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+const getDefaultDates = () => {
+    const now = new Date();
+    const startDate = now.toISOString().split('T')[0];
+    const endDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+    return { startDate, endDate };
+};
+
+export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintModalProps) {
     const { data, setData, post, processing, errors, reset } = useForm({
         project_id: projectId,
         name: '',
         goal: '',
-        start_date: defaultStartDate,
-        end_date: defaultEndDate,
+        start_date: getDefaultDates().startDate,
+        end_date: getDefaultDates().endDate,
         status: 'future',
     });
 
@@ -93,6 +98,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                                 <Input
                                     id="start_date"
                                     type="date"
+                                    min="2000-01-01"
                                     value={data.start_date}
                                     onChange={(e) => setData('start_date', e.target.value)}
                                 />
@@ -102,6 +108,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                                 <Input
                                     id="end_date"
                                     type="date"
+                                    min="2000-01-01"
                                     value={data.end_date}
                                     onChange={(e) => setData('end_date', e.target.value)}
                                 />

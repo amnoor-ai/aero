@@ -4,9 +4,54 @@ This document provides a comprehensive day-by-day record of all features built, 
 
 ---
 
+## 📅 July 25, 2026: Project Status Update, Task Date Fix, 1970s Date Restrictions & Button Handlers
+
+### 1. Functional Update Project Status & Edit Project Info Buttons
+
+- **Issue**: The "Update Status" and "Edit Project Details" (Pencil icon) buttons on the project detail view (`Projects/Show.tsx`) opened dialog modals, but the buttons inside had no event handlers or state management, and the backend route `PUT /projects/{project}` was missing.
+- **Root Cause & Solution**:
+  - Registered `PUT /projects/{project}` in `routes/web.php` pointing to `ProjectController@update`.
+  - Implemented `update` method in `ProjectController.php` supporting project `name`, `description`, `status`, `start_date`, `due_date`, and `budget`.
+  - Connected state (`isStatusOpen`, `statusValue`, `isEditInfoOpen`, `editName`, `editDescription`) and `handleUpdateStatusSubmit` / `handleEditInfoSubmit` form handlers in `Projects/Show.tsx`.
+
+### 2. Task Due Date Editing & Timezone Offset Bug Fix
+
+- **Issue**: Editing task due dates in `TaskDetailModal.tsx` shifted the date backward by a day each time it was edited, and clearing the date input threw validation errors.
+- **Root Cause & Solution**:
+  - `new Date(task.due_date).toISOString()` converted local time midnight to UTC, applying timezone offsets that shifted the displayed date backward.
+  - Implemented a regex-based `formatDateForInput` helper to extract `YYYY-MM-DD` directly without JS timezone conversion.
+  - Updated `onChange` handler to send `null` when a date is cleared (`e.target.value || null`).
+
+### 3. Project Start Date 1970s Boundary Validation
+
+- **Issue**: Users could scroll back or enter dates in the 1970s when setting project start and target completion dates.
+- **Root Cause & Solution**:
+  - HTML date input elements lacked `min` attribute constraints, and backend validation in `ProjectController.php` allowed any date string.
+  - Added `min="2000-01-01"` to date pickers in `CreateProjectWizardModal.tsx` and `Projects/Show.tsx`.
+  - Added `after_or_equal:2000-01-01` validation rules in `ProjectController.php`.
+
+### 4. Interactive Modals for Discussions and Attachments
+
+- **Issue**: "+ Start Discussion", "Add Attachment", and "Browse Files" buttons under the Discussions and Files tabs on `Projects/Show.tsx` had no click handlers attached.
+- **Solution**: Connected working `<Dialog>` modals for starting discussion topics and selecting local file attachments.
+
+### 5. Task Assignee Selection Fix & Git Branch Integration
+
+- **Issue**:
+  1. The "Assigned To" select dropdown in `TaskDetailModal.tsx` allowed opening but failed to select new assignees because `<select value={task.assignee_id}>` was controlled directly by stale props without reactive component state.
+  2. The `git_branch` column existed in the database and models but lacked an input field in the task detail sidebar.
+- **Solution**:
+  - Bound `Status`, `Priority`, `Assigned To`, and `Dates` in `TaskDetailModal.tsx` to reactive component state (`assigneeId`, `statusId`, `priority`, `dueDate`, `gitBranch`) that updates immediately on selection.
+  - Added a dedicated **Git Branch** input field with auto-save (`router.patch('/tasks/' + task.id, { git_branch })`).
+  - Removed hardcoded `"SA "` prefix from user select options and formatted with name & email (`Name (email)`).
+- **Files Modified**: `routes/web.php`, `app/Http/Controllers/ProjectController.php`, `resources/js/pages/Projects/Show.tsx`, `resources/js/components/tasks/TaskDetailModal.tsx`, `resources/js/components/projects/CreateProjectWizardModal.tsx`, `resources/js/components/sprints/CreateSprintModal.tsx`, `resources/js/pages/Milestones/Index.tsx`.
+
+---
+
 ## 📅 July 23, 2026: Projects & Planning Suite, Universal Data Grid, Project Wizard & System Polish
 
 ### 1. Persistent Light/Dark Mode Theme Selection
+
 - **Issue**: Toggling the application to Light mode reverted back to Dark mode whenever the page was refreshed.
 - **Root Cause Analysis**:
   1. The top header theme toggle button in `AppSidebarHeader.tsx` managed its own local React state (`const [isDarkMode, setIsDarkMode] = useState(true)`). Clicking it toggled in-memory classes without updating `localStorage` or setting the server cookie.
@@ -19,6 +64,7 @@ This document provides a comprehensive day-by-day record of all features built, 
 ---
 
 ### 2. High-Density 2-Column Task Detail Modal Redesign
+
 - **User Request**: Redesign the task status update and detail view into a wide 2-column modal/drawer matching enterprise standards (breadcrumbs, editable description, child sub-tasks table, status/priority/assignee/followers/dates/tags sidebar, documents dropzone).
 - **Architectural Implementation**:
   - **Modal Shell**: Expanded `TaskDetailModal.tsx` into a responsive `max-w-5xl lg:max-w-6xl` drawer overlay.
@@ -36,6 +82,7 @@ This document provides a comprehensive day-by-day record of all features built, 
 ---
 
 ### 3. Automatic Board Column Seeding & Empty Project View Fix
+
 - **Issue**: Visiting newly created or unseeded project pages (`/projects/{id}`) resulted in an empty screen below the tab bar.
 - **Root Cause Analysis**:
   1. Projects created manually or prior to default column seeding had 0 board columns in the database, causing the `KanbanBoard` component to render 0 columns.
@@ -51,6 +98,7 @@ This document provides a comprehensive day-by-day record of all features built, 
 ---
 
 ### 4. System-Wide Mobile Responsiveness Pass
+
 - **Issue**: Kanban board columns cramped on small mobile viewports (< 768px); page headers and statistics rows overflowed horizontally.
 - **Solution & Architectural Decision**:
   - **Kanban Board**: Added touch-friendly momentum snap scrolling (`snap-x`, `scroll-smooth`, `touch-pan-x`, `min-h-[500px]`) on `KanbanBoard.tsx`.
@@ -61,6 +109,7 @@ This document provides a comprehensive day-by-day record of all features built, 
 ---
 
 ### 5. Milestone & Project Card Click Navigation Fix
+
 - **Issue**: Clicking milestone cards in `/milestones` or project cards in `/projects` did not trigger navigation.
 - **Solution**: Added `router.visit(`/projects/${m.project.id}`)` click handlers to milestone cards in `Milestones/Index.tsx` and project rows in `Projects/Index.tsx`.
 - **Files Modified**: `resources/js/pages/Milestones/Index.tsx`, `resources/js/pages/Projects/Index.tsx`.
@@ -68,6 +117,7 @@ This document provides a comprehensive day-by-day record of all features built, 
 ---
 
 ### 6. Phase 9: Multi-Step Project Creation Wizard
+
 - **Features Implemented**:
   - Database migration `2026_07_23_123000_add_budget_tags_and_draft_to_projects_table.php` adding `budget`, `tags`, `logo_path`, and `draft` status attributes to `projects`.
   - Updated `Project` model `$fillable` array and `$casts` (`budget` as `decimal:2`, `tags` as `array`).
@@ -82,6 +132,7 @@ This document provides a comprehensive day-by-day record of all features built, 
 ---
 
 ### 7. Phase 8: Universal Data Table Pagination & Column Controls
+
 - **Features Implemented**:
   - Built global Tasks Directory (`/tasks`) with `TaskDirectoryController.php`.
   - Reusable UI controls: `DataTableHeader.tsx` (sorting/hiding menu), `ColumnVisibilityPopover.tsx` (column visibility checklist popover), `PaginationBar.tsx` (server-side Inertia pagination links).
@@ -94,6 +145,7 @@ This document provides a comprehensive day-by-day record of all features built, 
 ---
 
 ### 8. Phase 7: Projects & Planning Suite Integration
+
 - **Features Implemented**:
   - Restructured left navigation sidebar under `Projects & Planning` collapsable group.
   - Global Activities timeline feed (`/activities`) via `ActivityFeedController.php`.
@@ -106,10 +158,12 @@ This document provides a comprehensive day-by-day record of all features built, 
 ## 📅 July 22, 2026: Departments & Sprint Planning Engine
 
 ### 1. Workspace Departments Suite
+
 - **Features**: Department listing, director assignments, office locations, private mandate document uploads/downloads via `DepartmentController.php`.
 - **Files**: `app/Models/Department.php`, `app/Http/Controllers/DepartmentController.php`, `resources/js/pages/Departments/Index.tsx`, `resources/js/pages/Departments/Show.tsx`.
 
 ### 2. Sprint Iteration Engine
+
 - **Features**: Sprint lifecycle management (`future` → `active` → `completed`), active sprint banner with story point metrics, Backlog planning drawer, sprint completion rollover dialog.
 - **Files**: `app/Models/Sprint.php`, `app/Http/Controllers/SprintController.php`, `resources/js/components/sprints/SprintHeaderStrip.tsx`, `resources/js/components/sprints/BacklogDrawer.tsx`.
 
@@ -118,7 +172,9 @@ This document provides a comprehensive day-by-day record of all features built, 
 ## 📅 July 20 & 21, 2026: Initial Architecture, Database Setup & UI Design
 
 ### 1. Multi-Tenant Ready Schema
+
 - **Features**: Workspace scoping across all tables (`workspace_id`), seeders, models, and factory setup.
 
 ### 2. Core User Interface Architecture
+
 - **Features**: Slate-black dark theme design system, `AppSidebar.tsx` navigation, command palette search (`⌘K`), Kanban Board, My Desk command center, Task Detail drawer.
