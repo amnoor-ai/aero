@@ -144,8 +144,8 @@ class ProjectController extends Controller
             'lead_id' => 'nullable|exists:users,id',
             'description' => 'nullable|string',
             'status' => 'required|string|in:draft,planned,ongoing,completed,archived',
-            'start_date' => 'nullable|date',
-            'due_date' => 'nullable|date',
+            'start_date' => 'nullable|date|after_or_equal:2000-01-01',
+            'due_date' => 'nullable|date|after_or_equal:2000-01-01',
             'budget' => 'nullable|numeric|min:0',
             'tags' => 'nullable|array',
             'tags.*' => 'string',
@@ -208,6 +208,24 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.show', $project->id)
             ->with('success', 'Project created successfully.');
+    }
+
+    public function update(Request $request, Project $project): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'department_id' => 'nullable|exists:departments,id',
+            'lead_id' => 'nullable|exists:users,id',
+            'description' => 'nullable|string',
+            'status' => 'sometimes|required|string|in:draft,planned,ongoing,completed,archived',
+            'start_date' => 'nullable|date|after_or_equal:2000-01-01',
+            'due_date' => 'nullable|date|after_or_equal:2000-01-01',
+            'budget' => 'nullable|numeric|min:0',
+        ]);
+
+        $project->update($validated);
+
+        return back()->with('success', 'Project updated successfully.');
     }
 
     public function toggleStar(Project $project): RedirectResponse
