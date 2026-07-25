@@ -1,24 +1,15 @@
-import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import {
     X,
-    CheckSquare,
-    MessageSquare,
-    Clock,
     GitBranch,
-    User,
-    Calendar,
-    AlertCircle,
     Plus,
     Send,
     Trash2,
     Pencil,
     Paperclip,
     ClipboardList,
-    ChevronDown,
-    Tag,
-    Users,
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -70,6 +61,16 @@ interface TaskDetailModalProps {
 }
 
 export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [] }: TaskDetailModalProps) {
+    const formatDateForInput = (dateStr?: string) => {
+        if (!dateStr) {
+return '';
+}
+
+        const match = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+
+        return match ? match[1] : '';
+    };
+
     const [activeTab, setActiveTab] = useState<'tasks' | 'checklist' | 'comments' | 'activity'>('tasks');
     const [newChecklistTitle, setNewChecklistTitle] = useState('');
     const [newCommentContent, setNewCommentContent] = useState('');
@@ -80,7 +81,27 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
     const [isAddingSubtask, setIsAddingSubtask] = useState(false);
     const [subtaskTitle, setSubtaskTitle] = useState('');
 
-    if (!isOpen || !task) return null;
+    const [prevTaskKey, setPrevTaskKey] = useState<string>('');
+    const [dueDate, setDueDate] = useState<string>(formatDateForInput(task?.due_date));
+    const [statusId, setStatusId] = useState<number>(task?.board_column_id || 0);
+    const [priority, setPriority] = useState<string>(task?.priority || 'medium');
+    const [assigneeId, setAssigneeId] = useState<string | number>(task?.assignee_id || '');
+    const [gitBranch, setGitBranch] = useState<string>(task?.git_branch || '');
+
+    const currentTaskKey = `${task?.id}-${task?.due_date}-${task?.board_column_id}-${task?.priority}-${task?.assignee_id}-${task?.git_branch || ''}`;
+
+    if (task && currentTaskKey !== prevTaskKey) {
+        setPrevTaskKey(currentTaskKey);
+        setDueDate(formatDateForInput(task.due_date));
+        setStatusId(task.board_column_id);
+        setPriority(task.priority);
+        setAssigneeId(task.assignee_id || '');
+        setGitBranch(task.git_branch || '');
+    }
+
+    if (!isOpen || !task) {
+        return null;
+    }
 
     const defaultColumns = [
         { id: 1, name: 'Backlog' },
@@ -101,21 +122,43 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
               ]
             : defaultColumns);
 
+    const handleDueDateChange = (newDate: string) => {
+        setDueDate(newDate);
+        router.patch(
+            `/tasks/${task.id}`,
+            { due_date: newDate || null },
+            { preserveScroll: true }
+        );
+    };
+
     const handleStatusChange = (columnId: number) => {
+        setStatusId(columnId);
         router.patch(`/tasks/${task.id}`, { board_column_id: columnId }, { preserveScroll: true });
     };
 
-    const handlePriorityChange = (priority: string) => {
-        router.patch(`/tasks/${task.id}`, { priority }, { preserveScroll: true });
+    const handlePriorityChange = (newPriority: string) => {
+        setPriority(newPriority);
+        router.patch(`/tasks/${task.id}`, { priority: newPriority }, { preserveScroll: true });
     };
 
-    const handleAssigneeChange = (assigneeId: number | string) => {
-        router.patch(`/tasks/${task.id}`, { assignee_id: assigneeId || null }, { preserveScroll: true });
+    const handleAssigneeChange = (newAssigneeId: string | number) => {
+        const val = newAssigneeId ? Number(newAssigneeId) : '';
+        setAssigneeId(val);
+        router.patch(`/tasks/${task.id}`, { assignee_id: val || null }, { preserveScroll: true });
+    };
+
+    const handleGitBranchChange = (newBranch: string) => {
+        setGitBranch(newBranch);
+        router.patch(`/tasks/${task.id}`, { git_branch: newBranch || null }, { preserveScroll: true });
     };
 
     const handleAddChecklist = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newChecklistTitle.trim()) return;
+
+        if (!newChecklistTitle.trim()) {
+return;
+}
+
         router.post(`/tasks/${task.id}/checklists`, { title: newChecklistTitle }, {
             preserveScroll: true,
             onSuccess: () => setNewChecklistTitle(''),
@@ -128,7 +171,11 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
 
     const handleAddComment = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newCommentContent.trim()) return;
+
+        if (!newCommentContent.trim()) {
+return;
+}
+
         router.post(`/tasks/${task.id}/comments`, { content: newCommentContent }, {
             preserveScroll: true,
             onSuccess: () => setNewCommentContent(''),
@@ -151,10 +198,15 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
 
     const handleAddTag = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newTag.trim()) return;
+
+        if (!newTag.trim()) {
+return;
+}
+
         if (!tags.includes(newTag.trim())) {
             setTags([...tags, newTag.trim()]);
         }
+
         setNewTag('');
     };
 
@@ -164,7 +216,11 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
 
     const handleAddSubtask = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!subtaskTitle.trim()) return;
+
+        if (!subtaskTitle.trim()) {
+return;
+}
+
         router.post(`/tasks/${task.id}/checklists`, { title: subtaskTitle }, {
             preserveScroll: true,
             onSuccess: () => {
@@ -517,7 +573,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                             <div className="space-y-1.5">
                                 <label className="text-xs font-medium text-muted-foreground">Status</label>
                                 <select
-                                    value={task.board_column_id || activeColumns[0]?.id}
+                                    value={statusId || activeColumns[0]?.id}
                                     onChange={(e) => handleStatusChange(Number(e.target.value))}
                                     className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-medium"
                                 >
@@ -533,7 +589,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                             <div className="space-y-1.5">
                                 <label className="text-xs font-medium text-muted-foreground">Priority</label>
                                 <select
-                                    value={task.priority}
+                                    value={priority}
                                     onChange={(e) => handlePriorityChange(e.target.value)}
                                     className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring capitalize font-medium"
                                 >
@@ -548,33 +604,31 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                             <div className="space-y-1.5">
                                 <label className="text-xs font-medium text-muted-foreground">Assigned To</label>
                                 <select
-                                    value={task.assignee_id || ''}
+                                    value={assigneeId}
                                     onChange={(e) => handleAssigneeChange(e.target.value)}
                                     className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-medium"
                                 >
                                     <option value="">Unassigned</option>
                                     {users.map((u) => (
                                         <option key={u.id} value={u.id}>
-                                            SA {u.name}
+                                            {u.name} ({u.email})
                                         </option>
                                     ))}
                                 </select>
                             </div>
 
-                            {/* Followed By */}
+                            {/* Git Branch */}
                             <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">Followed By</label>
-                                <select
-                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-medium"
-                                    defaultValue=""
-                                >
-                                    <option value="">No followers</option>
-                                    {users.map((u) => (
-                                        <option key={u.id} value={u.id}>
-                                            {u.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                <label className="text-xs font-medium text-muted-foreground flex items-center">
+                                    <GitBranch className="w-3.5 h-3.5 mr-1 text-primary" /> Git Branch
+                                </label>
+                                <input
+                                    type="text"
+                                    value={gitBranch}
+                                    onChange={(e) => handleGitBranchChange(e.target.value)}
+                                    placeholder="feature/task-branch"
+                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-mono"
+                                />
                             </div>
 
                             {/* Dates */}
@@ -582,9 +636,10 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                                 <label className="text-xs font-medium text-muted-foreground">Dates</label>
                                 <input
                                     type="date"
-                                    value={task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : ''}
-                                    onChange={(e) => router.patch(`/tasks/${task.id}`, { due_date: e.target.value }, { preserveScroll: true })}
-                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-mono"
+                                    min="2000-01-01"
+                                    value={dueDate}
+                                    onChange={(e) => handleDueDateChange(e.target.value)}
+                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-mono cursor-pointer"
                                 />
                             </div>
 

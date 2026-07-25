@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { Plus, CheckSquare, MessageSquare, AlertCircle, User, GitBranch } from 'lucide-react';
+import { Plus, CheckSquare, MessageSquare, User, GitBranch } from 'lucide-react';
+import React, { useState } from 'react';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 
 interface TaskItem {
@@ -50,7 +50,10 @@ export function KanbanBoard({ projectId, columns = [], users = [] }: KanbanBoard
 
     const handleCreateTask = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newTaskTitle.trim() || !createColumnId) return;
+
+        if (!newTaskTitle.trim() || !createColumnId) {
+            return;
+        }
 
         router.post(
             '/tasks',
