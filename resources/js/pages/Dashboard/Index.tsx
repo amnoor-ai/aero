@@ -60,7 +60,7 @@ export default function Dashboard({ metrics, timeframe = 'month', pendingInvitat
                 {/* Standardized Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground">Workspace Overview</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Workspace Overview</h1>
                         <p className="text-xs text-muted-foreground mt-1">
                             Execution health, operational load, and recent organization updates.
                         </p>

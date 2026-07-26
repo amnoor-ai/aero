@@ -134,7 +134,7 @@ export default function TasksIndex({
                             <CheckSquare className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+                            <h1 className="text-2xl font-bold tracking-tight text-foreground">
                                 Tasks Directory
                             </h1>
                             <p className="text-sm text-muted-foreground mt-0.5">

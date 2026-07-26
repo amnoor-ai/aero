@@ -78,20 +78,20 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
         <>
             <Head title="My Desk - Aero DevPM" />
 
-            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-6">
+            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{today}</p>
-                        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">{greeting}, {userName}!</h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Here is a summary of your activities and urgent tasks.
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">{greeting}, {userName}!</h1>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {today} • Here is a summary of your activities and urgent tasks.
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <select
                             value={filters.scope || 'me'}
                             onChange={(e) => handleFilterChange('scope', e.target.value)}
-                            className="bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary transition"
+                            className="bg-card border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
                         >
                             <option value="me">Assigned to Me</option>
                             <option value="all">All Workspace Tasks</option>
@@ -99,64 +99,66 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                     </div>
                 </div>
 
+                {/* Stat Metric Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-center justify-between">
+                    <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-between shadow-2xs">
                         <div>
                             <span className="text-xs font-semibold text-destructive">Overdue</span>
-                            <span className="block text-2xl font-extrabold text-foreground mt-1">{counts.overdue}</span>
+                            <span className="block text-xl font-bold text-foreground mt-0.5">{counts.overdue}</span>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-destructive/20 text-destructive">
-                            <AlertCircle className="w-5 h-5" />
+                        <div className="p-2 rounded-lg bg-destructive/10 text-destructive">
+                            <AlertCircle className="w-4 h-4" />
                         </div>
                     </div>
 
-                    <div className="p-4 bg-accent/10 border border-accent/30 rounded-2xl flex items-center justify-between">
+                    <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-between shadow-2xs">
                         <div>
-                            <span className="text-xs font-semibold text-accent-foreground">Due Today</span>
-                            <span className="block text-2xl font-extrabold text-foreground mt-1">{counts.dueToday}</span>
+                            <span className="text-xs font-semibold text-amber-500">Due Today</span>
+                            <span className="block text-xl font-bold text-foreground mt-0.5">{counts.dueToday}</span>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-accent/20 text-accent-foreground">
-                            <Clock className="w-5 h-5" />
+                        <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                            <Clock className="w-4 h-4" />
                         </div>
                     </div>
 
-                    <div className="p-4 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between">
+                    <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-between shadow-2xs">
                         <div>
                             <span className="text-xs font-semibold text-primary">Due Tomorrow</span>
-                            <span className="block text-2xl font-extrabold text-foreground mt-1">{counts.dueTomorrow}</span>
+                            <span className="block text-xl font-bold text-foreground mt-0.5">{counts.dueTomorrow}</span>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-primary/20 text-primary">
-                            <Calendar className="w-5 h-5" />
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                            <Calendar className="w-4 h-4" />
                         </div>
                     </div>
 
-                    <div className="p-4 bg-card border border-border rounded-2xl flex items-center justify-between">
+                    <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-between shadow-2xs">
                         <div>
                             <span className="text-xs font-semibold text-muted-foreground">Upcoming / Backlog</span>
-                            <span className="block text-2xl font-extrabold text-foreground mt-1">{counts.upcoming}</span>
+                            <span className="block text-xl font-bold text-foreground mt-0.5">{counts.upcoming}</span>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-muted text-muted-foreground">
-                            <CheckCircle2 className="w-5 h-5" />
+                        <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+                            <CheckCircle2 className="w-4 h-4" />
                         </div>
                     </div>
                 </div>
 
-                <div className="p-4 bg-card border border-border rounded-2xl flex flex-wrap items-center gap-3">
+                {/* Inline Filter Toolbar */}
+                <div className="flex flex-wrap items-center gap-3">
                     <div className="relative flex-1 min-w-[200px]">
-                        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+                        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2" />
                         <input
                             type="text"
                             placeholder="Filter activities..."
                             value={filters.search || ''}
                             onChange={(e) => handleFilterChange('search', e.target.value)}
-                            className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-ring"
+                            className="w-full bg-card border border-border rounded-md pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                     </div>
 
                     <select
                         value={filters.project_id || ''}
                         onChange={(e) => handleFilterChange('project_id', e.target.value)}
-                        className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-ring"
+                        className="bg-card border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
                     >
                         <option value="">All Projects</option>
                         {projects.map((p) => (
@@ -169,7 +171,7 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                     <select
                         value={filters.priority || ''}
                         onChange={(e) => handleFilterChange('priority', e.target.value)}
-                        className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-ring"
+                        className="bg-card border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
                     >
                         <option value="">All Priorities</option>
                         <option value="low">Low</option>
@@ -179,49 +181,53 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                     </select>
                 </div>
 
-                <div className="space-y-4">
-                    <div className="bg-card border border-destructive/30 rounded-2xl overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('overdue')}
-                            className="w-full px-5 py-3.5 bg-destructive/10 hover:bg-destructive/20 flex items-center justify-between transition text-destructive font-semibold text-sm"
-                        >
-                            <div className="flex items-center space-x-2">
+                {/* Timeframe Sections */}
+                <div className="space-y-6">
+                    {/* Overdue Section */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                                 <AlertCircle className="w-4 h-4 text-destructive" />
                                 <span>Overdue Activities ({tasks.overdue.length})</span>
-                            </div>
-                            {openSections.overdue ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </button>
+                            </h2>
+                            <button
+                                onClick={() => toggleSection('overdue')}
+                                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-medium"
+                            >
+                                {openSections.overdue ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </button>
+                        </div>
 
                         {openSections.overdue && (
-                            <div className="divide-y divide-border">
+                            <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border">
                                 {tasks.overdue.length === 0 ? (
-                                    <div className="p-4 text-center text-muted-foreground text-xs">No overdue activities! 🎉</div>
+                                    <div className="p-4 text-center text-muted-foreground text-xs font-medium">No overdue activities! 🎉</div>
                                 ) : (
                                     tasks.overdue.map((task) => (
                                         <div
                                             key={task.id}
                                             onClick={() => openTaskModal(task)}
-                                            className="p-4 hover:bg-muted/40 cursor-pointer flex items-center justify-between transition group"
+                                            className="p-3.5 hover:bg-muted/50 cursor-pointer flex items-center justify-between transition-colors group"
                                         >
                                             <div className="space-y-1">
                                                 <div className="flex items-center space-x-2">
-                                                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition">
+                                                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
                                                         {task.title}
                                                     </span>
-                                                    <span className="text-xs text-muted-foreground">({task.project?.name})</span>
+                                                    <span className="text-xs text-muted-foreground font-medium">({task.project?.name})</span>
                                                 </div>
                                                 <div className="flex items-center space-x-3 text-xs text-muted-foreground">
-                                                    <span className="text-destructive font-mono text-[11px]">
+                                                    <span className="text-destructive font-mono text-[11px] font-medium">
                                                         Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}
                                                     </span>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center space-x-3">
-                                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30">
+                                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20">
                                                     {task.priority}
                                                 </span>
-                                                <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                                                <span className="text-xs px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                                                     {task.board_column?.name || 'To Do'}
                                                 </span>
                                             </div>
@@ -232,43 +238,46 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                         )}
                     </div>
 
-                    <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('dueToday')}
-                            className="w-full px-5 py-3.5 bg-background/60 hover:bg-muted/40 flex items-center justify-between transition text-accent-foreground font-semibold text-sm"
-                        >
-                            <div className="flex items-center space-x-2">
-                                <Clock className="w-4 h-4 text-accent-foreground" />
+                    {/* Today's Section */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-amber-500" />
                                 <span>Today's Activities ({tasks.dueToday.length})</span>
-                            </div>
-                            {openSections.dueToday ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </button>
+                            </h2>
+                            <button
+                                onClick={() => toggleSection('dueToday')}
+                                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-medium"
+                            >
+                                {openSections.dueToday ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </button>
+                        </div>
 
                         {openSections.dueToday && (
-                            <div className="divide-y divide-border">
+                            <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border">
                                 {tasks.dueToday.length === 0 ? (
-                                    <div className="p-4 text-center text-muted-foreground text-xs">No tasks due today.</div>
+                                    <div className="p-4 text-center text-muted-foreground text-xs font-medium">No tasks due today.</div>
                                 ) : (
                                     tasks.dueToday.map((task) => (
                                         <div
                                             key={task.id}
                                             onClick={() => openTaskModal(task)}
-                                            className="p-4 hover:bg-muted/40 cursor-pointer flex items-center justify-between transition group"
+                                            className="p-3.5 hover:bg-muted/50 cursor-pointer flex items-center justify-between transition-colors group"
                                         >
                                             <div className="space-y-1">
                                                 <div className="flex items-center space-x-2">
-                                                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition">
+                                                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
                                                         {task.title}
                                                     </span>
-                                                    <span className="text-xs text-muted-foreground">({task.project?.name})</span>
+                                                    <span className="text-xs text-muted-foreground font-medium">({task.project?.name})</span>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center space-x-3">
-                                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-accent/10 text-accent-foreground border border-accent/30">
+                                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
                                                     {task.priority}
                                                 </span>
-                                                <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                                                <span className="text-xs px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                                                     {task.board_column?.name || 'To Do'}
                                                 </span>
                                             </div>
@@ -279,40 +288,43 @@ export default function MyDesk({ tasks, counts, projects = [], filters = {} }: M
                         )}
                     </div>
 
-                    <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('upcoming')}
-                            className="w-full px-5 py-3.5 bg-background/60 hover:bg-muted/40 flex items-center justify-between transition text-muted-foreground font-semibold text-sm"
-                        >
-                            <div className="flex items-center space-x-2">
+                    {/* Upcoming Section */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                                 <Calendar className="w-4 h-4 text-primary" />
                                 <span>Upcoming & Backlog ({tasks.upcoming.length})</span>
-                            </div>
-                            {openSections.upcoming ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </button>
+                            </h2>
+                            <button
+                                onClick={() => toggleSection('upcoming')}
+                                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-medium"
+                            >
+                                {openSections.upcoming ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </button>
+                        </div>
 
                         {openSections.upcoming && (
-                            <div className="divide-y divide-border">
+                            <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border">
                                 {tasks.upcoming.length === 0 ? (
-                                    <div className="p-4 text-center text-muted-foreground text-xs">No upcoming tasks.</div>
+                                    <div className="p-4 text-center text-muted-foreground text-xs font-medium">No upcoming tasks.</div>
                                 ) : (
                                     tasks.upcoming.map((task) => (
                                         <div
                                             key={task.id}
                                             onClick={() => openTaskModal(task)}
-                                            className="p-4 hover:bg-muted/40 cursor-pointer flex items-center justify-between transition group"
+                                            className="p-3.5 hover:bg-muted/50 cursor-pointer flex items-center justify-between transition-colors group"
                                         >
                                             <div className="space-y-1">
                                                 <div className="flex items-center space-x-2">
-                                                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition">
+                                                    <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
                                                         {task.title}
                                                     </span>
-                                                    <span className="text-xs text-muted-foreground">({task.project?.name})</span>
+                                                    <span className="text-xs text-muted-foreground font-medium">({task.project?.name})</span>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center space-x-3">
-                                                <span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                                                <span className="text-xs px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                                                     {task.board_column?.name || 'Backlog'}
                                                 </span>
                                             </div>

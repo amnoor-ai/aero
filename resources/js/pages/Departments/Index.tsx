@@ -95,7 +95,7 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                                 <Building2 className="w-6 h-6" />
                             </span>
                             <div>
-                                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+                                <h1 className="text-2xl font-bold tracking-tight text-foreground">
                                     Departments & Org Structure
                                 </h1>
                                 <p className="text-sm text-muted-foreground mt-0.5">

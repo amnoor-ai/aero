@@ -98,7 +98,7 @@ return;
                             <Target className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+                            <h1 className="text-2xl font-bold tracking-tight text-foreground">
                                 Milestones & Release Gates
                             </h1>
                             <p className="text-sm text-muted-foreground mt-0.5">
