@@ -48,7 +48,7 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
             case 'column_updated':
                 return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30">Moved</span>;
             case 'comment_added':
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-purple-500/10 text-purple-400 border border-purple-500/30">Comment</span>;
+                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">Comment</span>;
             case 'task_updated':
                 return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Updated</span>;
             default:
@@ -64,7 +64,7 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
                             Activities Feed
                         </h1>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -74,7 +74,7 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
                 </div>
 
                 {/* Filter Toolbar */}
-                <div className="p-3 bg-card border border-border rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                <div className="p-3 bg-card border border-border rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-2xs">
                     <div className="relative w-full sm:w-80">
                         <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
                         <input
@@ -92,7 +92,7 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
 
                 {/* Feed Items */}
                 {activities.data.length === 0 ? (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
+                    <div className="bg-card border border-border rounded-xl p-12 text-center space-y-3">
                         <Sparkles className="w-8 h-8 text-muted-foreground/50 mx-auto" />
                         <h3 className="text-base font-semibold text-foreground">No Activities Found</h3>
                         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
@@ -100,7 +100,7 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
                         </p>
                     </div>
                 ) : (
-                    <div className="bg-card border border-border rounded-2xl p-6 relative space-y-6 shadow-sm">
+                    <div className="bg-card border border-border rounded-xl p-6 relative space-y-6 shadow-2xs">
                         <div className="absolute left-9 top-8 bottom-8 w-px bg-border/60 hidden sm:block" />
 
                         {activities.data.map((item) => (

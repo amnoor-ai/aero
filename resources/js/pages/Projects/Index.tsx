@@ -82,7 +82,7 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
             <div className="p-6 md:p-8 space-y-6 bg-background text-foreground">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Projects Directory</h1>
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">Projects Directory</h1>
                         <p className="text-xs text-muted-foreground mt-1">
                             Overview of all active workspace projects, progress, and team assignments.
                         </p>

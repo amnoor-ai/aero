@@ -94,7 +94,7 @@ return;
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
                             Milestones & Release Gates
                         </h1>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -126,19 +126,19 @@ return;
                     <div className="flex bg-muted/50 p-1 rounded-lg border border-border">
                         <button
                             onClick={() => handleStatusFilter('')}
-                            className={`px-3 py-1 text-xs font-medium rounded-md transition ${!filters.status ? 'bg-background shadow-sm text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${!filters.status ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             All
                         </button>
                         <button
                             onClick={() => handleStatusFilter('active')}
-                            className={`px-3 py-1 text-xs font-medium rounded-md transition ${filters.status === 'active' ? 'bg-background shadow-sm text-rose-400 font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'active' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             Active
                         </button>
                         <button
                             onClick={() => handleStatusFilter('completed')}
-                            className={`px-3 py-1 text-xs font-medium rounded-md transition ${filters.status === 'completed' ? 'bg-background shadow-sm text-emerald-400 font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'completed' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             Completed
                         </button>
@@ -147,7 +147,7 @@ return;
 
                 {/* Milestones Cards Grid */}
                 {milestones.length === 0 ? (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
+                    <div className="bg-card border border-border rounded-xl p-12 text-center space-y-3">
                         <Target className="w-8 h-8 text-muted-foreground/50 mx-auto" />
                         <h3 className="text-base font-semibold text-foreground">No Milestones Found</h3>
                         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
@@ -163,27 +163,27 @@ return;
                             <div
                                 key={m.id}
                                 onClick={() => m.project && router.visit(`/projects/${m.project.id}`)}
-                                className="bg-card border border-border rounded-2xl p-5 hover:border-rose-500/40 cursor-pointer transition-all duration-200 space-y-4 flex flex-col justify-between shadow-sm group"
+                                className="bg-card border border-border rounded-xl p-5 hover:border-primary/40 cursor-pointer transition-all duration-200 space-y-4 flex flex-col justify-between shadow-2xs group"
                             >
                                 <div className="space-y-3">
                                     <div className="flex items-start justify-between">
                                         <div className="space-y-1">
                                             {m.project && (
                                                 <span className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium inline-flex items-center">
-                                                    <Folder className="w-2.5 h-2.5 mr-1 text-amber-400" />
+                                                    <Folder className="w-2.5 h-2.5 mr-1 text-muted-foreground" />
                                                     {m.project.name}
                                                 </span>
                                             )}
-                                            <h3 className="font-bold text-foreground text-base leading-snug group-hover:text-rose-400 transition">{m.name}</h3>
+                                            <h3 className="font-bold text-foreground text-base leading-snug group-hover:text-primary transition">{m.name}</h3>
                                         </div>
 
                                         <span
                                             className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
                                                 m.is_overdue
-                                                    ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                                                    ? 'bg-destructive/10 text-destructive border-destructive/20'
                                                     : m.status === 'completed'
-                                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                                                    : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                    : 'bg-primary/10 text-primary border-primary/20'
                                             }`}
                                         >
                                             {m.is_overdue ? 'Overdue' : m.status}
@@ -197,18 +197,16 @@ return;
                                     )}
                                 </div>
 
-                                <div className="space-y-3 pt-3 border-t border-border/50">
+                                <div className="space-y-3 pt-3 border-t border-border">
                                     {/* Progress Bar */}
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-muted-foreground font-semibold">Progress</span>
                                             <span className="font-mono font-bold text-foreground">{m.progress}%</span>
                                         </div>
-                                        <div className="w-full bg-muted h-2 rounded-full overflow-hidden border border-border/40">
+                                        <div className="w-full bg-muted h-2 rounded-full overflow-hidden border border-border">
                                             <div
-                                                className={`h-full rounded-full transition-all duration-500 ${
-                                                    m.progress === 100 ? 'bg-emerald-500' : 'bg-rose-500'
-                                                }`}
+                                                className="h-full bg-primary rounded-full transition-all duration-500"
                                                 style={{ width: `${m.progress}%` }}
                                             />
                                         </div>

@@ -131,15 +131,15 @@ return null;
 
                     {/* Progress Bar / Stepper Tabs */}
                     <div className="grid grid-cols-3 gap-2">
-                        <div className={`flex items-center space-x-2 p-2.5 rounded-xl border text-xs font-semibold transition ${currentStep === 1 ? 'bg-primary/10 border-primary/40 text-primary' : currentStep > 1 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-muted/40 border-border text-muted-foreground'}`}>
-                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${currentStep === 1 ? 'bg-primary text-primary-foreground' : currentStep > 1 ? 'bg-emerald-500 text-black' : 'bg-muted text-muted-foreground'}`}>
+                        <div className={`flex items-center space-x-2 p-2.5 rounded-xl border text-xs font-semibold transition ${currentStep === 1 ? 'bg-primary/10 border-primary/40 text-primary' : currentStep > 1 ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-muted/40 border-border text-muted-foreground'}`}>
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${currentStep >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                                 1
                             </span>
                             <span className="truncate">Info & Timeline</span>
                         </div>
 
-                        <div className={`flex items-center space-x-2 p-2.5 rounded-xl border text-xs font-semibold transition ${currentStep === 2 ? 'bg-primary/10 border-primary/40 text-primary' : currentStep > 2 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-muted/40 border-border text-muted-foreground'}`}>
-                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${currentStep === 2 ? 'bg-primary text-primary-foreground' : currentStep > 2 ? 'bg-emerald-500 text-black' : 'bg-muted text-muted-foreground'}`}>
+                        <div className={`flex items-center space-x-2 p-2.5 rounded-xl border text-xs font-semibold transition ${currentStep === 2 ? 'bg-primary/10 border-primary/40 text-primary' : currentStep > 2 ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-muted/40 border-border text-muted-foreground'}`}>
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${currentStep >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                                 2
                             </span>
                             <span className="truncate">Branding & Team</span>
@@ -177,7 +177,7 @@ return null;
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground flex items-center">
-                                        <Building2 className="w-3.5 h-3.5 mr-1.5 text-purple-400" /> Department
+                                        <Building2 className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" /> Department
                                     </label>
                                     <select
                                         value={data.department_id}
@@ -193,7 +193,7 @@ return null;
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground flex items-center">
-                                        <UserIcon className="w-3.5 h-3.5 mr-1.5 text-cyan-400" /> Project Lead
+                                        <UserIcon className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" /> Project Lead
                                     </label>
                                     <select
                                         value={data.lead_id}
@@ -219,7 +219,7 @@ return null;
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground flex items-center">
-                                        <Calendar className="w-3.5 h-3.5 mr-1.5 text-amber-400" /> Start Date
+                                        <Calendar className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" /> Start Date
                                     </label>
                                     <input
                                         type="date"
@@ -232,7 +232,7 @@ return null;
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground flex items-center">
-                                        <Calendar className="w-3.5 h-3.5 mr-1.5 text-rose-400" /> Target Target Date
+                                        <Calendar className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" /> Target Target Date
                                     </label>
                                     <input
                                         type="date"
@@ -245,7 +245,7 @@ return null;
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground flex items-center">
-                                        <DollarSign className="w-3.5 h-3.5 mr-1.5 text-emerald-400" /> Estimated Budget ($)
+                                        <DollarSign className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" /> Estimated Budget ($)
                                     </label>
                                     <input
                                         type="number"

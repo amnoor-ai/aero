@@ -142,7 +142,7 @@ export function CompleteSprintModal({ isOpen, onClose, sprint, futureSprints }: 
                         <Button type="button" variant="outline" onClick={onClose}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+                        <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                             {isSubmitting ? 'Completing...' : 'Complete Sprint'}
                         </Button>
                     </DialogFooter>

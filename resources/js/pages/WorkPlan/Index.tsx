@@ -55,7 +55,7 @@ export default function WorkPlanIndex({ projects = [] }: WorkPlanProps) {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
                             Work Plan & Roadmap
                         </h1>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -91,18 +91,18 @@ export default function WorkPlanIndex({ projects = [] }: WorkPlanProps) {
                 </div>
 
                 {/* Legend Bar */}
-                <div className="p-3 bg-card border border-border rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-sm text-xs">
+                <div className="p-3 bg-card border border-border rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-2xs text-xs">
                     <div className="flex items-center space-x-6">
                         <div className="flex items-center space-x-2">
                             <div className="w-3 h-3 rounded bg-primary" />
                             <span className="font-semibold text-foreground">Projects</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 rounded bg-emerald-500" />
+                            <div className="w-3 h-3 rounded bg-primary/80" />
                             <span className="font-semibold text-foreground">Active/Future Sprints</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 rounded bg-rose-500" />
+                            <div className="w-3 h-3 rounded bg-destructive" />
                             <span className="font-semibold text-foreground">Release Milestones</span>
                         </div>
                     </div>
@@ -114,7 +114,7 @@ export default function WorkPlanIndex({ projects = [] }: WorkPlanProps) {
 
                 {/* Timeline Grid Roadmap */}
                 {projects.length === 0 ? (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
+                    <div className="bg-card border border-border rounded-xl p-12 text-center space-y-3">
                         <BarChart3 className="w-8 h-8 text-muted-foreground/50 mx-auto" />
                         <h3 className="text-base font-semibold text-foreground">No Projects Available</h3>
                         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
@@ -122,7 +122,7 @@ export default function WorkPlanIndex({ projects = [] }: WorkPlanProps) {
                         </p>
                     </div>
                 ) : (
-                    <div className="bg-card border border-border rounded-2xl p-6 space-y-6 shadow-sm overflow-x-auto">
+                    <div className="bg-card border border-border rounded-xl p-6 space-y-6 shadow-2xs overflow-x-auto">
                         <div className="space-y-6 min-w-[700px]">
                             {projects.map((project) => (
                                 <div key={project.id} className="space-y-3 p-4 rounded-xl bg-muted/30 border border-border/60">

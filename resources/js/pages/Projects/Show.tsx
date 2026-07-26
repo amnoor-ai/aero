@@ -106,7 +106,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="space-y-2">
                             <div className="flex items-center gap-3">
-                                <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">{project.name}</h1>
+                                <h1 className="text-xl font-bold tracking-tight text-foreground">{project.name}</h1>
                                 <Dialog open={isEditInfoOpen} onOpenChange={setIsEditInfoOpen}>
                                     <DialogTrigger asChild>
                                         <button className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition">
@@ -393,7 +393,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 )}
 
                 {activeTab === 'list' && (
-                    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-2xs">
                         <div className="p-4 border-b border-border/60 bg-muted/20 flex items-center justify-between">
                             <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Project Task Registry</h3>
                             <span className="text-xs text-muted-foreground font-mono">
@@ -458,7 +458,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 )}
 
                 {activeTab === 'team' && (
-                    <div className="p-6 bg-card border border-border rounded-2xl space-y-4 max-w-xl">
+                    <div className="p-6 bg-card border border-border rounded-xl space-y-4 max-w-xl">
                         <h3 className="text-sm font-bold text-foreground">Project Members & Permissions</h3>
                         <div className="divide-y divide-border">
                             {project.members?.map((member: any) => (
@@ -483,7 +483,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
 
                 {activeTab === 'discussions' && (
                     <div className="space-y-4">
-                        <div className="p-6 bg-card border border-border rounded-2xl space-y-4">
+                        <div className="p-6 bg-card border border-border rounded-xl space-y-4">
                             <div className="flex items-center justify-between border-b border-border/50 pb-4">
                                 <div>
                                     <h3 className="font-bold text-base text-foreground">Project Team Discussions</h3>
@@ -537,7 +537,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 {activeTab === 'milestones' && (
                     <div className="space-y-4">
                         {(!project.milestones || project.milestones.length === 0) ? (
-                            <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground text-sm space-y-2">
+                            <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground text-sm space-y-2">
                                 <Target className="w-8 h-8 text-muted-foreground/50 mx-auto" />
                                 <h4 className="font-bold text-foreground text-sm">No Milestones Defined Yet</h4>
                                 <p className="text-xs text-muted-foreground max-w-sm mx-auto">Create release gates to track phase progress.</p>
@@ -545,7 +545,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {project.milestones.map((m: any) => (
-                                    <div key={m.id} className="bg-card border border-border rounded-2xl p-5 space-y-3 shadow-sm">
+                                    <div key={m.id} className="bg-card border border-border rounded-xl p-5 space-y-3 shadow-sm">
                                         <div className="flex items-center justify-between">
                                             <h4 className="font-bold text-foreground text-sm">{m.name}</h4>
                                             <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${m.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
@@ -570,7 +570,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 )}
 
                 {activeTab === 'timeline' && (
-                    <div className="p-6 bg-card border border-border rounded-2xl space-y-4">
+                    <div className="p-6 bg-card border border-border rounded-xl space-y-4">
                         <div className="flex items-center justify-between border-b border-border/50 pb-4">
                             <div>
                                 <h3 className="font-bold text-base text-foreground">Project Sprint & Milestone Roadmap</h3>
@@ -605,7 +605,7 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                 )}
 
                 {activeTab === 'files' && (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground text-sm">
+                    <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground text-sm">
                         No files uploaded to this project yet. Share documents, designs, and specs here.
                     </div>
                 )}

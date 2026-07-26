@@ -130,7 +130,7 @@ export default function TasksIndex({
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
                             Tasks Directory
                         </h1>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -148,7 +148,7 @@ export default function TasksIndex({
                 </div>
 
                 {/* Filter Toolbar & Column Manager */}
-                <div className="p-3 bg-card border border-border rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                <div className="p-3 bg-card border border-border rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-2xs">
                     <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                         <div className="relative w-full sm:w-64">
                             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
@@ -243,7 +243,7 @@ export default function TasksIndex({
 
                 {/* Master Data Grid Table */}
                 {tasks.data.length === 0 ? (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
+                    <div className="bg-card border border-border rounded-xl p-12 text-center space-y-3">
                         <Sparkles className="w-8 h-8 text-muted-foreground/50 mx-auto" />
                         <h3 className="text-base font-semibold text-foreground">No Tasks Found</h3>
                         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
@@ -251,7 +251,7 @@ export default function TasksIndex({
                         </p>
                     </div>
                 ) : (
-                    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-2xs">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs border-collapse">
                                 <thead>

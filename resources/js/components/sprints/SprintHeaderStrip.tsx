@@ -63,14 +63,14 @@ export function SprintHeaderStrip({
     }
 
     return (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-card to-card border border-purple-500/30 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+        <div className="p-4 rounded-xl bg-card border border-border flex flex-wrap items-center justify-between gap-4 shadow-2xs">
             <div className="space-y-1 max-w-xl">
                 <div className="flex items-center space-x-3">
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono font-bold text-[11px] border border-emerald-500/30 flex items-center space-x-1">
-                        <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400" />
+                    <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold text-[11px] border border-primary/20 flex items-center space-x-1">
+                        <Zap className="w-3 h-3 text-primary fill-primary" />
                         <span>ACTIVE SPRINT</span>
                     </span>
-                    <h3 className="text-base font-extrabold text-foreground">{sprint.name}</h3>
+                    <h3 className="text-base font-bold text-foreground">{sprint.name}</h3>
                     {daysLeft !== null && (
                         <span className="text-[11px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-md border border-border">
                             ⏳ {daysLeft} days left
@@ -79,7 +79,7 @@ export function SprintHeaderStrip({
                 </div>
 
                 {sprint.goal && (
-                    <p className="text-xs text-purple-200/80 font-medium line-clamp-1 italic">
+                    <p className="text-xs text-muted-foreground font-medium line-clamp-1 italic">
                         "{sprint.goal}"
                     </p>
                 )}
@@ -87,24 +87,24 @@ export function SprintHeaderStrip({
 
             {/* Metrics & Actions */}
             <div className="flex items-center space-x-4">
-                <div className="hidden md:flex items-center space-x-4 px-3 py-1.5 bg-muted/40 rounded-xl border border-border/60 text-xs">
+                <div className="hidden md:flex items-center space-x-4 px-3 py-1.5 bg-muted/40 rounded-lg border border-border text-xs">
                     <div>
                         <span className="text-[10px] text-muted-foreground block font-semibold uppercase">Story Points</span>
-                        <span className="font-mono font-extrabold text-foreground">{completedPoints} / {totalPoints} pts</span>
+                        <span className="font-mono font-bold text-foreground">{completedPoints} / {totalPoints} pts</span>
                     </div>
                     <div className="w-px h-6 bg-border" />
                     <div>
                         <span className="text-[10px] text-muted-foreground block font-semibold uppercase">Tasks</span>
-                        <span className="font-mono font-extrabold text-foreground">{completedTasks.length} / {tasks.length}</span>
+                        <span className="font-mono font-bold text-foreground">{completedTasks.length} / {tasks.length}</span>
                     </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
-                    <Button onClick={onOpenBacklogDrawer} variant="outline" size="sm" className="text-xs">
-                        <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5 text-purple-400" /> Backlog
+                    <Button onClick={onOpenBacklogDrawer} variant="outline" size="sm" className="text-xs font-semibold">
+                        <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" /> Backlog
                     </Button>
 
-                    <Button onClick={onOpenCompleteSprint} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md">
+                    <Button onClick={onOpenCompleteSprint} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold shadow-xs">
                         <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Complete Sprint
                     </Button>
                 </div>
