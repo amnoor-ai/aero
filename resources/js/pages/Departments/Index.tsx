@@ -62,7 +62,7 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
     const departmentList = departments.data || [];
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingDepartment, setEditingDepartment] = useState<DepartmentItem | null>(null);
-    const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
     const handleSort = (columnKey: string, order: 'asc' | 'desc') => {
         router.get('/departments', { ...filters, sort_by: columnKey, order }, { preserveState: true, replace: true });
@@ -90,7 +90,7 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
                             Departments & Org Structure
                         </h1>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -130,19 +130,19 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                         <div className="flex bg-muted/50 p-1 rounded-lg border border-border">
                             <button
                                 onClick={() => handleStatusFilter('')}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${!filters.status ? 'bg-background shadow-sm text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${!filters.status ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 All
                             </button>
                             <button
                                 onClick={() => handleStatusFilter('active')}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${filters.status === 'active' ? 'bg-background shadow-sm text-emerald-400 font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'active' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 Active
                             </button>
                             <button
                                 onClick={() => handleStatusFilter('archived')}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${filters.status === 'archived' ? 'bg-background shadow-sm text-amber-400 font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'archived' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 Archived
                             </button>
@@ -167,8 +167,8 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
 
                 {/* Content Grid or Table */}
                 {departmentList.length === 0 ? (
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
-                        <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+                    <div className="bg-card border border-border rounded-xl p-12 text-center space-y-3">
+                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto text-muted-foreground">
                             <Building2 className="w-6 h-6" />
                         </div>
                         <h3 className="text-base font-semibold text-foreground">No Departments Found</h3>
@@ -186,31 +186,35 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                             {departmentList.map((dept) => (
                                 <div
                                     key={dept.id}
-                                    className="bg-card border border-border rounded-2xl p-5 hover:border-purple-500/40 transition-all duration-200 group flex flex-col justify-between space-y-4 shadow-sm"
+                                    onClick={() => router.visit(`/departments/${dept.id}`)}
+                                    className="bg-card border border-border rounded-xl p-5 hover:border-primary/40 cursor-pointer transition-all duration-200 group flex flex-col justify-between space-y-4 shadow-2xs"
                                 >
                                     {/* Card Header */}
                                     <div>
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-center space-x-3">
-                                                <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-400 font-mono text-xs font-bold border border-purple-500/20">
+                                                <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-mono text-xs font-bold border border-primary/20">
                                                     {dept.code}
                                                 </span>
-                                                <h3 className="font-bold text-foreground text-base group-hover:text-purple-400 transition">
+                                                <h3 className="font-bold text-foreground text-base group-hover:text-primary transition">
                                                     {dept.name}
                                                 </h3>
                                             </div>
 
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <button className="p-1 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
+                                                    <button
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="p-1 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition"
+                                                    >
                                                         <MoreVertical className="w-4 h-4" />
                                                     </button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-40">
-                                                    <DropdownMenuItem onClick={() => router.visit(`/departments/${dept.id}`)}>
+                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.visit(`/departments/${dept.id}`); }}>
                                                         <Eye className="w-3.5 h-3.5 mr-2 text-muted-foreground" /> View Overview
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setEditingDepartment(dept)}>
+                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditingDepartment(dept); }}>
                                                         <Pencil className="w-3.5 h-3.5 mr-2 text-muted-foreground" /> Edit
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -241,13 +245,13 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                                         {dept.mandate_file_name ? (
                                             <a
                                                 href={`/departments/${dept.id}/mandate`}
-                                                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-purple-500/5 hover:bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:text-purple-200 transition group/btn text-xs font-medium"
+                                                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary transition group/btn text-xs font-medium"
                                             >
                                                 <div className="flex items-center space-x-2 truncate">
-                                                    <FileText className="w-4 h-4 text-purple-400 shrink-0" />
+                                                    <FileText className="w-4 h-4 text-primary shrink-0" />
                                                     <span className="truncate">{dept.mandate_file_name}</span>
                                                 </div>
-                                                <Download className="w-3.5 h-3.5 text-purple-400 group-hover/btn:scale-110 transition shrink-0 ml-1" />
+                                                <Download className="w-3.5 h-3.5 text-primary group-hover/btn:scale-110 transition shrink-0 ml-1" />
                                             </a>
                                         ) : (
                                             <div className="p-2 text-center rounded-xl border border-dashed border-border text-[11px] text-muted-foreground font-mono">
@@ -262,7 +266,7 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                     </div>
                 ) : (
                     /* TABLE VIEW */
-                    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-2xs">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs text-muted-foreground">
                                 <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
@@ -289,11 +293,11 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                                         >
                                             <td className="p-4 font-semibold text-foreground">
                                                 <div className="flex items-center space-x-3">
-                                                    <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 font-mono text-[11px] border border-purple-500/20">
+                                                    <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-mono text-[11px] border border-primary/20">
                                                         {dept.code}
                                                     </span>
                                                     <div>
-                                                        <span className="group-hover:text-purple-400 transition font-bold">{dept.name}</span>
+                                                        <span className="group-hover:text-primary transition font-bold">{dept.name}</span>
                                                         {dept.description && (
                                                             <span className="block text-[11px] text-muted-foreground font-normal line-clamp-1">
                                                                 {dept.description}
@@ -323,11 +327,11 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                                                 {dept.mandate_file_name ? (
                                                     <a
                                                         href={`/departments/${dept.id}/mandate`}
-                                                        className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 text-[11px] font-medium border border-purple-500/30 transition"
+                                                        className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-medium border border-primary/20 transition"
                                                     >
-                                                        <FileText className="w-3 h-3 text-purple-400" />
+                                                        <FileText className="w-3 h-3 text-primary" />
                                                         <span className="truncate max-w-[120px]">{dept.mandate_file_name}</span>
-                                                        <Download className="w-3 h-3 text-purple-400 ml-1" />
+                                                        <Download className="w-3 h-3 text-primary ml-1" />
                                                     </a>
                                                 ) : (
                                                     <span className="text-[11px] text-muted-foreground font-mono">None</span>

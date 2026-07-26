@@ -13,9 +13,19 @@ import {
     Briefcase,
     Calendar,
     ChevronRight,
+    Plus,
+    Trash2,
+    UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EditDepartmentModal } from '@/components/departments/EditDepartmentModal';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
 
 interface UserItem {
     id: number;
@@ -60,9 +70,41 @@ interface DepartmentShowProps {
 export default function DepartmentShow({ department, workspaceUsers = [] }: DepartmentShowProps) {
     const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'projects' | 'mandate'>('overview');
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState('');
+    const [isSubmittingMember, setIsSubmittingMember] = useState(false);
 
     const membersList = department.members || [];
     const projectsList = department.projects || [];
+
+    const handleAddMember = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedUserId) return;
+        setIsSubmittingMember(true);
+        router.post(
+            `/departments/${department.id}/members`,
+            { user_id: selectedUserId },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsAddMemberOpen(false);
+                    setSelectedUserId('');
+                    setIsSubmittingMember(false);
+                },
+                onError: () => setIsSubmittingMember(false),
+            }
+        );
+    };
+
+    const handleRemoveMember = (userId: number) => {
+        if (confirm('Are you sure you want to remove this member from the department?')) {
+            router.delete(`/departments/${department.id}/members/${userId}`, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        }
+    };
 
     return (
         <>
@@ -83,9 +125,9 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
                         {department.mandate_file_name && (
                             <a
                                 href={`/departments/${department.id}/mandate`}
-                                className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 text-xs font-semibold border border-purple-500/30 transition"
+                                className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold border border-primary/20 transition"
                             >
-                                <Download className="w-4 h-4 text-purple-400" />
+                                <Download className="w-4 h-4 text-primary" />
                                 <span>Download Mandate Document</span>
                             </a>
                         )}
@@ -97,38 +139,33 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
                 </div>
 
                 {/* Hero Header Card */}
-                <div className="bg-card border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+                <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6 shadow-2xs">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-start space-x-4">
-                            <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0">
-                                <Building2 className="w-8 h-8" />
+                        <div className="space-y-1">
+                            <div className="flex items-center space-x-3">
+                                <span className="px-2.5 py-1 rounded-md bg-primary/10 text-primary font-mono font-bold text-xs border border-primary/20">
+                                    {department.code}
+                                </span>
+                                <h1 className="text-xl font-bold tracking-tight text-foreground">
+                                    {department.name}
+                                </h1>
+                                <span
+                                    className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+                                        department.status === 'active'
+                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                    }`}
+                                >
+                                    {department.status}
+                                </span>
                             </div>
-                            <div className="space-y-1">
-                                <div className="flex items-center space-x-3">
-                                    <span className="px-2.5 py-1 rounded-md bg-purple-500/15 text-purple-400 font-mono font-extrabold text-xs border border-purple-500/30">
-                                        {department.code}
-                                    </span>
-                                    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
-                                        {department.name}
-                                    </h1>
-                                    <span
-                                        className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-                                            department.status === 'active'
-                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                                        }`}
-                                    >
-                                        {department.status}
-                                    </span>
-                                </div>
 
-                                {department.location && (
-                                    <div className="flex items-center space-x-1 text-xs text-muted-foreground pt-0.5">
-                                        <MapPin className="w-3.5 h-3.5 text-purple-400" />
-                                        <span>{department.location}</span>
-                                    </div>
-                                )}
-                            </div>
+                            {department.location && (
+                                <div className="flex items-center space-x-1 text-xs text-muted-foreground pt-0.5">
+                                    <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <span>{department.location}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -158,7 +195,7 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
 
                         <div className="p-3.5 bg-muted/40 rounded-xl border border-border/60">
                             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Mandate Attachment</p>
-                            <p className="text-xs font-bold text-purple-300 truncate mt-1">
+                            <p className="text-xs font-bold text-primary truncate mt-1">
                                 {department.mandate_file_name || 'No Document'}
                             </p>
                         </div>
@@ -197,46 +234,49 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
 
                 {/* Tab Contents */}
                 {activeTab === 'overview' && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="md:col-span-2 space-y-6">
-                            <div className="bg-card border border-border rounded-2xl p-6 space-y-3">
-                                <h3 className="text-base font-bold text-foreground flex items-center space-x-2">
-                                    <Briefcase className="w-4 h-4 text-purple-400" />
-                                    <span>Department Description & Responsibilities</span>
-                                </h3>
-                                <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                                    {department.description || 'No detailed mandate description has been configured for this department.'}
-                                </p>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="md:col-span-2 space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-foreground">Department Overview & Responsibilities</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Summary of organizational mandate and operational scope.</p>
+                                </div>
+                                <div className="bg-card border border-border rounded-xl p-6">
+                                    <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                                        {department.description || 'No detailed mandate description has been configured for this department.'}
+                                    </p>
+                                </div>
+
+                                {/* Mandate file quick download banner */}
+                                {department.mandate_file_name && (
+                                    <div className="bg-card border border-border rounded-xl p-5 flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="p-3 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                                                <FileText className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-xs font-bold text-foreground">Official Department Mandate</h4>
+                                                <p className="text-[11px] text-muted-foreground">{department.mandate_file_name}</p>
+                                            </div>
+                                        </div>
+                                        <a
+                                            href={`/departments/${department.id}/mandate`}
+                                            className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg transition flex items-center space-x-1.5 shadow-xs"
+                                        >
+                                            <Download className="w-3.5 h-3.5" />
+                                            <span>Download</span>
+                                        </a>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Mandate file quick download banner */}
-                            {department.mandate_file_name && (
-                                <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-6 flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="p-3 rounded-xl bg-purple-500/20 text-purple-300">
-                                            <FileText className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-bold text-foreground">Official Department Mandate</h4>
-                                            <p className="text-xs text-purple-300/80">{department.mandate_file_name}</p>
-                                        </div>
-                                    </div>
-                                    <a
-                                        href={`/departments/${department.id}/mandate`}
-                                        className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1.5 shadow-lg shadow-purple-500/20"
-                                    >
-                                        <Download className="w-4 h-4" />
-                                        <span>Download File</span>
-                                    </a>
+                            {/* Sidebar Info Card */}
+                            <div className="space-y-4">
+                                <div>
+                                    <h4 className="text-sm font-semibold text-foreground">Department Info</h4>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Key metadata and leadership assignments.</p>
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Sidebar Info Card */}
-                        <div className="space-y-6">
-                            <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Department Info</h4>
-                                <div className="space-y-3 text-xs">
+                                <div className="bg-card border border-border rounded-xl p-5 space-y-3 text-xs">
                                     <div>
                                         <span className="text-muted-foreground block text-[11px]">Director</span>
                                         <span className="font-semibold text-foreground">
@@ -249,7 +289,7 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground block text-[11px]">Department Code</span>
-                                        <span className="font-mono font-bold text-purple-400">{department.code}</span>
+                                        <span className="font-mono font-bold text-primary">{department.code}</span>
                                     </div>
                                 </div>
                             </div>
@@ -258,32 +298,61 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
                 )}
 
                 {activeTab === 'members' && (
-                    <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
-                        <h3 className="text-base font-bold text-foreground">Assigned Department Members</h3>
-                        {membersList.length === 0 ? (
-                            <p className="text-xs text-muted-foreground py-6 text-center">No team members assigned to this department yet.</p>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                {membersList.map((member) => (
-                                    <div key={member.id} className="p-3.5 bg-muted/40 rounded-xl border border-border flex items-center space-x-3">
-                                        <div className="w-9 h-9 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm font-bold border border-primary/30">
-                                            {member.name.charAt(0)}
-                                        </div>
-                                        <div className="truncate">
-                                            <p className="text-xs font-bold text-foreground truncate">{member.name}</p>
-                                            <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                    <div className="space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <h3 className="text-sm font-semibold text-foreground">Assigned Department Members</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">Workspace team members linked to this department.</p>
                             </div>
-                        )}
+                            <Button onClick={() => setIsAddMemberOpen(true)} size="sm" className="bg-primary text-primary-foreground text-xs font-semibold">
+                                <Plus className="w-4 h-4 mr-1.5" /> Add Member
+                            </Button>
+                        </div>
+
+                        <div className="bg-card border border-border rounded-xl p-6">
+                            {membersList.length === 0 ? (
+                                <div className="text-center py-6 space-y-2">
+                                    <p className="text-xs text-muted-foreground">No team members assigned to this department yet.</p>
+                                    <Button onClick={() => setIsAddMemberOpen(true)} size="sm" variant="outline" className="text-xs">
+                                        <Plus className="w-3.5 h-3.5 mr-1" /> Add First Member
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {membersList.map((member) => (
+                                        <div key={member.id} className="p-3.5 bg-muted/40 rounded-xl border border-border flex items-center justify-between space-x-3">
+                                            <div className="flex items-center space-x-3 truncate">
+                                                <div className="w-9 h-9 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm font-bold border border-primary/30 shrink-0">
+                                                    {member.name.charAt(0)}
+                                                </div>
+                                                <div className="truncate">
+                                                    <p className="text-xs font-bold text-foreground truncate">{member.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemoveMember(member.id)}
+                                                title="Remove member from department"
+                                                className="text-muted-foreground hover:text-destructive p-1 rounded transition shrink-0"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
                 {activeTab === 'projects' && (
                     <div className="space-y-4">
+                        <div>
+                            <h3 className="text-sm font-semibold text-foreground">Department Projects</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">Active projects assigned to {department.name}.</p>
+                        </div>
                         {projectsList.length === 0 ? (
-                            <div className="bg-card border border-border rounded-2xl p-8 text-center text-muted-foreground text-xs">
+                            <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground text-xs">
                                 No projects currently assigned to this department.
                             </div>
                         ) : (
@@ -292,12 +361,12 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
                                     <Link
                                         key={project.id}
                                         href={`/projects/${project.id}`}
-                                        className="bg-card border border-border hover:border-purple-500/40 rounded-2xl p-5 transition group space-y-3 block"
+                                        className="bg-card border border-border hover:border-primary/40 rounded-xl p-5 transition group space-y-3 block shadow-2xs"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center space-x-2">
-                                                <Folder className="w-4 h-4 text-purple-400" />
-                                                <span className="font-bold text-foreground text-sm group-hover:text-purple-400 transition">
+                                                <Folder className="w-4 h-4 text-primary" />
+                                                <span className="font-bold text-foreground text-sm group-hover:text-primary transition">
                                                     {project.name}
                                                 </span>
                                             </div>
@@ -308,9 +377,9 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
                                         {project.description && (
                                             <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
                                         )}
-                                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
                                             <span>Lead: {project.lead ? project.lead.name : 'Unassigned'}</span>
-                                            <div className="flex items-center text-purple-400 font-semibold group-hover:translate-x-1 transition-transform">
+                                            <div className="flex items-center text-primary font-semibold group-hover:translate-x-1 transition-transform">
                                                 View Project <ChevronRight className="w-3.5 h-3.5 ml-1" />
                                             </div>
                                         </div>
@@ -322,49 +391,45 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
                 )}
 
                 {activeTab === 'mandate' && (
-                    <div className="bg-card border border-border rounded-2xl p-6 md:p-8 space-y-6">
-                        <div className="flex items-center space-x-3">
-                            <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400">
-                                <ShieldCheck className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-foreground">Mandate & Organizational Compliance</h3>
-                                <p className="text-xs text-muted-foreground">Official charter and documentation for {department.name}</p>
-                            </div>
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="text-sm font-semibold text-foreground">Mandate & Compliance Charter</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">Official organizational charter and governance documentation.</p>
                         </div>
+                        <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6">
+                            {department.mandate_file_name ? (
+                                <div className="p-6 rounded-xl bg-muted/40 border border-border flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div className="flex items-center space-x-4">
+                                        <div className="p-4 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                                            <FileText className="w-8 h-8" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-foreground">{department.mandate_file_name}</h4>
+                                            <p className="text-xs text-muted-foreground">Stored securely in workspace private vault</p>
+                                        </div>
+                                    </div>
 
-                        {department.mandate_file_name ? (
-                            <div className="p-6 rounded-2xl bg-muted/40 border border-border flex flex-col md:flex-row items-center justify-between gap-4">
-                                <div className="flex items-center space-x-4">
-                                    <div className="p-4 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                        <FileText className="w-8 h-8" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-bold text-foreground">{department.mandate_file_name}</h4>
-                                        <p className="text-xs text-muted-foreground">Stored securely in workspace private vault</p>
-                                    </div>
+                                    <a
+                                        href={`/departments/${department.id}/mandate`}
+                                        className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg transition flex items-center space-x-1.5 shadow-xs"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        <span>Download Document</span>
+                                    </a>
                                 </div>
-
-                                <a
-                                    href={`/departments/${department.id}/mandate`}
-                                    className="px-5 py-2.5 bg-primary text-primary-foreground text-xs font-bold rounded-xl transition flex items-center space-x-2 shadow-lg"
-                                >
-                                    <Download className="w-4 h-4" />
-                                    <span>Download Mandate Document</span>
-                                </a>
-                            </div>
-                        ) : (
-                            <div className="p-8 text-center rounded-2xl border border-dashed border-border text-muted-foreground space-y-2">
-                                <FileText className="w-8 h-8 mx-auto text-muted-foreground/50" />
-                                <p className="text-xs font-semibold">No Mandate Document Attached</p>
-                                <p className="text-[11px] max-w-sm mx-auto">
-                                    You can upload a mandate file (PDF or DOCX) by editing this department details.
-                                </p>
-                                <Button onClick={() => setIsEditOpen(true)} size="sm" variant="outline" className="mt-2 text-xs">
-                                    Upload Mandate Document
-                                </Button>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="p-8 text-center rounded-xl border border-dashed border-border text-muted-foreground space-y-2">
+                                    <FileText className="w-8 h-8 mx-auto text-muted-foreground/50" />
+                                    <p className="text-xs font-semibold">No Mandate Document Attached</p>
+                                    <p className="text-[11px] max-w-sm mx-auto">
+                                        You can upload a mandate file (PDF or DOCX) by editing this department's details.
+                                    </p>
+                                    <Button onClick={() => setIsEditOpen(true)} size="sm" variant="outline" className="mt-2 text-xs">
+                                        Upload Mandate Document
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
@@ -376,6 +441,48 @@ export default function DepartmentShow({ department, workspaceUsers = [] }: Depa
                 department={department}
                 workspaceUsers={workspaceUsers}
             />
+
+            {/* Add Member Modal */}
+            <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+                <DialogContent className="sm:max-w-md bg-card border-border text-foreground">
+                    <DialogHeader>
+                        <DialogTitle className="text-base font-bold flex items-center space-x-2">
+                            <UserPlus className="w-5 h-5 text-primary" />
+                            <span>Add Member to {department.name}</span>
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <form onSubmit={handleAddMember} className="space-y-4 py-2">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-foreground">Select Team Member</label>
+                            <select
+                                value={selectedUserId}
+                                onChange={(e) => setSelectedUserId(e.target.value)}
+                                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                required
+                            >
+                                <option value="">-- Choose workspace user --</option>
+                                {workspaceUsers
+                                    .filter((u) => !membersList.some((m) => m.id === u.id))
+                                    .map((user) => (
+                                        <option key={user.id} value={user.id}>
+                                            {user.name} ({user.email})
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+
+                        <DialogFooter className="pt-2">
+                            <Button type="button" variant="outline" size="sm" onClick={() => setIsAddMemberOpen(false)} className="text-xs">
+                                Cancel
+                            </Button>
+                            <Button type="submit" size="sm" disabled={isSubmittingMember || !selectedUserId} className="bg-primary text-primary-foreground text-xs font-semibold">
+                                {isSubmittingMember ? 'Adding...' : 'Assign Member'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
