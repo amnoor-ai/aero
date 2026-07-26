@@ -91,14 +91,14 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="px-4 py-2 bg-primary hover:bg-primary/90 text-xs font-semibold text-black rounded-lg shadow-lg shadow-sm transition flex items-center"
+                            className="px-4 py-2 bg-primary hover:bg-primary/90 text-xs font-semibold text-primary-foreground rounded-lg shadow-xs transition-all flex items-center"
                         >
                             <Plus className="w-4 h-4 mr-1.5" /> Create Project
                         </button>
                     </div>
                 </div>
 
-                <div className="p-3 bg-card border border-border rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                <div className="p-3 bg-card border border-border rounded-xl flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center space-x-3 w-full sm:w-auto">
                         <div className="relative w-full sm:w-64">
                             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />

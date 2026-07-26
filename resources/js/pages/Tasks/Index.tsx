@@ -128,19 +128,14 @@ export default function TasksIndex({
 
             <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-6">
-                    <div className="flex items-center space-x-3">
-                        <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <CheckSquare className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                Tasks Directory
-                            </h1>
-                            <p className="text-sm text-muted-foreground mt-0.5">
-                                Master data grid to search, sort, filter, and export all workspace tasks.
-                            </p>
-                        </div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            Tasks Directory
+                        </h1>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Master data grid to search, sort, filter, and export all workspace tasks.
+                        </p>
                     </div>
 
                     <div className="flex items-center space-x-2">

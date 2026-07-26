@@ -92,19 +92,14 @@ return;
 
             <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-6">
-                    <div className="flex items-center space-x-3">
-                        <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                            <Target className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                Milestones & Release Gates
-                            </h1>
-                            <p className="text-sm text-muted-foreground mt-0.5">
-                                Track project phase targets, delivery deadlines, and task completion progress.
-                            </p>
-                        </div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            Milestones & Release Gates
+                        </h1>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Track project phase targets, delivery deadlines, and task completion progress.
+                        </p>
                     </div>
 
                     <Button

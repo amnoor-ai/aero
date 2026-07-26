@@ -62,19 +62,14 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
 
             <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-6">
-                    <div className="flex items-center space-x-3">
-                        <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                            <Activity className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                Activities Feed
-                            </h1>
-                            <p className="text-sm text-muted-foreground mt-0.5">
-                                Real-time chronological audit trail of all task modifications, comments, and project events.
-                            </p>
-                        </div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            Activities Feed
+                        </h1>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Real-time chronological audit trail of all task modifications, comments, and project events.
+                        </p>
                     </div>
                 </div>
 
