@@ -35,6 +35,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Departments & Org Structure Routes
     Route::resource('departments', DepartmentController::class);
     Route::get('/departments/{department}/mandate', [DepartmentController::class, 'downloadMandate'])->name('departments.mandate');
+    Route::post('/departments/{department}/members', [DepartmentController::class, 'addMember'])->name('departments.members.add');
+    Route::delete('/departments/{department}/members/{user}', [DepartmentController::class, 'removeMember'])->name('departments.members.remove');
 
     // Sprints & Iterations Routes
     Route::post('/sprints', [SprintController::class, 'store'])->name('sprints.store');

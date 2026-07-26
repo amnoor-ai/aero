@@ -171,4 +171,24 @@ class DepartmentController extends Controller
 
         return Storage::download($department->mandate_file_path, $department->mandate_file_name);
     }
+
+    public function addMember(Request $request, Department $department): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        User::where('id', $validated['user_id'])->update(['department_id' => $department->id]);
+
+        return back()->with('success', 'Member added to department successfully.');
+    }
+
+    public function removeMember(Department $department, User $user): RedirectResponse
+    {
+        if ($user->department_id === $department->id) {
+            $user->update(['department_id' => null]);
+        }
+
+        return back()->with('success', 'Member removed from department.');
+    }
 }
