@@ -8,6 +8,7 @@ import {
     Paperclip,
     Upload,
     Target,
+    Zap,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { KanbanBoard } from '@/components/board/KanbanBoard';

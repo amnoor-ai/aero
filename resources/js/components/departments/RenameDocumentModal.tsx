@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { Pencil } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -8,9 +9,8 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DocumentItem } from './MediaPreviewModal';
+import type { DocumentItem } from './MediaPreviewModal';
 
 interface RenameDocumentModalProps {
     document: DocumentItem | null;
@@ -18,23 +18,32 @@ interface RenameDocumentModalProps {
     onClose: () => void;
 }
 
-export function RenameDocumentModal({ document, isOpen, onClose }: RenameDocumentModalProps) {
+export function RenameDocumentModal({
+    document,
+    isOpen,
+    onClose,
+}: RenameDocumentModalProps) {
     const [name, setName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [prevDocId, setPrevDocId] = useState<number | null>(null);
 
-    useEffect(() => {
-        if (document) {
-            setName(document.name);
-        }
-    }, [document]);
+    if (document && document.id !== prevDocId) {
+        setPrevDocId(document.id);
+        setName(document.name);
+        setError(null);
+    }
 
-    if (!document) return null;
+    if (!document) {
+        return null;
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (!name.trim()) {
             setError('Document title cannot be empty.');
+
             return;
         }
 
@@ -53,31 +62,36 @@ export function RenameDocumentModal({ document, isOpen, onClose }: RenameDocumen
                 },
                 onError: (errors) => {
                     setIsSubmitting(false);
-                    setError(Object.values(errors)[0] as string || 'Failed to rename document.');
+                    setError(
+                        (Object.values(errors)[0] as string) ||
+                            'Failed to rename document.',
+                    );
                 },
-            }
+            },
         );
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md bg-background border shadow-lg rounded-xl">
+            <DialogContent className="rounded-xl border bg-background shadow-lg sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-                        <Pencil className="w-4 h-4 text-primary" />
+                    <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+                        <Pencil className="h-4 w-4 text-primary" />
                         Rename Document
                     </DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
                     {error && (
-                        <div className="p-3 text-xs rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+                        <div className="rounded-md border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
                             {error}
                         </div>
                     )}
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">Document Title</label>
+                        <label className="text-xs font-medium text-muted-foreground">
+                            Document Title
+                        </label>
                         <Input
                             type="text"
                             value={name}
@@ -87,11 +101,19 @@ export function RenameDocumentModal({ document, isOpen, onClose }: RenameDocumen
                         />
                     </div>
 
-                    <DialogFooter className="pt-2 gap-2 sm:gap-0">
-                        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+                    <DialogFooter className="gap-2 pt-2 sm:gap-0">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                            disabled={isSubmitting}
+                        >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting || !name.trim()}>
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting || !name.trim()}
+                        >
                             {isSubmitting ? 'Saving...' : 'Save Title'}
                         </Button>
                     </DialogFooter>

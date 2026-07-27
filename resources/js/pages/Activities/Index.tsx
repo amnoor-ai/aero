@@ -1,17 +1,10 @@
-import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    Activity,
     Search,
-    MessageSquare,
-    CheckSquare,
-    ArrowRight,
-    User,
     Folder,
     Clock,
     Sparkles,
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 
 interface ActivityItem {
     id: number;

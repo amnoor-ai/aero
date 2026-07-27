@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { Upload, FileText, X } from 'lucide-react';
+import { Upload } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -8,7 +9,6 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface UploadDepartmentDocModalProps {
@@ -17,7 +17,11 @@ interface UploadDepartmentDocModalProps {
     onClose: () => void;
 }
 
-export function UploadDepartmentDocModal({ departmentId, isOpen, onClose }: UploadDepartmentDocModalProps) {
+export function UploadDepartmentDocModal({
+    departmentId,
+    isOpen,
+    onClose,
+}: UploadDepartmentDocModalProps) {
     const [file, setFile] = useState<File | null>(null);
     const [name, setName] = useState('');
     const [isUploading, setIsUploading] = useState(false);
@@ -27,9 +31,14 @@ export function UploadDepartmentDocModal({ departmentId, isOpen, onClose }: Uplo
         if (e.target.files && e.target.files[0]) {
             const selectedFile = e.target.files[0];
             setFile(selectedFile);
+
             if (!name) {
                 // Pre-fill name without extension
-                const nameWithoutExt = selectedFile.name.substring(0, selectedFile.name.lastIndexOf('.')) || selectedFile.name;
+                const nameWithoutExt =
+                    selectedFile.name.substring(
+                        0,
+                        selectedFile.name.lastIndexOf('.'),
+                    ) || selectedFile.name;
                 setName(nameWithoutExt);
             }
         }
@@ -37,8 +46,10 @@ export function UploadDepartmentDocModal({ departmentId, isOpen, onClose }: Uplo
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (!file) {
             setError('Please select a file to upload.');
+
             return;
         }
 
@@ -47,6 +58,7 @@ export function UploadDepartmentDocModal({ departmentId, isOpen, onClose }: Uplo
 
         const formData = new FormData();
         formData.append('file', file);
+
         if (name) {
             formData.append('name', name);
         }
@@ -62,48 +74,62 @@ export function UploadDepartmentDocModal({ departmentId, isOpen, onClose }: Uplo
             },
             onError: (errors) => {
                 setIsUploading(false);
-                setError(Object.values(errors)[0] as string || 'Failed to upload document.');
+                setError(
+                    (Object.values(errors)[0] as string) ||
+                        'Failed to upload document.',
+                );
             },
         });
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md bg-background border shadow-lg rounded-xl">
+            <DialogContent className="rounded-xl border bg-background shadow-lg sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-                        <Upload className="w-5 h-5 text-primary" />
+                    <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+                        <Upload className="h-5 w-5 text-primary" />
                         Upload Department Document
                     </DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
                     {error && (
-                        <div className="p-3 text-xs rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+                        <div className="rounded-md border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
                             {error}
                         </div>
                     )}
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">Select File *</label>
-                        <div className="flex items-center justify-center w-full">
-                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors border-muted-foreground/25">
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                                    <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-                                    <p className="text-xs text-muted-foreground font-medium">
-                                        {file ? file.name : 'Click to select or drag and drop file'}
+                        <label className="text-xs font-medium text-muted-foreground">
+                            Select File *
+                        </label>
+                        <div className="flex w-full items-center justify-center">
+                            <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 transition-colors hover:bg-muted/50">
+                                <div className="flex flex-col items-center justify-center px-4 pt-5 pb-6 text-center">
+                                    <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                        {file
+                                            ? file.name
+                                            : 'Click to select or drag and drop file'}
                                     </p>
-                                    <p className="text-[10px] text-muted-foreground/70 mt-1">
-                                        PDF, DOCX, XLSX, PNG, JPG, MP4, etc. (Max 50MB)
+                                    <p className="mt-1 text-[10px] text-muted-foreground/70">
+                                        PDF, DOCX, XLSX, PNG, JPG, MP4, etc.
+                                        (Max 50MB)
                                     </p>
                                 </div>
-                                <input type="file" className="hidden" onChange={handleFileChange} />
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
                             </label>
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">Document Title (Optional)</label>
+                        <label className="text-xs font-medium text-muted-foreground">
+                            Document Title (Optional)
+                        </label>
                         <Input
                             type="text"
                             placeholder="e.g. Q3 Strategic Mandate"
@@ -112,8 +138,13 @@ export function UploadDepartmentDocModal({ departmentId, isOpen, onClose }: Uplo
                         />
                     </div>
 
-                    <DialogFooter className="pt-2 gap-2 sm:gap-0">
-                        <Button type="button" variant="outline" onClick={onClose} disabled={isUploading}>
+                    <DialogFooter className="gap-2 pt-2 sm:gap-0">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                            disabled={isUploading}
+                        >
                             Cancel
                         </Button>
                         <Button type="submit" disabled={isUploading || !file}>

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -8,8 +9,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { DocumentItem } from './MediaPreviewModal';
+import type { DocumentItem } from './MediaPreviewModal';
 
 interface DeleteDocumentModalProps {
     document: DocumentItem | null;
@@ -17,10 +17,16 @@ interface DeleteDocumentModalProps {
     onClose: () => void;
 }
 
-export function DeleteDocumentModal({ document, isOpen, onClose }: DeleteDocumentModalProps) {
+export function DeleteDocumentModal({
+    document,
+    isOpen,
+    onClose,
+}: DeleteDocumentModalProps) {
     const [isDeleting, setIsDeleting] = useState(false);
 
-    if (!document) return null;
+    if (!document) {
+        return null;
+    }
 
     const handleDelete = () => {
         setIsDeleting(true);
@@ -37,28 +43,43 @@ export function DeleteDocumentModal({ document, isOpen, onClose }: DeleteDocumen
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md bg-background border shadow-lg rounded-xl">
+            <DialogContent className="rounded-xl border bg-background shadow-lg sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle className="text-lg font-semibold flex items-center gap-2 text-destructive">
-                        <AlertTriangle className="w-5 h-5" />
+                    <DialogTitle className="flex items-center gap-2 text-lg font-semibold text-destructive">
+                        <AlertTriangle className="h-5 w-5" />
                         Delete Document
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="py-2 text-sm text-muted-foreground space-y-2">
+                <div className="space-y-2 py-2 text-sm text-muted-foreground">
                     <p>
-                        Are you sure you want to delete <strong className="text-foreground">{document.name}</strong>?
+                        Are you sure you want to delete{' '}
+                        <strong className="text-foreground">
+                            {document.name}
+                        </strong>
+                        ?
                     </p>
                     <p className="text-xs text-muted-foreground/80">
-                        This action cannot be undone and will permanently delete the file from department records.
+                        This action cannot be undone and will permanently delete
+                        the file from department records.
                     </p>
                 </div>
 
-                <DialogFooter className="pt-2 gap-2 sm:gap-0">
-                    <Button type="button" variant="outline" onClick={onClose} disabled={isDeleting}>
+                <DialogFooter className="gap-2 pt-2 sm:gap-0">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onClose}
+                        disabled={isDeleting}
+                    >
                         Cancel
                     </Button>
-                    <Button type="button" variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                    >
                         {isDeleting ? 'Deleting...' : 'Delete Document'}
                     </Button>
                 </DialogFooter>
