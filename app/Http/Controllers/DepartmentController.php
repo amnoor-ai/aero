@@ -62,7 +62,10 @@ class DepartmentController extends Controller
             'projects' => function ($q) {
                 $q->with('lead')->withCount('tasks');
             },
-        ])->loadCount(['members', 'projects']);
+            'documents' => function ($q) {
+                $q->with('uploadedBy')->latest();
+            },
+        ])->loadCount(['members', 'projects', 'documents']);
 
         $users = User::select('id', 'name', 'email')->get();
 

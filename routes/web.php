@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DepartmentDocumentController;
 use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\MyDeskController;
 use App\Http\Controllers\ProjectController;
@@ -33,6 +34,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/milestones/{milestone}', [MilestoneController::class, 'destroy'])->name('milestones.destroy');
 
     // Departments & Org Structure Routes
+    Route::get('/departments/documents', [DepartmentDocumentController::class, 'index'])->name('departments.documents.index');
+    Route::get('/departments/documents/{document}/view', [DepartmentDocumentController::class, 'view'])->name('departments.documents.view');
+    Route::get('/departments/documents/{document}/download', [DepartmentDocumentController::class, 'download'])->name('departments.documents.download');
+    Route::patch('/departments/documents/{document}', [DepartmentDocumentController::class, 'update'])->name('departments.documents.update');
+    Route::delete('/departments/documents/{document}', [DepartmentDocumentController::class, 'destroy'])->name('departments.documents.destroy');
+    Route::post('/departments/{department}/documents', [DepartmentDocumentController::class, 'store'])->name('departments.documents.store');
+
     Route::resource('departments', DepartmentController::class);
     Route::get('/departments/{department}/mandate', [DepartmentController::class, 'downloadMandate'])->name('departments.mandate');
     Route::post('/departments/{department}/members', [DepartmentController::class, 'addMember'])->name('departments.members.add');
