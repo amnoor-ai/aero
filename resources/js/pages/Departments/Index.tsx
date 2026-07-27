@@ -99,6 +99,14 @@ export default function DepartmentsIndex({ departments, workspaceUsers = [], fil
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <Link
+                            href="/departments/documents"
+                            className="inline-flex items-center space-x-2 px-3 py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold border border-border transition shadow-xs"
+                        >
+                            <Folder className="w-4 h-4 text-primary" />
+                            <span>Documents Hub</span>
+                        </Link>
+
                         <Button
                             onClick={() => setIsCreateOpen(true)}
                             className="bg-primary text-primary-foreground font-semibold text-xs shadow-lg"

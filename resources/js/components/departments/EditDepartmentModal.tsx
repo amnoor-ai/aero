@@ -184,51 +184,11 @@ export function EditDepartmentModal({ isOpen, onClose, department, workspaceUser
                             <Label htmlFor="edit-description" className="text-xs font-semibold">Description & Mandate Summary</Label>
                             <Textarea
                                 id="edit-description"
-                                rows={3}
+                                rows={4}
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
                             />
                             {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
-                        </div>
-
-                        {/* Mandate File Upload Dropzone */}
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">
-                                Mandate Document {department.mandate_file_name && '(Currently: ' + department.mandate_file_name + ')'}
-                            </Label>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                accept=".pdf,.doc,.docx,.txt"
-                                onChange={handleFileChange}
-                            />
-                            
-                            {data.mandate_file ? (
-                                <div className="flex items-center justify-between p-3 rounded-lg border border-primary/30 bg-primary/5">
-                                    <div className="flex items-center space-x-2 truncate">
-                                        <FileText className="w-5 h-5 text-primary shrink-0" />
-                                        <div className="truncate">
-                                            <p className="text-xs font-semibold truncate">{data.mandate_file.name}</p>
-                                            <p className="text-[10px] text-muted-foreground">New Replacement Document</p>
-                                        </div>
-                                    </div>
-                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={removeFile}>
-                                        <X className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="border-2 border-dashed border-border rounded-lg p-3 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition flex items-center justify-center space-x-2"
-                                >
-                                    <Upload className="w-4 h-4 text-muted-foreground" />
-                                    <p className="text-xs font-medium text-foreground">
-                                        {department.mandate_file_name ? 'Click to replace mandate file' : 'Click to upload mandate file'}
-                                    </p>
-                                </div>
-                            )}
-                            {errors.mandate_file && <p className="text-xs text-destructive">{errors.mandate_file}</p>}
                         </div>
                     </div>
 
