@@ -134,17 +134,17 @@ export default function DepartmentsIndex({
                     </div>
                 </div>
 
-                {/* Filter & View Mode Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
+                {/* Filter & View Mode Bar (Borderless, Page Canvas Native) */}
+                <div className="flex flex-wrap items-center justify-between gap-4 py-1">
                     <div className="flex w-full items-center space-x-3 sm:w-auto">
                         <div className="relative w-full sm:w-72">
-                            <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <input
                                 type="text"
                                 placeholder="Search departments by name, code, location..."
                                 value={filters.search || ''}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full rounded-lg border border-border bg-background py-1.5 pr-3 pl-9 text-xs text-foreground focus:border-primary focus:outline-none"
+                                className="w-full h-9.5 rounded-lg border border-input bg-background pr-3 pl-9 text-xs text-foreground shadow-2xs focus:border-primary focus:outline-none"
                             />
                         </div>
                         <span className="hidden text-xs font-medium text-muted-foreground sm:inline-block">
@@ -153,39 +153,41 @@ export default function DepartmentsIndex({
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <div className="flex rounded-lg border border-border bg-muted/50 p-1">
+                        <div className="flex rounded-lg border border-border bg-card/50 p-1">
                             <button
                                 onClick={() => handleStatusFilter('')}
-                                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${!filters.status ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${!filters.status ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 All
                             </button>
                             <button
                                 onClick={() => handleStatusFilter('active')}
-                                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${filters.status === 'active' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${filters.status === 'active' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 Active
                             </button>
                             <button
                                 onClick={() => handleStatusFilter('archived')}
-                                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${filters.status === 'archived' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${filters.status === 'archived' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 Archived
                             </button>
                         </div>
 
-                        <div className="hidden items-center space-x-1 border-l border-border pl-4 sm:flex">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`rounded-md border p-1.5 transition ${viewMode === 'grid' ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-muted/50 text-muted-foreground hover:text-foreground'}`}
-                            >
-                                <LayoutGrid className="h-4 w-4" />
-                            </button>
+                        <div className="flex items-center space-x-1 rounded-lg border border-border bg-card/50 p-1">
                             <button
                                 onClick={() => setViewMode('table')}
-                                className={`rounded-md border p-1.5 transition ${viewMode === 'table' ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-muted/50 text-muted-foreground hover:text-foreground'}`}
+                                className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-primary/10 text-primary shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="Table View"
                             >
                                 <List className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-primary/10 text-primary shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="Grid View"
+                            >
+                                <LayoutGrid className="h-4 w-4" />
                             </button>
                         </div>
                     </div>

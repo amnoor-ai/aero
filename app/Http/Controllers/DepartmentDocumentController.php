@@ -86,6 +86,13 @@ class DepartmentDocumentController extends Controller
             abort(404, 'Document file not found.');
         }
 
+        $type = strtolower($document->file_type ?? '');
+        $inlineable = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'mp4', 'webm', 'ogg', 'mov', 'txt', 'html'];
+
+        if (! in_array($type, $inlineable)) {
+            return Storage::download($document->file_path, $document->name);
+        }
+
         return Storage::response($document->file_path);
     }
 

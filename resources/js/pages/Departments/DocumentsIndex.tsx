@@ -128,14 +128,11 @@ export default function DocumentsIndex({
                 </div>
 
                 {/* Page Title & Controls Header outside container */}
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center border-b border-border pb-6">
                     <div>
-                        <div className="flex items-center space-x-2">
-                            <Folder className="h-6 w-6 text-primary" />
-                            <h1 className="text-xl font-bold tracking-tight text-foreground">
-                                Global Documents Hub
-                            </h1>
-                        </div>
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
+                            Global Documents Hub
+                        </h1>
                         <p className="mt-1 text-xs text-muted-foreground">
                             Central repository of all organizational files and
                             documentation across all departments.
@@ -143,27 +140,27 @@ export default function DocumentsIndex({
                     </div>
 
                     {/* Controls: Search, Dept Filter, View Switcher */}
-                    <div className="flex flex-wrap items-center gap-3">
-                        <form
-                            onSubmit={handleSearchSubmit}
-                            className="relative"
-                        >
-                            <Search className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <div className="flex flex-wrap items-center gap-3.5">
+                        <div className="relative">
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 type="text"
                                 placeholder="Search documents..."
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="h-9 w-48 pl-9 text-xs sm:w-64"
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    handleSearchSubmit(e as any);
+                                }}
+                                className="h-9.5 w-48 pl-9 text-xs sm:w-64 bg-background rounded-lg"
                             />
-                        </form>
+                        </div>
 
                         <select
                             value={departmentId}
                             onChange={(e) =>
                                 handleDepartmentChange(e.target.value)
                             }
-                            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                            className="h-9.5 rounded-lg border border-input bg-background px-3 py-1 text-xs text-foreground shadow-2xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                         >
                             <option value="">All Departments</option>
                             {departments.map((dept) => (
@@ -173,17 +170,17 @@ export default function DocumentsIndex({
                             ))}
                         </select>
 
-                        <div className="flex items-center rounded-lg border border-border bg-muted p-1">
+                        <div className="flex items-center space-x-1 rounded-lg border border-border bg-card/50 p-1">
                             <button
                                 onClick={() => setViewMode('table')}
-                                className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-primary/10 text-primary shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                                 title="Table View"
                             >
                                 <List className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-primary/10 text-primary shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                                 title="Grid View"
                             >
                                 <LayoutGrid className="h-4 w-4" />

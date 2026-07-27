@@ -85,13 +85,12 @@ export default function SystemLogsIndex({ activities, filters = {} }: Activities
         <>
             <Head title="System Audit Logs - Aero DevPM" />
 
-            <div className="min-h-screen space-y-6 bg-background text-foreground">
+            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
                 {/* Header */}
                 <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-foreground">
-                            <ShieldCheck className="h-6 w-6 text-primary" />
-                            <span>System Audit & Activity Logs</span>
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
+                            System Audit & Activity Logs
                         </h1>
                         <p className="mt-1 text-xs text-muted-foreground">
                             Complete system-wide audit trail cataloging task modifications, document events, and user activities.
@@ -99,16 +98,16 @@ export default function SystemLogsIndex({ activities, filters = {} }: Activities
                     </div>
                 </div>
 
-                {/* Filter Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 shadow-2xs">
+                {/* Filter Toolbar (Borderless, Page Canvas Native) */}
+                <div className="flex flex-wrap items-center justify-between gap-4 py-1">
                     <div className="relative w-full sm:w-80">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Filter logs by action, user, task..."
                             value={filters.search || ''}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background py-1.5 pl-9 pr-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                            className="w-full h-9.5 rounded-lg border border-input bg-background pl-9 pr-3 text-xs text-foreground shadow-2xs focus:border-primary focus:outline-none"
                         />
                     </div>
                     <span className="font-mono text-xs text-muted-foreground">

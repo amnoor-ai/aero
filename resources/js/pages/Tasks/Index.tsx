@@ -147,17 +147,17 @@ export default function TasksIndex({
                     </div>
                 </div>
 
-                {/* Filter Toolbar & Column Manager */}
-                <div className="p-3 bg-card border border-border rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-2xs">
-                    <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                {/* Filter Toolbar & Column Manager (Borderless, Page Canvas Native) */}
+                <div className="py-1 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <div className="relative w-full sm:w-64">
-                            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+                            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 placeholder="Search by task title or ID..."
                                 value={filters.search || ''}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                                className="w-full h-9.5 bg-background border border-input rounded-lg pl-9 pr-3 text-xs text-foreground shadow-2xs focus:outline-none focus:border-primary"
                             />
                         </div>
 

@@ -110,35 +110,35 @@ return;
                     </Button>
                 </div>
 
-                {/* Filter Bar */}
-                <div className="p-3 bg-card border border-border rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                {/* Filter Bar (Borderless, Page Canvas Native) */}
+                <div className="py-1 flex flex-wrap items-center justify-between gap-4">
                     <div className="relative w-full sm:w-72">
-                        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+                        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
                             placeholder="Search milestones by name or project..."
                             value={filters.search || ''}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                            className="w-full h-9.5 bg-background border border-input rounded-lg pl-9 pr-3 text-xs text-foreground shadow-2xs focus:outline-none focus:border-primary"
                         />
                     </div>
 
-                    <div className="flex bg-muted/50 p-1 rounded-lg border border-border">
+                    <div className="flex bg-card/50 p-1 rounded-lg border border-border">
                         <button
                             onClick={() => handleStatusFilter('')}
-                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${!filters.status ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${!filters.status ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             All
                         </button>
                         <button
                             onClick={() => handleStatusFilter('active')}
-                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'active' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'active' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             Active
                         </button>
                         <button
                             onClick={() => handleStatusFilter('completed')}
-                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'completed' ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'completed' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             Completed
                         </button>

@@ -17,6 +17,7 @@ import {
     Clock,
     User,
     Filter,
+    ExternalLink,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { DeleteDocumentModal } from '@/components/departments/DeleteDocumentModal';
@@ -82,22 +83,32 @@ export default function DocumentationIndex({
     const [renameDoc, setRenameDoc] = useState<DocumentItem | null>(null);
     const [deleteDoc, setDeleteDoc] = useState<DocumentItem | null>(null);
 
-    const handleFilterChange = (newDeptId?: string, newType?: string) => {
+    const handleFilterChange = (newDeptId?: string, newType?: string, newSearch?: string) => {
         const dId = newDeptId !== undefined ? newDeptId : departmentId;
         const fType = newType !== undefined ? newType : fileTypeFilter;
+        const sQuery = newSearch !== undefined ? newSearch : search;
 
         router.get(
             '/documentation',
             {
-                search,
+                search: sQuery || undefined,
                 department_id: dId || undefined,
                 file_type: fType || undefined,
             },
             {
                 preserveState: true,
                 preserveScroll: true,
+                replace: true,
             },
         );
+    };
+
+    const handleDocumentClick = (doc: DocumentItem) => {
+        if (isMediaFileType(doc.file_type)) {
+            setPreviewDoc(doc);
+        } else {
+            window.open(`/departments/documents/${doc.id}/view`, '_blank');
+        }
     };
 
     const handleSearchSubmit = (e: React.FormEvent) => {
@@ -123,18 +134,17 @@ export default function DocumentationIndex({
     };
 
     return (
-        <div className="space-y-6 pb-12">
+        <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
             <Head title="Documentation & File Directory - Aero DevPM" />
 
-            {/* Header Title Section */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Standardized Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                 <div>
-                    <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-foreground">
-                        <FileText className="h-7 w-7 text-primary" />
-                        <span>Documentation & File Directory</span>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground">
+                        Documentation & File Directory
                     </h1>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                        Central registry cataloging all project attachments, department mandates, technical specs, and workspace files.
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Central registry cataloging all project attachments, department documents, technical specs, and workspace files.
                     </p>
                 </div>
             </div>
@@ -206,34 +216,34 @@ export default function DocumentationIndex({
                 </div>
             </div>
 
-            {/* Filter & View Mode Controls */}
-            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
-                <form onSubmit={handleSearchSubmit} className="flex flex-1 items-center gap-2">
-                    <div className="relative flex-1">
+            {/* Filter & View Mode Controls (Clean, Spacing & Background Alignment) */}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between py-1">
+                <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+                    {/* Search Input */}
+                    <div className="relative max-w-md flex-1">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
-                            placeholder="Search documents by name or extension..."
+                            placeholder="Search by title, department, author, or extension..."
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="pl-9 text-xs"
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setSearch(val);
+                                handleFilterChange(undefined, undefined, val);
+                            }}
+                            className="pl-9 h-9.5 text-xs rounded-lg bg-background"
                         />
                     </div>
-                    <Button type="submit" variant="secondary" size="sm" className="h-9 px-3 text-xs">
-                        Search
-                    </Button>
-                </form>
 
-                <div className="flex flex-wrap items-center gap-2">
                     {/* Department Select */}
-                    <div className="flex items-center space-x-1">
-                        <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="flex items-center space-x-2">
+                        <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
                         <select
                             value={departmentId}
                             onChange={(e) => {
                                 setDepartmentId(e.target.value);
                                 handleFilterChange(e.target.value);
                             }}
-                            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-xs text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                            className="h-9.5 rounded-lg border border-input bg-background px-3 py-1 text-xs text-foreground shadow-2xs focus:outline-none focus:ring-1 focus:ring-ring"
                         >
                             <option value="">All Departments</option>
                             {departments.map((dept) => (
@@ -243,9 +253,11 @@ export default function DocumentationIndex({
                             ))}
                         </select>
                     </div>
+                </div>
 
+                <div className="flex items-center gap-3">
                     {/* File Type Filter Pills */}
-                    <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1">
+                    <div className="flex items-center rounded-lg border border-border bg-card/50 p-1">
                         {[
                             { id: '', label: 'All' },
                             { id: 'pdf', label: 'PDFs' },
@@ -258,9 +270,9 @@ export default function DocumentationIndex({
                                     setFileTypeFilter(item.id);
                                     handleFilterChange(undefined, item.id);
                                 }}
-                                className={`rounded px-2.5 py-1 text-[11px] font-semibold transition ${
+                                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${
                                     fileTypeFilter === item.id
-                                        ? 'bg-primary text-primary-foreground shadow-xs'
+                                        ? 'bg-primary text-primary-foreground shadow-2xs'
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
@@ -270,12 +282,12 @@ export default function DocumentationIndex({
                     </div>
 
                     {/* View Switcher */}
-                    <div className="flex items-center space-x-1 rounded-lg border border-border bg-muted/40 p-1">
+                    <div className="flex items-center space-x-1 rounded-lg border border-border bg-card/50 p-1">
                         <button
                             onClick={() => setViewMode('table')}
-                            className={`rounded p-1 transition ${
+                            className={`rounded-md p-1.5 transition ${
                                 viewMode === 'table'
-                                    ? 'bg-card text-foreground shadow-xs'
+                                    ? 'bg-primary/10 text-primary shadow-2xs'
                                     : 'text-muted-foreground hover:text-foreground'
                             }`}
                             title="Table View"
@@ -284,9 +296,9 @@ export default function DocumentationIndex({
                         </button>
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`rounded p-1 transition ${
+                            className={`rounded-md p-1.5 transition ${
                                 viewMode === 'grid'
-                                    ? 'bg-card text-foreground shadow-xs'
+                                    ? 'bg-primary/10 text-primary shadow-2xs'
                                     : 'text-muted-foreground hover:text-foreground'
                             }`}
                             title="Grid View"
@@ -296,6 +308,7 @@ export default function DocumentationIndex({
                     </div>
                 </div>
             </div>
+
 
             {/* Document Content List */}
             {documents.data.length === 0 ? (
@@ -328,13 +341,20 @@ export default function DocumentationIndex({
                                     <tr key={doc.id} className="group transition hover:bg-muted/30">
                                         <td className="px-4 py-3.5">
                                             <div className="flex items-center space-x-3">
-                                                <div className="rounded-lg bg-muted p-2">
+                                                <button
+                                                    onClick={() => handleDocumentClick(doc)}
+                                                    className="rounded-lg bg-muted p-2 hover:bg-primary/20 transition cursor-pointer"
+                                                    title={isMediaFileType(doc.file_type) ? 'Preview Media' : 'Open Document in New Tab'}
+                                                >
                                                     {getFileIcon(doc.file_type)}
-                                                </div>
+                                                </button>
                                                 <div>
-                                                    <span className="font-semibold text-foreground group-hover:text-primary transition">
+                                                    <button
+                                                        onClick={() => handleDocumentClick(doc)}
+                                                        className="font-semibold text-foreground hover:text-primary transition text-left cursor-pointer"
+                                                    >
                                                         {doc.name}
-                                                    </span>
+                                                    </button>
                                                     <span className="ml-2 rounded bg-muted/80 px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground font-mono">
                                                         .{doc.file_type}
                                                     </span>
@@ -375,16 +395,26 @@ export default function DocumentationIndex({
                                         </td>
                                         <td className="px-4 py-3.5 text-right">
                                             <div className="flex items-center justify-end space-x-1">
-                                                {isMediaFileType(doc.file_type) && (
+                                                {isMediaFileType(doc.file_type) ? (
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => setPreviewDoc(doc)}
                                                         className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                                                        title="Preview Media"
+                                                        title="Preview Media Popup"
                                                     >
                                                         <Eye className="h-3.5 w-3.5" />
                                                     </Button>
+                                                ) : (
+                                                    <a
+                                                        href={`/departments/documents/${doc.id}/view`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition"
+                                                        title="Open Document in New Tab"
+                                                    >
+                                                        <ExternalLink className="h-3.5 w-3.5" />
+                                                    </a>
                                                 )}
 
                                                 <a
@@ -435,13 +465,20 @@ export default function DocumentationIndex({
                             <div className="space-y-3">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center space-x-3">
-                                        <div className="rounded-lg bg-muted p-2.5">
+                                        <button
+                                            onClick={() => handleDocumentClick(doc)}
+                                            className="rounded-lg bg-muted p-2.5 hover:bg-primary/20 transition cursor-pointer"
+                                            title={isMediaFileType(doc.file_type) ? 'Preview Media' : 'Open Document in New Tab'}
+                                        >
                                             {getFileIcon(doc.file_type)}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <h4 className="truncate font-semibold text-foreground group-hover:text-primary transition">
+                                        </button>
+                                        <div className="min-w-0 flex-1 text-left">
+                                            <button
+                                                onClick={() => handleDocumentClick(doc)}
+                                                className="truncate font-semibold text-foreground hover:text-primary transition block text-left w-full cursor-pointer"
+                                            >
                                                 {doc.name}
-                                            </h4>
+                                            </button>
                                             <span className="text-[10px] font-mono uppercase text-muted-foreground">
                                                 .{doc.file_type} • {formatFileSize(doc.file_size)}
                                             </span>
@@ -477,16 +514,26 @@ export default function DocumentationIndex({
                             </div>
 
                             <div className="mt-4 flex items-center justify-end space-x-1 border-t border-border/60 pt-3">
-                                {isMediaFileType(doc.file_type) && (
+                                {isMediaFileType(doc.file_type) ? (
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => setPreviewDoc(doc)}
-                                        className="h-8 gap-1.5 px-2.5 text-xs"
+                                        className="h-8 gap-1.5 px-2.5 text-xs font-semibold"
                                     >
                                         <Eye className="h-3.5 w-3.5" />
-                                        <span>Preview</span>
+                                        <span>Preview Media</span>
                                     </Button>
+                                ) : (
+                                    <a
+                                        href={`/departments/documents/${doc.id}/view`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-2.5 text-xs font-medium text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground transition font-semibold"
+                                    >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                        <span>Open in New Tab</span>
+                                    </a>
                                 )}
 
                                 <a

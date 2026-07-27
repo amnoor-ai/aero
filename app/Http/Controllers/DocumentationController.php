@@ -35,7 +35,15 @@ class DocumentationController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('file_type', 'like', "%{$search}%");
+                    ->orWhere('file_type', 'like', "%{$search}%")
+                    ->orWhereHas('department', function ($deptQ) use ($search) {
+                        $deptQ->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('uploadedBy', function ($userQ) use ($search) {
+                        $userQ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 

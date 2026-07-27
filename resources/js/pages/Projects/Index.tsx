@@ -98,16 +98,17 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                     </div>
                 </div>
 
-                <div className="p-3 bg-card border border-border rounded-xl flex flex-wrap items-center justify-between gap-3">
+                {/* Filter & Controls Bar (Borderless, Page Canvas Native) */}
+                <div className="py-1 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center space-x-3 w-full sm:w-auto">
                         <div className="relative w-full sm:w-64">
-                            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+                            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 placeholder="Search projects by name..."
                                 value={filters.search || ''}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                                className="w-full h-9.5 bg-background border border-input rounded-lg pl-9 pr-3 text-xs text-foreground shadow-2xs focus:outline-none focus:border-primary"
                             />
                         </div>
                         <span className="text-xs text-muted-foreground font-medium hidden sm:inline-block">
@@ -116,22 +117,22 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <div className="flex bg-muted/50 p-1 rounded-lg border border-border">
+                        <div className="flex bg-card/50 p-1 rounded-lg border border-border">
                             <button
                                 onClick={() => handleStatusFilter('')}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${!filters.status ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${!filters.status ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 All
                             </button>
                             <button
                                 onClick={() => handleStatusFilter('favorites')}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition flex items-center ${filters.status === 'favorites' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center ${filters.status === 'favorites' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 <Star className="w-3 h-3 mr-1" /> Favorites
                             </button>
                             <button
                                 onClick={() => handleStatusFilter('archived')}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${filters.status === 'archived' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'archived' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 Archived
                             </button>
