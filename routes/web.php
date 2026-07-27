@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DepartmentDocumentController;
+use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\MyDeskController;
 use App\Http\Controllers\ProjectController;
@@ -23,8 +24,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard & My Desk Command Center
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/my-desk', MyDeskController::class)->name('my-desk');
+    Route::get('/documentation', [DocumentationController::class, 'index'])->name('documentation.index');
 
-    // Projects & Planning Suite Routes
+    // System Audit & Logs Routes
+    Route::get('/system/logs', [ActivityController::class, 'index'])->name('system.logs');
     Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
     Route::get('/milestones', [MilestoneController::class, 'globalIndex'])->name('milestones.global');
     Route::get('/work-plan', [WorkPlanController::class, 'index'])->name('work-plan.index');

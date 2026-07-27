@@ -10,6 +10,7 @@ import {
     Activity,
     Target,
     BarChart3,
+    FileText,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { NavUser } from '@/components/nav-user';
@@ -102,6 +103,18 @@ export function AppSidebar() {
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/documentation')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/documentation" className="group/link flex items-center gap-2">
+                                            <FileText className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">Documentation</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
@@ -120,18 +133,6 @@ export function AppSidebar() {
                                         <Link href="/tasks" className="group/link flex items-center gap-2">
                                             <CheckSquare className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
                                             <span className="font-medium">Tasks Directory</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton 
-                                        isActive={isCurrentUrl('/activities')} 
-                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
-                                        asChild
-                                    >
-                                        <Link href="/activities" className="group/link flex items-center gap-2">
-                                            <Activity className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
-                                            <span className="font-medium">Activities Feed</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -228,6 +229,18 @@ export function AppSidebar() {
                         <SidebarGroupLabel>System</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton 
+                                        isActive={isCurrentUrl('/system/logs') || isCurrentUrl('/activities')} 
+                                        className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
+                                        asChild
+                                    >
+                                        <Link href="/system/logs" className="group/link flex items-center gap-2">
+                                            <Activity className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
+                                            <span className="font-medium">System Audit Logs</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
                                 <SidebarMenuItem>
                                     <SidebarMenuButton 
                                         isActive={isCurrentUrl('/settings/profile')} 

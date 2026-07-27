@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Search, Folder, CheckSquare, LayoutGrid, Activity, Target, BarChart3, Building2, Sliders } from 'lucide-react';
+import { Search, Folder, CheckSquare, LayoutGrid, Activity, Target, BarChart3, Building2, Sliders, FileText } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 interface ProjectItem {
@@ -17,12 +17,13 @@ interface CommandPaletteProps {
 const systemPages = [
     { title: 'Dashboard Overview', href: '/dashboard', icon: LayoutGrid, group: 'Pages' },
     { title: 'My Desk (Personal Tasks)', href: '/my-desk', icon: CheckSquare, group: 'Pages' },
+    { title: 'Documentation & Files Directory', href: '/documentation', icon: FileText, group: 'Pages' },
     { title: 'Tasks Directory', href: '/tasks', icon: CheckSquare, group: 'Pages' },
-    { title: 'Activities Feed', href: '/activities', icon: Activity, group: 'Pages' },
     { title: 'Projects Hub', href: '/projects', icon: Folder, group: 'Pages' },
     { title: 'Milestones Dashboard', href: '/milestones', icon: Target, group: 'Pages' },
     { title: 'Work Plan (Roadmap)', href: '/work-plan', icon: BarChart3, group: 'Pages' },
     { title: 'Workspace Departments', href: '/departments', icon: Building2, group: 'Pages' },
+    { title: 'System Audit Logs', href: '/system/logs', icon: Activity, group: 'System' },
     { title: 'Account Settings', href: '/settings/profile', icon: Sliders, group: 'Settings' },
     { title: 'Security Settings', href: '/settings/security', icon: Sliders, group: 'Settings' },
     { title: 'Appearance Settings', href: '/settings/appearance', icon: Sliders, group: 'Settings' },

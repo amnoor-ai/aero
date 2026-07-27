@@ -4,7 +4,14 @@ import {
     Folder,
     Clock,
     Sparkles,
+    Activity as ActivityIcon,
+    ShieldCheck,
+    CheckCircle2,
+    MessageSquare,
+    FileEdit,
+    PlusCircle,
 } from 'lucide-react';
+import React from 'react';
 
 interface ActivityItem {
     id: number;
@@ -28,92 +35,118 @@ interface ActivitiesIndexProps {
     filters: any;
 }
 
-export default function ActivitiesIndex({ activities, filters = {} }: ActivitiesIndexProps) {
+export default function SystemLogsIndex({ activities, filters = {} }: ActivitiesIndexProps) {
     const handleSearch = (query: string) => {
-        router.get('/activities', { search: query }, { preserveState: true, replace: true });
+        router.get('/system/logs', { search: query }, { preserveState: true, replace: true });
     };
 
     const formatActionBadge = (action: string) => {
         switch (action) {
             case 'task_created':
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-500/10 text-blue-400 border border-blue-500/30">Created</span>;
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                        <PlusCircle className="h-3 w-3" />
+                        <span>Created</span>
+                    </span>
+                );
             case 'status_changed':
             case 'column_updated':
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30">Moved</span>;
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span>Moved</span>
+                    </span>
+                );
             case 'comment_added':
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">Comment</span>;
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                        <MessageSquare className="h-3 w-3" />
+                        <span>Comment</span>
+                    </span>
+                );
             case 'task_updated':
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Updated</span>;
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                        <FileEdit className="h-3 w-3" />
+                        <span>Updated</span>
+                    </span>
+                );
             default:
-                return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-muted text-muted-foreground border border-border">{action}</span>;
+                return (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <ActivityIcon className="h-3 w-3" />
+                        <span>{action}</span>
+                    </span>
+                );
         }
     };
 
     return (
         <>
-            <Head title="Activities Feed - Aero DevPM" />
+            <Head title="System Audit Logs - Aero DevPM" />
 
-            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
+            <div className="min-h-screen space-y-6 bg-background text-foreground">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+                <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground">
-                            Activities Feed
+                        <h1 className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-foreground">
+                            <ShieldCheck className="h-6 w-6 text-primary" />
+                            <span>System Audit & Activity Logs</span>
                         </h1>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Real-time chronological audit trail of all task modifications, comments, and project events.
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Complete system-wide audit trail cataloging task modifications, document events, and user activities.
                         </p>
                     </div>
                 </div>
 
                 {/* Filter Toolbar */}
-                <div className="p-3 bg-card border border-border rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 shadow-2xs">
                     <div className="relative w-full sm:w-80">
-                        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <input
                             type="text"
-                            placeholder="Filter activities by action, user, task..."
+                            placeholder="Filter logs by action, user, task..."
                             value={filters.search || ''}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                            className="w-full rounded-lg border border-border bg-background py-1.5 pl-9 pr-3 text-xs text-foreground focus:border-primary focus:outline-none"
                         />
                     </div>
-                    <span className="text-xs text-muted-foreground font-mono">
-                        {activities.total || 0} Events Logged
+                    <span className="font-mono text-xs text-muted-foreground">
+                        {activities.total || 0} System Logs Recorded
                     </span>
                 </div>
 
                 {/* Feed Items */}
                 {activities.data.length === 0 ? (
-                    <div className="bg-card border border-border rounded-xl p-12 text-center space-y-3">
-                        <Sparkles className="w-8 h-8 text-muted-foreground/50 mx-auto" />
-                        <h3 className="text-base font-semibold text-foreground">No Activities Found</h3>
-                        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    <div className="space-y-3 rounded-xl border border-border bg-card p-12 text-center">
+                        <Sparkles className="mx-auto h-8 w-8 text-muted-foreground/50" />
+                        <h3 className="text-base font-semibold text-foreground">No Logs Found</h3>
+                        <p className="mx-auto max-w-sm text-xs text-muted-foreground">
                             No logged task changes or team actions match your current search parameter.
                         </p>
                     </div>
                 ) : (
-                    <div className="bg-card border border-border rounded-xl p-6 relative space-y-6 shadow-2xs">
-                        <div className="absolute left-9 top-8 bottom-8 w-px bg-border/60 hidden sm:block" />
+                    <div className="relative space-y-4 rounded-xl border border-border bg-card p-6 shadow-2xs">
+                        <div className="absolute bottom-8 left-9 top-8 hidden w-px bg-border/60 sm:block" />
 
                         {activities.data.map((item) => (
-                            <div key={item.id} className="flex items-start space-x-4 relative group">
+                            <div key={item.id} className="group relative flex items-start space-x-4">
                                 {/* Avatar */}
-                                <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold border border-primary/30 shrink-0 z-10">
+                                <div className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20 text-xs font-bold text-primary">
                                     {item.user ? item.user.name.charAt(0) : '?'}
                                 </div>
 
-                                <div className="flex-1 bg-muted/40 border border-border/70 rounded-xl p-4 space-y-2 group-hover:border-cyan-500/40 transition">
+                                <div className="flex-1 space-y-2 rounded-xl border border-border/70 bg-muted/40 p-4 transition group-hover:border-primary/40">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                         <div className="flex items-center space-x-2">
-                                            <span className="font-bold text-xs text-foreground">
+                                            <span className="text-xs font-bold text-foreground">
                                                 {item.user ? item.user.name : 'System User'}
                                             </span>
                                             {formatActionBadge(item.action)}
                                         </div>
 
-                                        <span className="text-[11px] font-mono text-muted-foreground flex items-center">
-                                            <Clock className="w-3 h-3 mr-1" />
+                                        <span className="flex items-center font-mono text-[11px] text-muted-foreground">
+                                            <Clock className="mr-1 h-3 w-3" />
                                             {new Date(item.created_at).toLocaleString()}
                                         </span>
                                     </div>
@@ -123,13 +156,13 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
                                             <span className="font-mono text-muted-foreground">#{item.task.id}</span>
                                             <Link
                                                 href={`/projects/${item.task.project?.id || 1}`}
-                                                className="font-semibold text-foreground hover:text-cyan-400 transition truncate max-w-md"
+                                                className="max-w-md truncate font-semibold text-foreground transition hover:text-primary"
                                             >
                                                 {item.task.title}
                                             </Link>
                                             {item.task.project && (
-                                                <span className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium flex items-center shrink-0">
-                                                    <Folder className="w-2.5 h-2.5 mr-1 text-amber-400" />
+                                                <span className="flex shrink-0 items-center rounded bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                                    <Folder className="mr-1 h-2.5 w-2.5 text-amber-400" />
                                                     {item.task.project.name}
                                                 </span>
                                             )}
@@ -137,7 +170,7 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
                                     )}
 
                                     {item.details && typeof item.details === 'object' && (
-                                        <div className="text-xs text-muted-foreground font-mono bg-background/60 p-2 rounded-lg border border-border/40">
+                                        <div className="rounded-lg border border-border/40 bg-background/60 p-2 font-mono text-xs text-muted-foreground">
                                             {JSON.stringify(item.details)}
                                         </div>
                                     )}
@@ -151,9 +184,9 @@ export default function ActivitiesIndex({ activities, filters = {} }: Activities
     );
 }
 
-ActivitiesIndex.layout = {
+SystemLogsIndex.layout = {
     breadcrumbs: [
-        { title: 'Projects & Planning', href: '/projects' },
-        { title: 'Activities', href: '/activities' },
+        { title: 'System', href: '/system/logs' },
+        { title: 'System Audit Logs', href: '/system/logs' },
     ],
 };
