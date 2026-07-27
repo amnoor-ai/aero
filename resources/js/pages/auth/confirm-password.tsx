@@ -28,28 +28,29 @@ export default function ConfirmPassword() {
 
             <Form {...store.form()} resetOnSuccess={['password']}>
                 {({ processing, errors }) => (
-                    <div className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                    <div className="space-y-4">
+                        <div className="grid gap-1.5">
+                            <Label htmlFor="password" className="text-xs font-semibold text-foreground">Password</Label>
                             <PasswordInput
                                 id="password"
                                 name="password"
-                                placeholder="Password"
+                                placeholder="••••••••"
                                 autoComplete="current-password"
                                 autoFocus
+                                className="h-9 rounded-md border-input bg-background text-xs shadow-xs focus-visible:ring-1 focus-visible:ring-ring"
                             />
 
                             <InputError message={errors.password} />
                         </div>
 
-                        <div className="flex items-center">
+                        <div className="flex items-center pt-2">
                             <Button
-                                className="w-full"
+                                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-xs h-9 rounded-md transition"
                                 disabled={processing}
                                 data-test="confirm-password-button"
                             >
-                                {processing && <Spinner />}
-                                Confirm password
+                                {processing && <Spinner className="w-4 h-4 mr-2" />}
+                                Confirm Password
                             </Button>
                         </div>
                     </div>

@@ -20,24 +20,27 @@ export default function AuthCardLayout({
     description?: string;
 }>) {
     return (
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
+        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10 text-foreground">
             <div className="flex w-full max-w-md flex-col gap-6">
                 <Link
                     href={home()}
-                    className="flex items-center gap-2 self-center font-medium"
+                    className="flex items-center justify-center gap-2.5 self-center font-bold text-foreground transition-transform hover:scale-105"
                 >
-                    <div className="flex h-9 w-9 items-center justify-center">
-                        <AppLogoIcon className="size-9 fill-current text-black dark:text-white" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-2xs">
+                        <AppLogoIcon className="size-6 fill-current text-primary" />
                     </div>
+                    <span className="text-xl font-bold tracking-tight text-foreground">Aero DevPM</span>
                 </Link>
 
                 <div className="flex flex-col gap-6">
-                    <Card className="rounded-xl">
-                        <CardHeader className="px-10 pt-8 pb-0 text-center">
-                            <CardTitle className="text-xl">{title}</CardTitle>
-                            <CardDescription>{description}</CardDescription>
+                    <Card className="rounded-xl border border-border bg-card shadow-xs">
+                        <CardHeader className="px-8 pt-8 pb-2 text-center space-y-1.5">
+                            <CardTitle className="text-xl font-bold tracking-tight text-foreground">{title}</CardTitle>
+                            {description && (
+                                <CardDescription className="text-xs text-muted-foreground">{description}</CardDescription>
+                            )}
                         </CardHeader>
-                        <CardContent className="px-10 py-8">
+                        <CardContent className="px-8 py-6">
                             {children}
                         </CardContent>
                     </Card>

@@ -24,7 +24,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
                 disableWhileProcessing
-                className="flex flex-col gap-6"
+                className="flex flex-col gap-5"
             >
                 {({ processing, errors }) => (
                     <>
@@ -35,9 +35,9 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                             />
                         )}
 
-                        <div className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
+                        <div className="grid gap-4">
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="name" className="text-xs font-semibold text-foreground">Name</Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -47,15 +47,13 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                     autoComplete="name"
                                     name="name"
                                     placeholder="Full name"
+                                    className="h-9 rounded-md border-input bg-background text-xs shadow-xs focus-visible:ring-1 focus-visible:ring-ring"
                                 />
-                                <InputError
-                                    message={errors.name}
-                                    className="mt-2"
-                                />
+                                <InputError message={errors.name} />
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="email" className="text-xs font-semibold text-foreground">Email address</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -63,27 +61,29 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                     tabIndex={2}
                                     autoComplete="email"
                                     name="email"
-                                    placeholder="email@example.com"
+                                    placeholder="name@example.com"
+                                    className="h-9 rounded-md border-input bg-background text-xs shadow-xs focus-visible:ring-1 focus-visible:ring-ring"
                                 />
                                 <InputError message={errors.email} />
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">Password</Label>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="password" className="text-xs font-semibold text-foreground">Password</Label>
                                 <PasswordInput
                                     id="password"
                                     required
                                     tabIndex={3}
                                     autoComplete="new-password"
                                     name="password"
-                                    placeholder="Password"
+                                    placeholder="••••••••"
                                     passwordrules={passwordRules}
+                                    className="h-9 rounded-md border-input bg-background text-xs shadow-xs focus-visible:ring-1 focus-visible:ring-ring"
                                 />
                                 <InputError message={errors.password} />
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="password_confirmation" className="text-xs font-semibold text-foreground">
                                     Confirm password
                                 </Label>
                                 <PasswordInput
@@ -92,8 +92,9 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                     tabIndex={4}
                                     autoComplete="new-password"
                                     name="password_confirmation"
-                                    placeholder="Confirm password"
+                                    placeholder="••••••••"
                                     passwordrules={passwordRules}
+                                    className="h-9 rounded-md border-input bg-background text-xs shadow-xs focus-visible:ring-1 focus-visible:ring-ring"
                                 />
                                 <InputError
                                     message={errors.password_confirmation}
@@ -102,16 +103,16 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
 
                             <Button
                                 type="submit"
-                                className="mt-2 w-full"
+                                className="mt-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-xs h-9 rounded-md transition"
                                 tabIndex={5}
                                 data-test="register-user-button"
                             >
-                                {processing && <Spinner />}
-                                Create account
+                                {processing && <Spinner className="w-4 h-4 mr-2" />}
+                                Create Account
                             </Button>
                         </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
+                        <div className="text-center text-xs text-muted-foreground pt-3 border-t border-border/80">
                             Already have an account?{' '}
                             <TextLink
                                 href={
