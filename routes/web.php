@@ -71,10 +71,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/tasks/{task}/position', [TaskController::class, 'updatePosition'])->name('tasks.update-position');
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 
-    // Task Sub-features (Checklists & Comments)
+    // Task Sub-features (Checklists, Comments & Documents)
     Route::post('/tasks/{task}/checklists', [TaskController::class, 'addChecklist'])->name('tasks.checklists.store');
     Route::patch('/checklists/{checklist}/toggle', [TaskController::class, 'toggleChecklist'])->name('checklists.toggle');
+    Route::delete('/checklists/{checklist}', [TaskController::class, 'deleteChecklist'])->name('checklists.destroy');
     Route::post('/tasks/{task}/comments', [TaskController::class, 'addComment'])->name('tasks.comments.store');
+    Route::post('/tasks/{task}/documents', [TaskController::class, 'uploadDocument'])->name('tasks.documents.store');
 });
 
 Route::middleware(['auth'])->group(function () {

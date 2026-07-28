@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BoardColumn;
 use App\Models\Department;
+use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -111,12 +113,16 @@ class TaskDirectoryController extends Controller
         $projects = Project::where('workspace_id', $workspaceId)->select('id', 'name')->get();
         $departments = Department::where('workspace_id', $workspaceId)->select('id', 'name')->get();
         $users = User::select('id', 'name')->get();
+        $milestones = Milestone::where('workspace_id', $workspaceId)->select('id', 'name', 'project_id')->get();
+        $boardColumns = BoardColumn::select('id', 'name', 'project_id', 'color', 'position')->orderBy('position')->get();
 
         return Inertia::render('Tasks/Index', [
             'tasks' => $tasks,
             'projects' => $projects,
             'departments' => $departments,
             'users' => $users,
+            'milestones' => $milestones,
+            'boardColumns' => $boardColumns,
             'filters' => $request->only([
                 'search', 'status', 'priority', 'project_id',
                 'assignee_id', 'department_id', 'due_date_from',

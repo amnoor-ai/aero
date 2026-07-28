@@ -8,6 +8,8 @@ use App\Actions\Task\UpdateTaskPositionAction;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskPositionRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Models\BoardColumn;
+use App\Models\DepartmentDocument;
 use App\Models\Task;
 use App\Models\TaskActivity;
 use App\Models\TaskChecklist;
@@ -25,7 +27,15 @@ class TaskController extends Controller
         $creatorId = $request->user()?->id ?? 1;
         $workspaceId = 1;
 
-        $createTaskAction->execute($request->validated(), $creatorId, $workspaceId);
+        $validated = $request->validated();
+        if (empty($validated['board_column_id']) && ! empty($validated['project_id'])) {
+            $firstCol = BoardColumn::where('project_id', $validated['project_id'])->orderBy('position')->first();
+            $validated['board_column_id'] = $firstCol?->id ?? 1;
+        } elseif (empty($validated['board_column_id'])) {
+            $validated['board_column_id'] = 1;
+        }
+
+        $createTaskAction->execute($validated, $creatorId, $workspaceId);
 
         return back()->with('success', 'Task created successfully.');
     }
@@ -74,12 +84,24 @@ class TaskController extends Controller
             'position' => $task->checklists()->max('position') + 1,
         ]);
 
+        $task->touch();
+
         return back();
     }
 
     public function toggleChecklist(TaskChecklist $checklist): RedirectResponse
     {
         $checklist->update(['is_completed' => ! $checklist->is_completed]);
+        $checklist->task?->touch();
+
+        return back();
+    }
+
+    public function deleteChecklist(TaskChecklist $checklist): RedirectResponse
+    {
+        $task = $checklist->task;
+        $checklist->delete();
+        $task?->touch();
 
         return back();
     }
@@ -104,5 +126,39 @@ class TaskController extends Controller
         ]);
 
         return back();
+    }
+
+    public function uploadDocument(Request $request, Task $task): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'file' => 'required|file|max:51200',
+        ]);
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $displayName = ! empty($validated['name']) ? $validated['name'] : "[TASK-#{$task->id}] {$originalName}";
+        $path = $file->store('department-documents');
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        $deptId = $task->project?->department_id ?? 1;
+
+        $doc = DepartmentDocument::create([
+            'department_id' => $deptId,
+            'name' => $displayName,
+            'file_path' => $path,
+            'file_type' => $extension,
+            'file_size' => $file->getSize(),
+            'uploaded_by_id' => $request->user()?->id ?? 1,
+        ]);
+
+        TaskActivity::create([
+            'task_id' => $task->id,
+            'user_id' => $request->user()?->id ?? 1,
+            'action' => 'document_uploaded',
+            'details' => ['document_name' => $displayName, 'document_id' => $doc->id],
+        ]);
+
+        return back()->with('success', 'Document uploaded and attached successfully.');
     }
 }

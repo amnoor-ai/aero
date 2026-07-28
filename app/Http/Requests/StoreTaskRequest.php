@@ -24,11 +24,12 @@ class StoreTaskRequest extends FormRequest
     {
         return [
             'project_id' => 'required|exists:projects,id',
-            'board_column_id' => 'required|exists:board_columns,id',
+            'board_column_id' => 'nullable|exists:board_columns,id',
             'sprint_id' => 'nullable|exists:sprints,id',
+            'milestone_id' => 'nullable|exists:milestones,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|string|in:bug,feature,improvement,task',
+            'type' => 'required|string|in:bug,feature,improvement,task,activity',
             'priority' => 'required|string|in:low,medium,high,urgent',
             'story_points' => 'nullable|integer|min:0',
             'assignee_id' => 'nullable|exists:users,id',
