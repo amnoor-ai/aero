@@ -572,7 +572,7 @@ export default function DepartmentShow({
                                     size="sm"
                                     className="gap-1.5 bg-primary text-xs font-semibold text-primary-foreground"
                                 >
-                                    <Upload className="h-4 w-4" /> + Upload
+                                    <Upload className="h-4 w-4" /> Upload
                                     Document
                                 </Button>
                             </div>

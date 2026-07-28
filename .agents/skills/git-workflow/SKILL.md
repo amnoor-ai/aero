@@ -7,15 +7,16 @@ description: "Guidelines for git commits, conventional commit formatting, and AI
 
 When Antigravity agents are tasked with committing code, they must adhere to standard professional practices to keep the repository history clean.
 
-## 1. Conventional Commits
-All commit messages must follow the Conventional Commits specification:
-- `feat:` for new features
+## 1. Conventional & Customer-Facing Commits
+All commit messages must follow the Conventional Commits specification with customer-friendly descriptions:
+- `feat:` for new features (written in clear, user-facing language for `/changelog`)
 - `fix:` for bug fixes
-- `refactor:` for code changes that neither fix a bug nor add a feature
+- `refactor:` for internal code restructuring (omitted from public changelog)
 - `style:` for formatting, missing semi-colons, etc.
-- `chore:` for updating dependencies, build scripts, etc.
+- `chore:` for updating dependencies, build scripts, etc. (omitted from public changelog)
 
-*Example:* `feat(auth): implemented two-factor authentication via email`
+*Example:* `feat(auth): add two-factor authentication via email`
+*Note:* Avoid raw technical filenames or internal symbols in commit subjects as post-commit hooks auto-derive entries for `changelog.json`.
 
 ## 2. Commit Sizing
 - Agents should strive to make atomic, logical commits. 

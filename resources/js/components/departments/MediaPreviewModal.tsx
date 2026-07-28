@@ -1,4 +1,4 @@
-import { Download, FileText, ExternalLink } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -124,11 +124,15 @@ export function MediaPreviewModal({
     isOpen,
     onClose,
 }: MediaPreviewModalProps) {
+    const [prevDocumentId, setPrevDocumentId] = React.useState<number | null>(null);
     const [hasLoadError, setHasLoadError] = React.useState(false);
 
-    React.useEffect(() => {
+    const currentDocId = document?.id ?? null;
+
+    if (currentDocId !== prevDocumentId) {
+        setPrevDocumentId(currentDocId);
         setHasLoadError(false);
-    }, [document]);
+    }
 
     if (!document) {
         return null;
