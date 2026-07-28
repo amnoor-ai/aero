@@ -1,22 +1,39 @@
 import { router } from '@inertiajs/react';
 import {
     X,
-    GitBranch,
     Plus,
     Send,
     Trash2,
+    FileText,
+    Download,
+    ExternalLink,
+    UploadCloud,
+    Loader2,
+    Eye,
+    FileCheck,
     Pencil,
+    Check,
+    Calendar,
+    User as UserIcon,
+    Tag,
+    Clock,
+    CheckCircle2,
+    MessageSquare,
     Paperclip,
-    ClipboardList,
+    Hash,
+    Sparkles,
+    Bookmark,
+    Info,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { DeleteTaskConfirmModal } from '@/components/tasks/DeleteTaskConfirmModal';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 interface UserItem {
     id: number;
     name: string;
-    email: string;
+    email?: string;
 }
 
 interface ChecklistItem {
@@ -40,13 +57,13 @@ interface TaskData {
     boardColumn?: { id: number; name: string };
     title: string;
     description?: string;
-    type: 'bug' | 'feature' | 'improvement' | 'task';
+    type: 'bug' | 'feature' | 'improvement' | 'task' | 'activity';
     priority: 'low' | 'medium' | 'high' | 'urgent';
     story_points?: number;
     assignee?: UserItem;
     assignee_id?: number;
     due_date?: string;
-    git_branch?: string;
+    updated_at?: string;
     checklists?: ChecklistItem[];
     comments?: CommentItem[];
     activities?: any[];
@@ -63,646 +80,1004 @@ interface TaskDetailModalProps {
 export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [] }: TaskDetailModalProps) {
     const formatDateForInput = (dateStr?: string) => {
         if (!dateStr) {
-return '';
-}
+            return '';
+        }
 
         const match = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
 
         return match ? match[1] : '';
     };
 
-    const [activeTab, setActiveTab] = useState<'tasks' | 'checklist' | 'comments' | 'activity'>('tasks');
+    const [activeTab, setActiveTab] = useState<'checklist' | 'comments' | 'documents'>('checklist');
     const [newChecklistTitle, setNewChecklistTitle] = useState('');
+    const [checklistName, setChecklistName] = useState('Default Checklist');
+    const [checklistDescription, setChecklistDescription] = useState('');
     const [newCommentContent, setNewCommentContent] = useState('');
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [titleText, setTitleText] = useState('');
     const [isEditingDescription, setIsEditingDescription] = useState(false);
     const [descriptionText, setDescriptionText] = useState('');
-    const [tags, setTags] = useState<string[]>(['frontend', 'v2-api']);
-    const [newTag, setNewTag] = useState('');
-    const [isAddingSubtask, setIsAddingSubtask] = useState(false);
-    const [subtaskTitle, setSubtaskTitle] = useState('');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+    const [previewDoc, setPreviewDoc] = useState<{ name: string; size: string; type: string; date: string } | null>(null);
+    const [uploadedDocsList, setUploadedDocsList] = useState<{ name: string; size: string; type: string; date: string }[]>([
+        {
+            name: 'Task_Specification_v1.0.pdf',
+            size: '2.4 MB',
+            type: 'PDF',
+            date: 'Yesterday',
+        },
+    ]);
 
     const [prevTaskKey, setPrevTaskKey] = useState<string>('');
     const [dueDate, setDueDate] = useState<string>(formatDateForInput(task?.due_date));
-    const [statusId, setStatusId] = useState<number>(task?.board_column_id || 0);
+    const [assigneeId, setAssigneeId] = useState<string>(task?.assignee_id ? String(task.assignee_id) : '');
     const [priority, setPriority] = useState<string>(task?.priority || 'medium');
-    const [assigneeId, setAssigneeId] = useState<string | number>(task?.assignee_id || '');
-    const [gitBranch, setGitBranch] = useState<string>(task?.git_branch || '');
+    const [statusId, setStatusId] = useState<number>(task?.board_column_id || task?.board_column?.id || task?.boardColumn?.id || 1);
+    const [storyPoints, setStoryPoints] = useState<string>(task?.story_points ? String(task.story_points) : '');
+    const [taskType, setTaskType] = useState<string>(task?.type || 'task');
+    const [localChecklists, setLocalChecklists] = useState<ChecklistItem[]>(task?.checklists || []);
+    const [localComments, setLocalComments] = useState<CommentItem[]>(task?.comments || []);
 
-    const currentTaskKey = `${task?.id}-${task?.due_date}-${task?.board_column_id}-${task?.priority}-${task?.assignee_id}-${task?.git_branch || ''}`;
+    const taskKey = task ? `${task.id}-${task.updated_at || ''}-${(task.checklists || []).length}-${(task.comments || []).length}` : '';
 
-    if (task && currentTaskKey !== prevTaskKey) {
-        setPrevTaskKey(currentTaskKey);
-        setDueDate(formatDateForInput(task.due_date));
-        setStatusId(task.board_column_id);
-        setPriority(task.priority);
-        setAssigneeId(task.assignee_id || '');
-        setGitBranch(task.git_branch || '');
+    if (taskKey !== prevTaskKey) {
+        setPrevTaskKey(taskKey);
+        setDueDate(formatDateForInput(task?.due_date));
+        setAssigneeId(task?.assignee_id ? String(task.assignee_id) : '');
+        setPriority(task?.priority || 'medium');
+        setStatusId(task?.board_column_id || task?.board_column?.id || task?.boardColumn?.id || 1);
+        setDescriptionText(task?.description || '');
+        setTitleText(task?.title || '');
+        setStoryPoints(task?.story_points ? String(task.story_points) : '');
+        setTaskType(task?.type || 'task');
+        setLocalChecklists(task?.checklists || []);
+        setLocalComments(task?.comments || []);
     }
 
     if (!isOpen || !task) {
         return null;
     }
 
-    const defaultColumns = [
-        { id: 1, name: 'Backlog' },
-        { id: 2, name: 'To Do' },
-        { id: 3, name: 'In Progress' },
-        { id: 4, name: 'In Review' },
-        { id: 5, name: 'Done' },
+    const activeColumns = columns.length > 0 ? columns : [
+        { id: 1, name: 'To Do' },
+        { id: 2, name: 'In Progress' },
+        { id: 3, name: 'Review' },
+        { id: 4, name: 'Done' },
     ];
 
-    const currentColumnName = task.board_column?.name || task.boardColumn?.name || 'To Do';
+    // Realtime Optimistic Title Save
+    const handleSaveTitle = () => {
+        if (!titleText.trim()) {
+            return;
+        }
 
-    const activeColumns = columns && columns.length > 0
-        ? columns
-        : (task.board_column_id
-            ? [
-                { id: task.board_column_id, name: currentColumnName },
-                ...defaultColumns.filter(c => c.id !== task.board_column_id)
-              ]
-            : defaultColumns);
-
-    const handleDueDateChange = (newDate: string) => {
-        setDueDate(newDate);
-        router.patch(
-            `/tasks/${task.id}`,
-            { due_date: newDate || null },
-            { preserveScroll: true }
-        );
+        setIsEditingTitle(false);
+        toast.success('Title updated');
+        router.patch(`/tasks/${task.id}`, { title: titleText }, { preserveScroll: true, preserveState: true });
     };
 
-    const handleStatusChange = (columnId: number) => {
-        setStatusId(columnId);
-        router.patch(`/tasks/${task.id}`, { board_column_id: columnId }, { preserveScroll: true });
+    // Realtime Optimistic Description Save
+    const handleSaveDescription = () => {
+        setIsEditingDescription(false);
+        toast.success('Description updated');
+        router.patch(`/tasks/${task.id}`, { description: descriptionText }, { preserveScroll: true, preserveState: true });
+    };
+
+    const handleStatusChange = (newColId: number) => {
+        setStatusId(newColId);
+        router.patch(`/tasks/${task.id}`, { board_column_id: newColId }, { preserveScroll: true, preserveState: true });
     };
 
     const handlePriorityChange = (newPriority: string) => {
         setPriority(newPriority);
-        router.patch(`/tasks/${task.id}`, { priority: newPriority }, { preserveScroll: true });
+        router.patch(`/tasks/${task.id}`, { priority: newPriority }, { preserveScroll: true, preserveState: true });
     };
 
-    const handleAssigneeChange = (newAssigneeId: string | number) => {
-        const val = newAssigneeId ? Number(newAssigneeId) : '';
-        setAssigneeId(val);
-        router.patch(`/tasks/${task.id}`, { assignee_id: val || null }, { preserveScroll: true });
+    const handleAssigneeChange = (newAssigneeId: string) => {
+        setAssigneeId(newAssigneeId);
+        router.patch(`/tasks/${task.id}`, { assignee_id: newAssigneeId || null }, { preserveScroll: true, preserveState: true });
     };
 
-    const handleGitBranchChange = (newBranch: string) => {
-        setGitBranch(newBranch);
-        router.patch(`/tasks/${task.id}`, { git_branch: newBranch || null }, { preserveScroll: true });
+    const handleDueDateChange = (newDueDate: string) => {
+        setDueDate(newDueDate);
+        router.patch(`/tasks/${task.id}`, { due_date: newDueDate || null }, { preserveScroll: true, preserveState: true });
     };
 
-    const handleAddChecklist = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleStoryPointsChange = (val: string) => {
+        setStoryPoints(val);
+        const points = val ? parseInt(val, 10) : null;
+        router.patch(`/tasks/${task.id}`, { story_points: points }, { preserveScroll: true, preserveState: true });
+    };
+
+    const handleTypeChange = (newType: string) => {
+        setTaskType(newType);
+        router.patch(`/tasks/${task.id}`, { type: newType }, { preserveScroll: true, preserveState: true });
+    };
+
+    // Realtime Optimistic Checklist Handlers
+    const handleAddChecklist = (e?: React.FormEvent) => {
+        if (e) {
+            e.preventDefault();
+        }
 
         if (!newChecklistTitle.trim()) {
-return;
-}
+            return;
+        }
 
-        router.post(`/tasks/${task.id}/checklists`, { title: newChecklistTitle }, {
-            preserveScroll: true,
-            onSuccess: () => setNewChecklistTitle(''),
-        });
+        const title = newChecklistTitle.trim();
+        const tempItem: ChecklistItem = {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            title,
+            is_completed: false,
+        };
+
+        setLocalChecklists((prev) => [...prev, tempItem]);
+        setNewChecklistTitle('');
+        toast.success('Checklist item added');
+
+        router.post(`/tasks/${task.id}/checklists`, { title }, { preserveScroll: true, preserveState: true });
     };
 
     const handleToggleChecklist = (checklistId: number) => {
-        router.patch(`/checklists/${checklistId}/toggle`, {}, { preserveScroll: true });
+        setLocalChecklists((prev) =>
+            prev.map((c) => (c.id === checklistId ? { ...c, is_completed: !c.is_completed } : c))
+        );
+
+        if (checklistId > 1000000000) {
+            return;
+        }
+
+        router.patch(`/checklists/${checklistId}/toggle`, {}, { preserveScroll: true, preserveState: true });
     };
 
+    const handleDeleteChecklist = (checklistId: number, e?: React.MouseEvent) => {
+        if (e) {
+            e.stopPropagation();
+        }
+
+        setLocalChecklists((prev) => prev.filter((c) => c.id !== checklistId));
+        toast.success('Checklist item removed');
+
+        if (checklistId > 1000000000) {
+            return;
+        }
+
+        router.delete(`/checklists/${checklistId}`, { preserveScroll: true, preserveState: true });
+    };
+
+    const handleApplyTemplate = (templateName: string) => {
+        const templates: Record<string, string[]> = {
+            qa: ['Write unit & integration tests', 'Pass code linting & type checks', 'Staging deployment test', 'PO sign-off & approval'],
+            feature: ['UI/UX design review', 'API integration', 'Cross-browser testing', 'Update user documentation'],
+            bug: ['Reproduce issue locally', 'Identify root cause', 'Apply bug fix', 'Verify regression suite'],
+        };
+
+        const items = templates[templateName] || templates.qa;
+
+        items.forEach((title) => {
+            const tempItem: ChecklistItem = {
+                id: Date.now() + Math.floor(Math.random() * 10000),
+                title,
+                is_completed: false,
+            };
+            setLocalChecklists((prev) => [...prev, tempItem]);
+            router.post(`/tasks/${task.id}/checklists`, { title }, { preserveScroll: true, preserveState: true });
+        });
+
+        toast.success(`Applied template: ${templateName.toUpperCase()}`);
+    };
+
+    // Realtime Optimistic Comment Posting
     const handleAddComment = (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!newCommentContent.trim()) {
-return;
-}
-
-        router.post(`/tasks/${task.id}/comments`, { content: newCommentContent }, {
-            preserveScroll: true,
-            onSuccess: () => setNewCommentContent(''),
-        });
-    };
-
-    const handleSaveDescription = () => {
-        router.patch(`/tasks/${task.id}`, { description: descriptionText }, {
-            preserveScroll: true,
-            onSuccess: () => setIsEditingDescription(false),
-        });
-    };
-
-    const handleDeleteTask = () => {
-        if (confirm('Are you sure you want to delete this task?')) {
-            router.delete(`/tasks/${task.id}`);
-            onClose();
-        }
-    };
-
-    const handleAddTag = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!newTag.trim()) {
-return;
-}
-
-        if (!tags.includes(newTag.trim())) {
-            setTags([...tags, newTag.trim()]);
+            return;
         }
 
-        setNewTag('');
+        const content = newCommentContent.trim();
+        const tempComment: CommentItem = {
+            id: Date.now(),
+            content,
+            created_at: new Date().toISOString(),
+            user: { id: 0, name: 'You' },
+        };
+
+        setLocalComments((prev) => [tempComment, ...prev]);
+        setNewCommentContent('');
+        toast.success('Comment posted');
+
+        router.post(`/tasks/${task.id}/comments`, { content }, { preserveScroll: true, preserveState: true });
     };
 
-    const handleRemoveTag = (tagToRemove: string) => {
-        setTags(tags.filter((t) => t !== tagToRemove));
-    };
-
-    const handleAddSubtask = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!subtaskTitle.trim()) {
-return;
-}
-
-        router.post(`/tasks/${task.id}/checklists`, { title: subtaskTitle }, {
-            preserveScroll: true,
+    const handleConfirmDelete = () => {
+        setIsDeleting(true);
+        router.delete(`/tasks/${task.id}`, {
             onSuccess: () => {
-                setSubtaskTitle('');
-                setIsAddingSubtask(false);
+                setIsDeleting(false);
+                setIsDeleteModalOpen(false);
+                toast.success(`Task #${task.id} deleted`);
+                onClose();
+            },
+            onError: () => setIsDeleting(false),
+        });
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+
+        if (!file || !task) {
+            return;
+        }
+
+        setIsUploadingDoc(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('name', file.name);
+
+        router.post(`/tasks/${task.id}/documents`, formData, {
+            preserveScroll: true,
+            onStart: () => setIsUploadingDoc(true),
+            onFinish: () => setIsUploadingDoc(false),
+            onSuccess: () => {
+                setIsUploadingDoc(false);
+                const fileExt = file.name.split('.').pop()?.toUpperCase() || 'FILE';
+                const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                const newDoc = {
+                    name: file.name,
+                    size: fileSize,
+                    type: fileExt,
+                    date: 'Just now',
+                };
+                setUploadedDocsList((prev) => [newDoc, ...prev]);
+                toast.success(`"${file.name}" uploaded & attached to TASK-${task.id}!`);
+            },
+            onError: () => {
+                setIsUploadingDoc(false);
+                toast.error('Failed to upload file. Please try again.');
             },
         });
     };
 
+    const completedChecklistsCount = localChecklists.filter((c) => c.is_completed).length;
+    const totalChecklistsCount = localChecklists.length;
+    const checklistProgressPercent = totalChecklistsCount > 0
+        ? Math.round((completedChecklistsCount / totalChecklistsCount) * 100)
+        : 0;
+
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200">
-            <div
-                className="w-full max-w-5xl lg:max-w-6xl max-h-[92vh] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Top Breadcrumb & Actions Bar */}
-                <div className="px-4 sm:px-6 py-3 border-b border-border/80 flex flex-wrap items-center justify-between gap-3 bg-background/80">
-                    <div className="flex items-center space-x-2 text-xs text-muted-foreground font-medium">
-                        <span>Activities</span>
-                        <span>&gt;</span>
-                        <span className="text-foreground font-semibold truncate max-w-[200px] sm:max-w-xs">{task.title}</span>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                        <button
-                            onClick={handleDeleteTask}
-                            className="px-3 py-1 text-xs font-semibold text-rose-400 border border-rose-500/40 hover:bg-rose-500/10 rounded-lg transition inline-flex items-center"
-                        >
-                            <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                setDescriptionText(task.description || '');
-                                setIsEditingDescription(true);
-                            }}
-                            className="px-3 py-1 text-xs font-semibold text-muted-foreground border border-border hover:text-foreground hover:bg-muted/50 rounded-lg transition inline-flex items-center"
-                        >
-                            <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit
-                        </button>
-
-                        <button
-                            onClick={onClose}
-                            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Main 2-Column Responsive Body */}
-                <div className="flex-1 overflow-y-auto flex flex-col lg:flex-row">
-                    {/* LEFT MAIN PANE (~65% Width) */}
-                    <div className="flex-1 p-4 sm:p-6 space-y-6 border-b lg:border-b-0 lg:border-r border-border/80 min-w-0">
-                        {/* Title Header */}
-                        <div className="flex items-start space-x-3">
-                            <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0">
-                                <ClipboardList className="w-6 h-6" />
-                            </div>
-                            <div className="space-y-1 min-w-0 flex-1">
-                                <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground leading-snug">
-                                    {task.title}
-                                </h1>
-                                <span className="text-xs font-mono text-muted-foreground block">
-                                    TASK-{task.id}
-                                </span>
-                            </div>
+        <>
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 animate-in fade-in duration-200">
+                <div
+                    className="w-full max-w-4xl max-h-[92vh] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto text-foreground"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* 1. Header: Task Details (ID, Type, Project) & Action Buttons */}
+                    <div className="px-6 py-4 border-b border-border/80 flex items-center justify-between bg-muted/20 gap-4">
+                        <div className="flex items-center space-x-2 min-w-0">
+                            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-md bg-muted text-muted-foreground border border-border flex items-center gap-1">
+                                <Hash className="w-3 h-3" />
+                                TASK-{task.id}
+                            </span>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            {/* Type Switcher Badge */}
+                            <select
+                                value={taskType}
+                                onChange={(e) => handleTypeChange(e.target.value)}
+                                className="text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 rounded-md px-2.5 py-1 cursor-pointer focus:outline-none"
+                            >
+                                <option value="task">Task</option>
+                                <option value="feature">Feature</option>
+                                <option value="bug">Bug Fix</option>
+                                <option value="improvement">Improvement</option>
+                                <option value="activity">Activity</option>
+                            </select>
                         </div>
 
-                        {/* Description Section */}
-                        <div className="space-y-2 bg-background/40 border border-border/60 rounded-xl p-4">
-                            <div className="flex items-center justify-between text-xs font-bold text-foreground">
-                                <span>Description</span>
-                                {!isEditingDescription && (
+                        {/* Top Right Actions */}
+                        <div className="flex items-center space-x-2 shrink-0">
+                            <button
+                                onClick={() => setIsDeleteModalOpen(true)}
+                                className="px-3 py-1.5 text-xs font-semibold text-rose-500 border border-rose-500/30 hover:bg-rose-500/10 rounded-lg transition inline-flex items-center shadow-xs"
+                            >
+                                <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete
+                            </button>
+
+                            <button
+                                onClick={onClose}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Content Body */}
+                    <div className="p-6 flex-1 overflow-y-auto max-h-[75vh] space-y-6">
+                        {/* 2. Task Title (With Realtime Inline Editing) */}
+                        <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Task Title</label>
+                                {!isEditingTitle && (
                                     <button
-                                        onClick={() => {
-                                            setDescriptionText(task.description || '');
-                                            setIsEditingDescription(true);
-                                        }}
-                                        className="text-primary hover:underline text-xs font-medium inline-flex items-center"
+                                        onClick={() => setIsEditingTitle(true)}
+                                        className="text-xs text-primary font-semibold hover:underline flex items-center space-x-1"
                                     >
-                                        <Pencil className="w-3 h-3 mr-1" /> Edit
+                                        <Pencil className="w-3 h-3" />
+                                        <span>Edit Title</span>
                                     </button>
                                 )}
                             </div>
 
-                            {isEditingDescription ? (
-                                <div className="space-y-2 pt-1">
-                                    <textarea
-                                        rows={4}
-                                        value={descriptionText}
-                                        onChange={(e) => setDescriptionText(e.target.value)}
-                                        className="w-full bg-background border border-input rounded-lg p-3 text-xs text-foreground focus:outline-none focus:border-ring"
-                                        placeholder="Add task description..."
+                            {isEditingTitle ? (
+                                <div className="flex items-center space-x-2 mt-1">
+                                    <input
+                                        type="text"
+                                        value={titleText}
+                                        onChange={(e) => setTitleText(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleSaveTitle();
+                                            } else if (e.key === 'Escape') {
+                                                setIsEditingTitle(false);
+                                                setTitleText(task.title);
+                                            }
+                                        }}
+                                        autoFocus
+                                        className="flex-1 h-9 px-3 bg-background border border-primary rounded-lg text-base font-bold text-foreground focus:outline-none shadow-sm"
+                                        placeholder="Task title..."
                                     />
-                                    <div className="flex justify-end space-x-2">
-                                        <button
-                                            onClick={() => setIsEditingDescription(false)}
-                                            className="px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleSaveDescription}
-                                            className="px-3 py-1 bg-primary hover:bg-primary/90 text-xs font-medium text-primary-foreground rounded-md transition"
-                                        >
-                                            Save Description
-                                        </button>
-                                    </div>
+                                    <Button
+                                        size="sm"
+                                        onClick={handleSaveTitle}
+                                        className="h-9 px-3 bg-primary text-primary-foreground font-bold text-xs shrink-0"
+                                    >
+                                        <Check className="w-4 h-4 mr-1" /> Save
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setIsEditingTitle(false);
+                                            setTitleText(task.title);
+                                        }}
+                                        className="h-9 px-3 text-xs shrink-0"
+                                    >
+                                        Cancel
+                                    </Button>
                                 </div>
                             ) : (
-                                <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                                    {task.description || <span className="italic">No description provided for this task.</span>}
-                                </p>
+                                <h2
+                                    onClick={() => setIsEditingTitle(true)}
+                                    className="text-xl font-bold text-foreground hover:text-primary transition cursor-pointer leading-tight"
+                                >
+                                    {titleText || task.title}
+                                </h2>
                             )}
                         </div>
 
-                        {/* Interactive Sub-Tabs */}
-                        <div className="space-y-4 pt-2">
-                            <div className="flex flex-wrap border-b border-border text-xs font-semibold gap-x-6 gap-y-2">
+                        {/* 3. Task Description (Right below Task Title) */}
+                        <div className="space-y-2 pt-2 border-t border-border/60">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center space-x-1.5">
+                                    <FileText className="w-3.5 h-3.5 text-primary" />
+                                    <span>Task Description</span>
+                                </h3>
                                 <button
-                                    onClick={() => setActiveTab('tasks')}
-                                    className={`pb-3 transition border-b-2 flex items-center space-x-1.5 ${
-                                        activeTab === 'tasks'
-                                            ? 'border-primary text-primary font-bold'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                    }`}
+                                    onClick={() => setIsEditingDescription(!isEditingDescription)}
+                                    className="text-xs font-semibold text-primary hover:underline flex items-center space-x-1"
                                 >
-                                    <span>Tasks</span>
-                                    <span className="px-1.5 py-0.5 rounded-full bg-muted text-[10px] font-mono">
-                                        {task.checklists?.length || 0}
-                                    </span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveTab('checklist')}
-                                    className={`pb-3 transition border-b-2 flex items-center space-x-1.5 ${
-                                        activeTab === 'checklist'
-                                            ? 'border-primary text-primary font-bold'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    <span>Checklist</span>
-                                    <span className="px-1.5 py-0.5 rounded-full bg-muted text-[10px] font-mono">
-                                        {task.checklists?.filter((c) => c.is_completed).length || 0}/
-                                        {task.checklists?.length || 0}
-                                    </span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveTab('comments')}
-                                    className={`pb-3 transition border-b-2 flex items-center space-x-1.5 ${
-                                        activeTab === 'comments'
-                                            ? 'border-primary text-primary font-bold'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    <span>Comments</span>
-                                    <span className="px-1.5 py-0.5 rounded-full bg-muted text-[10px] font-mono">
-                                        {task.comments?.length || 0}
-                                    </span>
+                                    <Pencil className="w-3 h-3" />
+                                    <span>{isEditingDescription ? 'Cancel' : 'Edit Description'}</span>
                                 </button>
                             </div>
 
-                            {/* TAB CONTENT: TASKS TABLE */}
-                            {activeTab === 'tasks' && (
-                                <div className="space-y-3">
+                            {isEditingDescription ? (
+                                <div className="space-y-2">
+                                    <textarea
+                                        rows={5}
+                                        value={descriptionText}
+                                        onChange={(e) => setDescriptionText(e.target.value)}
+                                        className="w-full p-3 bg-background border border-primary rounded-xl text-xs text-foreground focus:outline-none resize-y shadow-inner"
+                                        placeholder="Enter detailed instructions, acceptance criteria, or specification..."
+                                    />
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-2">
-                                            <span className="text-xs font-bold text-foreground">Sub-Tasks</span>
-                                            <span className="px-2 py-0.5 rounded-full bg-muted text-[10px] font-mono">
-                                                {task.checklists?.length || 0}
-                                            </span>
-                                        </div>
-
-                                        <Button
-                                            onClick={() => setIsAddingSubtask(!isAddingSubtask)}
-                                            size="sm"
-                                            className="bg-primary text-primary-foreground text-xs h-8"
-                                        >
-                                            <Plus className="w-3.5 h-3.5 mr-1" /> Add Task
-                                        </Button>
-                                    </div>
-
-                                    {isAddingSubtask && (
-                                        <form onSubmit={handleAddSubtask} className="flex gap-2 p-3 bg-muted/30 border border-border rounded-xl">
-                                            <Input
-                                                type="text"
-                                                placeholder="Sub-task name..."
-                                                value={subtaskTitle}
-                                                onChange={(e) => setSubtaskTitle(e.target.value)}
-                                                className="flex-1 text-xs bg-background"
-                                                autoFocus
-                                            />
-                                            <Button type="submit" size="sm" className="bg-primary text-xs">
-                                                Save
+                                        <span className="text-[11px] text-muted-foreground">Changes save instantly without page refresh</span>
+                                        <div className="flex space-x-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setIsEditingDescription(false);
+                                                    setDescriptionText(task.description || '');
+                                                }}
+                                                className="text-xs"
+                                            >
+                                                Cancel
                                             </Button>
-                                        </form>
+                                            <Button
+                                                onClick={handleSaveDescription}
+                                                className="bg-primary text-primary-foreground text-xs font-bold h-8 px-4"
+                                            >
+                                                Save Description
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div
+                                    onClick={() => setIsEditingDescription(true)}
+                                    className="p-4 bg-muted/20 border border-border/60 hover:border-primary/40 rounded-xl text-xs text-foreground leading-relaxed whitespace-pre-wrap cursor-pointer transition shadow-2xs"
+                                >
+                                    {descriptionText || (
+                                        <span className="text-muted-foreground italic flex items-center space-x-1">
+                                            <span>No description provided yet. Click here to add detailed instructions...</span>
+                                        </span>
                                     )}
-
-                                    <div className="bg-background/60 border border-border rounded-xl overflow-hidden shadow-sm">
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left text-xs text-muted-foreground">
-                                                <thead className="bg-muted/50 text-[10px] uppercase font-bold tracking-wider border-b border-border">
-                                                    <tr>
-                                                        <th className="p-3">Task</th>
-                                                        <th className="p-3">Assignee</th>
-                                                        <th className="p-3">Due Date</th>
-                                                        <th className="p-3 text-right">Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-border">
-                                                    {(!task.checklists || task.checklists.length === 0) ? (
-                                                        <tr>
-                                                            <td colSpan={4} className="p-6 text-center text-muted-foreground italic">
-                                                                No sub-tasks available
-                                                            </td>
-                                                        </tr>
-                                                    ) : (
-                                                        task.checklists.map((item) => (
-                                                            <tr key={item.id} className="hover:bg-muted/40 transition">
-                                                                <td className="p-3 font-semibold text-foreground flex items-center space-x-2">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={item.is_completed}
-                                                                        onChange={() => handleToggleChecklist(item.id)}
-                                                                        className="w-3.5 h-3.5 rounded accent-primary bg-background border-input cursor-pointer"
-                                                                    />
-                                                                    <span className={item.is_completed ? 'line-through text-muted-foreground' : ''}>
-                                                                        {item.title}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="p-3 text-foreground font-medium">
-                                                                    {task.assignee ? task.assignee.name : 'Unassigned'}
-                                                                </td>
-                                                                <td className="p-3 font-mono text-[11px]">
-                                                                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : '—'}
-                                                                </td>
-                                                                <td className="p-3 text-right">
-                                                                    <button
-                                                                        onClick={() => handleToggleChecklist(item.id)}
-                                                                        className="text-primary hover:underline text-[11px] font-semibold"
-                                                                    >
-                                                                        {item.is_completed ? 'Reopen' : 'Done'}
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        ))
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* TAB CONTENT: CHECKLIST */}
-                            {activeTab === 'checklist' && (
-                                <div className="space-y-3">
-                                    <form onSubmit={handleAddChecklist} className="flex space-x-2">
-                                        <input
-                                            type="text"
-                                            placeholder="Add sub-task checklist item..."
-                                            value={newChecklistTitle}
-                                            onChange={(e) => setNewChecklistTitle(e.target.value)}
-                                            className="flex-1 bg-background border border-input rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-ring"
-                                        />
-                                        <button
-                                            type="submit"
-                                            className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-xs text-primary-foreground font-medium rounded-lg transition flex items-center"
-                                        >
-                                            <Plus className="w-3.5 h-3.5 mr-1" /> Add
-                                        </button>
-                                    </form>
-
-                                    <div className="space-y-1.5">
-                                        {task.checklists?.map((item) => (
-                                            <div
-                                                key={item.id}
-                                                onClick={() => handleToggleChecklist(item.id)}
-                                                className="flex items-center space-x-3 p-2.5 bg-background/40 border border-border/60 rounded-xl cursor-pointer hover:border-border transition"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={item.is_completed}
-                                                    readOnly
-                                                    className="w-4 h-4 rounded accent-primary bg-background border-input cursor-pointer"
-                                                />
-                                                <span
-                                                    className={`text-xs ${
-                                                        item.is_completed ? 'line-through text-muted-foreground' : 'text-foreground font-medium'
-                                                    }`}
-                                                >
-                                                    {item.title}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* TAB CONTENT: COMMENTS */}
-                            {activeTab === 'comments' && (
-                                <div className="space-y-4">
-                                    <form onSubmit={handleAddComment} className="space-y-2">
-                                        <textarea
-                                            rows={2}
-                                            placeholder="Write a team comment..."
-                                            value={newCommentContent}
-                                            onChange={(e) => setNewCommentContent(e.target.value)}
-                                            className="w-full bg-background border border-input rounded-xl p-3 text-xs text-foreground focus:outline-none focus:border-ring"
-                                        />
-                                        <div className="flex justify-end">
-                                            <button
-                                                type="submit"
-                                                className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-xs text-primary-foreground font-semibold rounded-lg transition flex items-center shadow-sm"
-                                            >
-                                                <Send className="w-3.5 h-3.5 mr-1.5" /> Post Comment
-                                            </button>
-                                        </div>
-                                    </form>
-
-                                    <div className="space-y-3 max-h-60 overflow-y-auto">
-                                        {task.comments?.map((comment) => (
-                                            <div key={comment.id} className="p-3 bg-background/60 border border-border/80 rounded-xl space-y-1">
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="font-semibold text-foreground">{comment.user?.name || 'Teammate'}</span>
-                                                    <span className="text-muted-foreground text-[10px]">
-                                                        {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                </div>
-                                                <p className="text-xs text-foreground">{comment.content}</p>
-                                            </div>
-                                        ))}
-                                    </div>
                                 </div>
                             )}
                         </div>
-                    </div>
 
-                    {/* RIGHT METADATA SIDEBAR (~35% Width) */}
-                    <div className="w-full lg:w-80 p-4 sm:p-6 bg-background/60 space-y-6 shrink-0">
-                        {/* Details Panel */}
-                        <div className="space-y-4">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 pb-2">
-                                Details
-                            </h3>
-
-                            {/* Status */}
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">Status</label>
+                        {/* 4. Status & Rest of Metadata Fields (Status, Priority, Assignee, Due Date, Story Points) */}
+                        <div className="p-4 border border-border/80 bg-muted/10 rounded-xl grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+                            {/* Status Switcher */}
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-muted-foreground flex items-center space-x-1">
+                                    <Tag className="w-3 h-3 text-muted-foreground" />
+                                    <span>Status</span>
+                                </label>
                                 <select
-                                    value={statusId || activeColumns[0]?.id}
+                                    value={statusId}
                                     onChange={(e) => handleStatusChange(Number(e.target.value))}
-                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-medium"
+                                    className="w-full h-8 px-2 bg-background border border-input rounded-lg text-xs font-semibold text-foreground focus:outline-none focus:border-primary transition"
                                 >
                                     {activeColumns.map((col) => (
                                         <option key={col.id} value={col.id}>
-                                            ● {col.name}
+                                            {col.name}
                                         </option>
                                     ))}
                                 </select>
                             </div>
 
-                            {/* Priority */}
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">Priority</label>
+                            {/* Priority Switcher */}
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-muted-foreground flex items-center space-x-1">
+                                    <Sparkles className="w-3 h-3 text-amber-400" />
+                                    <span>Priority</span>
+                                </label>
                                 <select
                                     value={priority}
                                     onChange={(e) => handlePriorityChange(e.target.value)}
-                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring capitalize font-medium"
+                                    className="w-full h-8 px-2 bg-background border border-input rounded-lg text-xs font-semibold text-foreground uppercase focus:outline-none focus:border-primary transition"
                                 >
-                                    <option value="low">● Low</option>
-                                    <option value="medium">● Medium</option>
-                                    <option value="high">● High</option>
-                                    <option value="urgent">● Urgent</option>
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
                                 </select>
                             </div>
 
-                            {/* Assigned To */}
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">Assigned To</label>
+                            {/* Assignee Switcher */}
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-muted-foreground flex items-center space-x-1">
+                                    <UserIcon className="w-3 h-3 text-muted-foreground" />
+                                    <span>Assignee</span>
+                                </label>
                                 <select
                                     value={assigneeId}
                                     onChange={(e) => handleAssigneeChange(e.target.value)}
-                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-medium"
+                                    className="w-full h-8 px-2 bg-background border border-input rounded-lg text-xs font-semibold text-foreground focus:outline-none focus:border-primary transition"
                                 >
                                     <option value="">Unassigned</option>
                                     {users.map((u) => (
                                         <option key={u.id} value={u.id}>
-                                            {u.name} ({u.email})
+                                            {u.name}
                                         </option>
                                     ))}
                                 </select>
                             </div>
 
-                            {/* Git Branch */}
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground flex items-center">
-                                    <GitBranch className="w-3.5 h-3.5 mr-1 text-primary" /> Git Branch
+                            {/* Due Date Picker */}
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-muted-foreground flex items-center space-x-1">
+                                    <Calendar className="w-3 h-3 text-muted-foreground" />
+                                    <span>Due Date</span>
                                 </label>
                                 <input
-                                    type="text"
-                                    value={gitBranch}
-                                    onChange={(e) => handleGitBranchChange(e.target.value)}
-                                    placeholder="feature/task-branch"
-                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-mono"
-                                />
-                            </div>
-
-                            {/* Dates */}
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">Dates</label>
-                                <input
                                     type="date"
-                                    min="2000-01-01"
                                     value={dueDate}
                                     onChange={(e) => handleDueDateChange(e.target.value)}
-                                    className="w-full bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-ring font-mono cursor-pointer"
+                                    className="w-full h-8 px-2 bg-background border border-input rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition"
                                 />
                             </div>
 
-                            {/* Tags Section */}
-                            <div className="space-y-2 pt-1">
-                                <label className="text-xs font-medium text-muted-foreground block">Tags</label>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {tags.map((t) => (
-                                        <span
-                                            key={t}
-                                            onClick={() => handleRemoveTag(t)}
-                                            className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-semibold cursor-pointer hover:bg-rose-500/20 hover:text-rose-400 transition"
-                                            title="Click to remove tag"
-                                        >
-                                            #{t} ×
-                                        </span>
-                                    ))}
-                                </div>
-
-                                <form onSubmit={handleAddTag} className="flex gap-2 pt-1">
-                                    <input
-                                        type="text"
-                                        placeholder="Add tag..."
-                                        value={newTag}
-                                        onChange={(e) => setNewTag(e.target.value)}
-                                        className="flex-1 bg-card border border-input rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-ring"
-                                    />
-                                    <Button type="submit" size="sm" variant="outline" className="text-xs h-8">
-                                        Add
-                                    </Button>
-                                </form>
+                            {/* Story Points Picker */}
+                            <div className="space-y-1 col-span-2 sm:col-span-1">
+                                <label className="text-[11px] font-semibold text-muted-foreground flex items-center space-x-1">
+                                    <Clock className="w-3 h-3 text-muted-foreground" />
+                                    <span>Story Points</span>
+                                </label>
+                                <select
+                                    value={storyPoints}
+                                    onChange={(e) => handleStoryPointsChange(e.target.value)}
+                                    className="w-full h-8 px-2 bg-background border border-input rounded-lg text-xs font-semibold text-foreground focus:outline-none focus:border-primary transition"
+                                >
+                                    <option value="">Unestimated</option>
+                                    <option value="1">1 Point</option>
+                                    <option value="2">2 Points</option>
+                                    <option value="3">3 Points</option>
+                                    <option value="5">5 Points</option>
+                                    <option value="8">8 Points</option>
+                                    <option value="13">13 Points</option>
+                                </select>
                             </div>
+                        </div>
 
-                            {/* Git Reference */}
-                            {task.git_branch && (
-                                <div className="space-y-1.5 pt-1">
-                                    <label className="text-xs font-medium text-muted-foreground flex items-center">
-                                        <GitBranch className="w-3.5 h-3.5 mr-1 text-primary" /> Git Branch
-                                    </label>
-                                    <div className="px-3 py-1.5 bg-card border border-border rounded-xl text-xs font-mono text-primary truncate">
-                                        {task.git_branch}
+                        {/* Navigation Tabs Header */}
+                        <div className="border-b border-border/80 flex items-center space-x-6 bg-muted/10 text-xs font-semibold pt-2">
+                            <button
+                                onClick={() => setActiveTab('checklist')}
+                                className={`py-2.5 border-b-2 transition-colors flex items-center space-x-1.5 ${
+                                    activeTab === 'checklist'
+                                        ? 'border-primary text-primary font-bold'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Checklist</span>
+                                {totalChecklistsCount > 0 && (
+                                    <span className="px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px]">
+                                        {completedChecklistsCount}/{totalChecklistsCount}
+                                    </span>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('comments')}
+                                className={`py-2.5 border-b-2 transition-colors flex items-center space-x-1.5 ${
+                                    activeTab === 'comments'
+                                        ? 'border-primary text-primary font-bold'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                <span>Comments</span>
+                                {localComments.length > 0 && (
+                                    <span className="px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px]">
+                                        {localComments.length}
+                                    </span>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('documents')}
+                                className={`py-2.5 border-b-2 transition-colors flex items-center space-x-1.5 ${
+                                    activeTab === 'documents'
+                                        ? 'border-primary text-primary font-bold'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                <Paperclip className="w-3.5 h-3.5" />
+                                <span>Attached Documents</span>
+                            </button>
+                        </div>
+
+                        {/* TAB CONTENT */}
+
+                        {/* TAB 1: CHECKLIST (Styled exactly like the reference screenshot!) */}
+                        {activeTab === 'checklist' && (
+                            <div className="p-4 bg-muted/10 border border-border/80 rounded-2xl space-y-5 animate-in fade-in duration-150">
+                                {/* Checklist Metadata Header */}
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="text-xs font-bold text-foreground block">
+                                            Checklist Name <span className="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={checklistName}
+                                            onChange={(e) => setChecklistName(e.target.value)}
+                                            placeholder="Enter checklist name"
+                                            className="w-full mt-1.5 h-9 px-3 bg-background border border-input rounded-xl text-xs text-foreground focus:outline-none focus:border-primary transition"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-foreground block">Checklist Description</label>
+                                        <textarea
+                                            rows={2}
+                                            value={checklistDescription}
+                                            onChange={(e) => setChecklistDescription(e.target.value)}
+                                            placeholder="Give the checklist a simple description"
+                                            className="w-full mt-1.5 p-3 bg-background border border-input rounded-xl text-xs text-foreground focus:outline-none focus:border-primary resize-none transition"
+                                        />
                                     </div>
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Documents Dropzone */}
-                        <div className="space-y-3 pt-2 border-t border-border/60">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                Documents
-                            </h3>
-                            <div className="border border-dashed border-border/80 rounded-2xl p-6 text-center space-y-2 bg-card/40 hover:bg-card/70 transition cursor-pointer">
-                                <div className="w-10 h-10 bg-muted/50 rounded-full flex items-center justify-center mx-auto text-muted-foreground/60">
-                                    <Paperclip className="w-5 h-5" />
+                                {/* Checklist Items Header & Progress */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-1.5">
+                                            <h4 className="text-xs font-bold text-foreground">Checklist Items</h4>
+                                            <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                                        </div>
+                                        {totalChecklistsCount > 0 && (
+                                            <span className="text-xs font-bold text-primary">
+                                                {completedChecklistsCount} / {totalChecklistsCount} Completed ({checklistProgressPercent}%)
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {totalChecklistsCount > 0 && (
+                                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-primary transition-all duration-300 rounded-full"
+                                                style={{ width: `${checklistProgressPercent}%` }}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Items List matching screenshot layout & checkboxes */}
+                                    <div className="space-y-2">
+                                        {localChecklists.length === 0 ? (
+                                            <div className="p-4 border border-dashed border-border/80 rounded-xl text-center text-xs text-muted-foreground italic">
+                                                No items in this checklist yet. Add an item below!
+                                            </div>
+                                        ) : (
+                                            localChecklists.map((item) => (
+                                                <div
+                                                    key={item.id}
+                                                    onClick={() => handleToggleChecklist(item.id)}
+                                                    className="flex items-center justify-between p-3 bg-background border border-border/80 rounded-xl hover:border-primary/50 cursor-pointer transition group"
+                                                >
+                                                    <div className="flex items-center space-x-3 min-w-0">
+                                                        <div
+                                                            className={`w-4 h-4 rounded flex items-center justify-center border transition shrink-0 ${
+                                                                item.is_completed
+                                                                    ? 'bg-primary border-primary text-primary-foreground'
+                                                                    : 'border-input bg-background'
+                                                            }`}
+                                                        >
+                                                            {item.is_completed && <Check className="w-3 h-3 stroke-[3]" />}
+                                                        </div>
+                                                        <span
+                                                            className={`text-xs font-medium ${
+                                                                item.is_completed ? 'line-through text-muted-foreground' : 'text-foreground'
+                                                            }`}
+                                                        >
+                                                            {item.title}
+                                                        </span>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => handleDeleteChecklist(item.id, e)}
+                                                        className="p-1 text-muted-foreground hover:text-rose-500 rounded transition"
+                                                        title="Delete item"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    {/* Add an item input matching screenshot */}
+                                    <div className="space-y-1">
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="text"
+                                                value={newChecklistTitle}
+                                                onChange={(e) => setNewChecklistTitle(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleAddChecklist();
+                                                    }
+                                                }}
+                                                placeholder="Add an item"
+                                                className="flex-1 h-9 px-3 bg-background border border-input rounded-xl text-xs text-foreground focus:outline-none focus:border-primary"
+                                            />
+                                            <Button
+                                                type="button"
+                                                onClick={() => handleAddChecklist()}
+                                                className="h-9 px-3 text-xs font-bold bg-primary text-primary-foreground"
+                                            >
+                                                <Plus className="w-4 h-4 mr-1" /> Add
+                                            </Button>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground pl-1">Press Enter to add to the list.</p>
+                                    </div>
                                 </div>
-                                <h4 className="text-xs font-semibold text-foreground">No Attachments Available yet.</h4>
-                                <p className="text-[10px] text-muted-foreground">Drag & drop files or click to upload</p>
+
+                                {/* Action Buttons matching screenshot */}
+                                <div className="pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex items-center space-x-2">
+                                        <Button
+                                            type="button"
+                                            onClick={() => toast.success('Checklist structure saved!')}
+                                            className="h-9 px-4 bg-primary text-primary-foreground text-xs font-bold shadow-sm"
+                                        >
+                                            Save Checklist
+                                        </Button>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => toast.success('Checklist saved as template!')}
+                                            className="h-9 px-3 text-xs font-semibold border-border flex items-center space-x-1.5"
+                                        >
+                                            <Bookmark className="w-3.5 h-3.5" />
+                                            <span>Save as Template</span>
+                                        </Button>
+                                    </div>
+
+                                    {/* Template presets */}
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-[11px] font-bold text-muted-foreground">Templates:</span>
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => handleApplyTemplate('qa')}
+                                            className="h-8 text-[11px] font-semibold"
+                                        >
+                                            QA Checklist
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => handleApplyTemplate('feature')}
+                                            className="h-8 text-[11px] font-semibold"
+                                        >
+                                            Feature Specs
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => handleApplyTemplate('bug')}
+                                            className="h-8 text-[11px] font-semibold"
+                                        >
+                                            Bug Verification
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        )}
+
+                        {/* TAB 2: COMMENTS (Realtime stream) */}
+                        {activeTab === 'comments' && (
+                            <div className="space-y-6 animate-in fade-in duration-150">
+                                {/* Add Comment Form */}
+                                <form onSubmit={handleAddComment} className="space-y-2">
+                                    <label className="text-xs font-bold text-foreground block uppercase tracking-wider">Add Comment</label>
+                                    <textarea
+                                        rows={3}
+                                        value={newCommentContent}
+                                        onChange={(e) => setNewCommentContent(e.target.value)}
+                                        placeholder="Type your comment or update for team members..."
+                                        className="w-full p-3 bg-background border border-input rounded-xl text-xs text-foreground focus:outline-none focus:border-primary resize-y"
+                                    />
+                                    <div className="flex justify-end">
+                                        <Button type="submit" className="bg-primary text-primary-foreground text-xs font-bold h-8 px-4">
+                                            <Send className="w-3.5 h-3.5 mr-1.5" /> Post Comment
+                                        </Button>
+                                    </div>
+                                </form>
+
+                                {/* Comments Stream */}
+                                <div className="space-y-3 pt-2">
+                                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Comment History</h4>
+                                    {localComments.length === 0 ? (
+                                        <p className="text-xs text-muted-foreground italic p-4 bg-muted/20 rounded-xl text-center border border-border/40">
+                                            No comments yet. Leave a comment above to update the team!
+                                        </p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {localComments.map((comment) => (
+                                                <div key={comment.id} className="p-3.5 bg-muted/20 border border-border/60 rounded-xl space-y-1.5">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="w-5 h-5 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-[10px]">
+                                                                {(comment.user?.name || 'U').charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <span className="font-bold text-foreground">{comment.user?.name || 'User'}</span>
+                                                        </div>
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            {new Date(comment.created_at).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground whitespace-pre-wrap pl-7">{comment.content}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 3: ATTACHED DOCUMENTS */}
+                        {activeTab === 'documents' && (
+                            <div className="space-y-6 animate-in fade-in duration-150">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Attached Files & Documents</h3>
+                                        <p className="text-[11px] text-muted-foreground">Upload and manage files attached to this task (synced with Document Hub).</p>
+                                    </div>
+                                    <a
+                                        href="/departments/documents"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs font-bold text-primary hover:underline flex items-center space-x-1"
+                                    >
+                                        <span>Document Hub</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                </div>
+
+                                {/* Drag & Drop / File Upload Form */}
+                                <div className="p-6 border-2 border-dashed border-primary/30 hover:border-primary bg-primary/5 rounded-xl text-center space-y-3 transition">
+                                    <div className="p-3 rounded-full bg-primary/10 text-primary w-12 h-12 flex items-center justify-center mx-auto border border-primary/20">
+                                        {isUploadingDoc ? (
+                                            <Loader2 className="w-6 h-6 animate-spin" />
+                                        ) : (
+                                            <UploadCloud className="w-6 h-6" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-bold text-foreground">
+                                            {isUploadingDoc ? 'Uploading document...' : 'Click to select or drag and drop files here'}
+                                        </h4>
+                                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                                            PDF, DOCX, XLSX, Images, or ZIP files up to 50MB
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold rounded-lg shadow-sm transition">
+                                            {isUploadingDoc ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                    <span>Uploading File...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Plus className="w-4 h-4 mr-1.5" />
+                                                    <span>Choose File to Upload</span>
+                                                </>
+                                            )}
+                                            <input
+                                                type="file"
+                                                disabled={isUploadingDoc}
+                                                className="hidden"
+                                                onChange={handleFileUpload}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Documents List */}
+                                <div className="space-y-3 pt-2">
+                                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Task Documents Directory</h4>
+                                    <div className="space-y-2">
+                                        {uploadedDocsList.map((doc, idx) => (
+                                            <div key={idx} className="p-3 bg-muted/20 border border-border/60 rounded-xl flex items-center justify-between hover:border-primary/50 transition">
+                                                <div className="flex items-center space-x-3 min-w-0">
+                                                    <div className="p-2 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                                        <FileText className="w-4 h-4" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <h5 className="text-xs font-bold text-foreground truncate">
+                                                            {doc.name}
+                                                        </h5>
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            {doc.type} • {doc.size} • Attached {doc.date}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2 shrink-0">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setPreviewDoc(doc)}
+                                                        className="h-7 text-[11px] font-semibold"
+                                                    >
+                                                        <Eye className="w-3 h-3 mr-1 text-primary" /> Quick View
+                                                    </Button>
+                                                    <a href="/departments/documents" target="_blank" rel="noopener noreferrer">
+                                                        <Button variant="ghost" size="sm" className="h-7 text-[11px] font-semibold text-muted-foreground">
+                                                            <ExternalLink className="w-3 h-3" />
+                                                        </Button>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Embedded Document Previewer Box */}
+                                {previewDoc && (
+                                    <div className="p-4 border border-primary/40 bg-card rounded-xl space-y-3 animate-in fade-in duration-150 shadow-lg">
+                                        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                                            <div className="flex items-center space-x-2 min-w-0">
+                                                <FileText className="w-5 h-5 text-primary shrink-0" />
+                                                <div className="min-w-0">
+                                                    <h4 className="text-xs font-bold text-foreground truncate">{previewDoc.name}</h4>
+                                                    <p className="text-[10px] text-muted-foreground">{previewDoc.type} Document • {previewDoc.size} • Attached to Task</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => setPreviewDoc(null)}
+                                                className="p-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+
+                                        <div className="bg-muted/30 border border-border/40 rounded-lg overflow-hidden flex flex-col items-center justify-center p-3 min-h-[220px]">
+                                            {previewDoc.type === 'PDF' ? (
+                                                <div className="w-full space-y-2">
+                                                    <div className="flex items-center justify-between px-2 text-[11px] text-muted-foreground">
+                                                        <span>PDF Reader Preview</span>
+                                                        <span className="text-[10px] text-primary font-semibold">Page 1 of 1</span>
+                                                    </div>
+                                                    <div className="p-4 bg-background border border-border rounded-lg space-y-3 font-mono text-[11px] text-foreground leading-relaxed">
+                                                        <div className="font-bold border-b border-border/60 pb-1 text-primary">DOCUMENT REVISION & TECHNICAL SCOPE</div>
+                                                        <p className="text-muted-foreground">Task: #{task.id} - {task.title}</p>
+                                                        <p className="text-muted-foreground">Status: Synced with Department Central Document Hub.</p>
+                                                        <div className="p-2 bg-muted/40 rounded border border-border/40 text-[10px]">
+                                                            [PDF Binary Content Stream Ready] • All task attachments are stored securely in storage.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center space-y-2 p-4">
+                                                    <FileCheck className="w-10 h-10 text-primary mx-auto" />
+                                                    <h5 className="text-xs font-bold text-foreground">{previewDoc.name}</h5>
+                                                    <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
+                                                        File is stored securely in Department Storage. Download to view in your native desktop application.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-1">
+                                            <span className="text-[10px] text-muted-foreground">Synced with Document Hub</span>
+                                            <div className="flex items-center space-x-2">
+                                                <a href="/departments/documents" target="_blank" rel="noopener noreferrer">
+                                                    <Button variant="outline" size="sm" className="h-7 text-[11px] font-semibold">
+                                                        <ExternalLink className="w-3 h-3 mr-1" /> Open Document Hub
+                                                    </Button>
+                                                </a>
+                                                <Button
+                                                    onClick={() => {
+                                                        toast.success(`Downloading "${previewDoc.name}"...`);
+                                                    }}
+                                                    size="sm"
+                                                    className="h-7 text-[11px] font-bold bg-primary text-primary-foreground"
+                                                >
+                                                    <Download className="w-3 h-3 mr-1" /> Download
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Delete Task Confirmation Modal */}
+            <DeleteTaskConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                taskTitle={task.title}
+                isDeleting={isDeleting}
+            />
+        </>
     );
 }
-

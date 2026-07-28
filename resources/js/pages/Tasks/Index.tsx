@@ -1,27 +1,31 @@
-import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
-    CheckSquare,
     Search,
     Download,
     Filter,
     Folder,
-    User as UserIcon,
-    Calendar,
     Sparkles,
-    AlertCircle,
-    X,
+    Plus,
+    CheckCircle2,
+    Target,
+    Eye,
+    Pencil,
+    Trash2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { DataTableHeader } from '@/components/ui/data-table-header';
-import { ColumnVisibilityPopover, ColumnDefinition } from '@/components/ui/column-visibility-popover';
-import { PaginationBar } from '@/components/ui/pagination-bar';
+import React, { useState } from 'react';
+import { CreateTaskWizardModal } from '@/components/tasks/CreateTaskWizardModal';
+import { DeleteTaskConfirmModal } from '@/components/tasks/DeleteTaskConfirmModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
+import { Button } from '@/components/ui/button';
+import { ColumnVisibilityPopover } from '@/components/ui/column-visibility-popover';
+import type { ColumnDefinition } from '@/components/ui/column-visibility-popover';
+import { DataTableHeader } from '@/components/ui/data-table-header';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PaginationBar } from '@/components/ui/pagination-bar';
 
 interface TaskDirectoryProps {
     tasks: {
@@ -36,6 +40,8 @@ interface TaskDirectoryProps {
     projects: { id: number; name: string }[];
     departments: { id: number; name: string }[];
     users: { id: number; name: string }[];
+    milestones?: { id: number; name: string; project_id: number }[];
+    boardColumns?: { id: number; name: string; project_id: number }[];
     filters: any;
 }
 
@@ -44,9 +50,14 @@ export default function TasksIndex({
     projects = [],
     departments = [],
     users = [],
+    milestones = [],
+    boardColumns = [],
     filters = {},
 }: TaskDirectoryProps) {
     const [selectedTask, setSelectedTask] = useState<any | null>(null);
+    const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState<any | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Column Visibility State
     const [columns, setColumns] = useState<ColumnDefinition[]>([
@@ -61,6 +72,7 @@ export default function TasksIndex({
 
     const isVisible = (key: string) => {
         const col = columns.find((c) => c.key === key);
+
         return col ? col.visible : true;
     };
 
@@ -95,7 +107,11 @@ export default function TasksIndex({
 
     const handleFilterChange = (key: string, value: string) => {
         const newFilters = { ...filters, [key]: value };
-        if (!value) delete newFilters[key];
+
+        if (!value) {
+delete newFilters[key];
+}
+
         router.get('/tasks', newFilters, { preserveState: true, replace: true });
     };
 
@@ -106,6 +122,7 @@ export default function TasksIndex({
     // Export CSV URL Generator
     const getExportCsvUrl = () => {
         const params = new URLSearchParams(filters).toString();
+
         return `/tasks/export-csv${params ? `?${params}` : ''}`;
     };
 
@@ -122,32 +139,86 @@ export default function TasksIndex({
         }
     };
 
+    const handleQuickStatusChange = (taskId: number, newColumnId: number) => {
+        router.patch(`/tasks/${taskId}`, { board_column_id: newColumnId }, { preserveScroll: true });
+    };
+
+    const handleConfirmDeleteTask = () => {
+        if (!taskToDelete) {
+return;
+}
+
+        setIsDeleting(true);
+        router.delete(`/tasks/${taskToDelete.id}`, {
+            onSuccess: () => {
+                setIsDeleting(false);
+                setTaskToDelete(null);
+            },
+            onError: () => setIsDeleting(false),
+        });
+    };
+
+    const completedTasksCount = tasks.data.filter(
+        (t) => t.board_column?.name?.toLowerCase() === 'done' || t.boardColumn?.name?.toLowerCase() === 'done'
+    ).length;
+    const progressPercent = tasks.data.length > 0 ? Math.round((completedTasksCount / tasks.data.length) * 100) : 0;
+
     return (
         <>
             <Head title="Tasks Directory & Master Grid - Aero DevPM" />
 
             <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
-                {/* Header */}
+                {/* Header (Clean title layout without icons) */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground">
-                            Tasks Directory
+                        <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center space-x-2">
+                            <span>Tasks Directory</span>
+                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-semibold">
+                                {tasks.total} Total
+                            </span>
                         </h1>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Master data grid to search, sort, filter, and export all workspace tasks.
+                            Master data grid to search, sort, filter, track execution, and export tasks.
                         </p>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2.5">
                         <a href={getExportCsvUrl()} target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" className="text-xs font-semibold h-9 border-border">
-                                <Download className="w-4 h-4 mr-1.5 text-primary" /> Export to CSV
+                                <Download className="w-4 h-4 mr-1.5 text-muted-foreground" /> Export CSV
                             </Button>
                         </a>
+
+                        <Button
+                            onClick={() => setIsCreateWizardOpen(true)}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold h-9 px-4 shadow-md shadow-primary/20"
+                        >
+                            <Plus className="w-4 h-4 mr-1.5" /> Add Task
+                        </Button>
                     </div>
                 </div>
 
-                {/* Filter Toolbar & Column Manager (Borderless, Page Canvas Native) */}
+                {/* Progress Tracking Bar ("Keep Track of Tasks Done") */}
+                <div className="p-4 rounded-xl border border-border bg-card/60 space-y-2.5 shadow-2xs">
+                    <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center space-x-2">
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                            <span className="font-bold text-foreground">Tasks Done Progress</span>
+                            <span className="text-muted-foreground">
+                                ({completedTasksCount} of {tasks.data.length} tasks on this page completed)
+                            </span>
+                        </div>
+                        <span className="font-extrabold text-primary">{progressPercent}% Completed</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-primary transition-all duration-500 rounded-full"
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* Filter Toolbar & Column Manager */}
                 <div className="py-1 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <div className="relative w-full sm:w-64">
@@ -320,7 +391,7 @@ export default function TasksIndex({
                                             <th className="p-3.5">Assignee</th>
                                         )}
                                         {isVisible('due_date') && (
-                                            <th className="p-3.5 pr-4">
+                                            <th className="p-3.5">
                                                 <DataTableHeader
                                                     title="Due Date"
                                                     columnKey="due_date"
@@ -331,6 +402,7 @@ export default function TasksIndex({
                                                 />
                                             </th>
                                         )}
+                                        <th className="p-3.5 pr-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
 
@@ -355,22 +427,44 @@ export default function TasksIndex({
 
                                             {isVisible('project') && (
                                                 <td className="p-3.5">
-                                                    {task.project ? (
-                                                        <span className="inline-flex items-center text-xs font-medium text-foreground">
-                                                            <Folder className="w-3 h-3 mr-1.5 text-amber-400 shrink-0" />
-                                                            <span className="truncate max-w-[120px]">{task.project.name}</span>
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-muted-foreground">—</span>
-                                                    )}
+                                                    <div className="space-y-1">
+                                                        {task.project ? (
+                                                            <span className="inline-flex items-center text-xs font-medium text-foreground">
+                                                                <Folder className="w-3 h-3 mr-1.5 text-amber-400 shrink-0" />
+                                                                <span className="truncate max-w-[120px]">{task.project.name}</span>
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-muted-foreground">—</span>
+                                                        )}
+                                                        {task.milestone && (
+                                                            <div className="flex items-center text-[10px] text-primary font-semibold">
+                                                                <Target className="w-2.5 h-2.5 mr-1 text-primary shrink-0" />
+                                                                <span className="truncate max-w-[120px]">{task.milestone.name}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             )}
 
                                             {isVisible('status') && (
-                                                <td className="p-3.5">
-                                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-muted text-foreground border border-border">
-                                                        {task.boardColumn?.name || 'To Do'}
-                                                    </span>
+                                                <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
+                                                    <select
+                                                        value={task.board_column_id || ''}
+                                                        onChange={(e) => handleQuickStatusChange(task.id, Number(e.target.value))}
+                                                        className="px-2 py-1 rounded text-[10px] font-bold uppercase bg-muted text-foreground border border-border focus:outline-none focus:border-primary cursor-pointer hover:border-primary/50"
+                                                    >
+                                                        {(boardColumns.length > 0 ? boardColumns : [
+                                                            { id: 1, name: 'Backlog' },
+                                                            { id: 2, name: 'To Do' },
+                                                            { id: 3, name: 'In Progress' },
+                                                            { id: 4, name: 'In Review' },
+                                                            { id: 5, name: 'Done' },
+                                                        ]).map((col) => (
+                                                            <option key={col.id} value={col.id}>
+                                                                {col.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                 </td>
                                             )}
 
@@ -386,7 +480,7 @@ export default function TasksIndex({
                                                         <span className="inline-flex items-center space-x-1.5 text-xs text-foreground">
                                                             <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold">
                                                                 {task.assignee.name.charAt(0)}
-                                                            </div>
+                                                             </div>
                                                             <span className="truncate max-w-[100px]">{task.assignee.name}</span>
                                                         </span>
                                                     ) : (
@@ -396,10 +490,36 @@ export default function TasksIndex({
                                             )}
 
                                             {isVisible('due_date') && (
-                                                <td className="p-3.5 pr-4 text-xs font-mono text-muted-foreground">
+                                                <td className="p-3.5 text-xs text-muted-foreground">
                                                     {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No Due Date'}
                                                 </td>
                                             )}
+
+                                            <td className="p-3.5 pr-4 text-right" onClick={(e) => e.stopPropagation()}>
+                                                <div className="flex items-center justify-end space-x-1">
+                                                    <button
+                                                        title="View Details"
+                                                        onClick={() => setSelectedTask(task)}
+                                                        className="p-1.5 text-muted-foreground hover:text-primary hover:bg-muted rounded-md transition"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        title="Edit Task"
+                                                        onClick={() => setSelectedTask(task)}
+                                                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition"
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        title="Delete Task"
+                                                        onClick={() => setTaskToDelete(task)}
+                                                        className="p-1.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -418,6 +538,28 @@ export default function TasksIndex({
                 task={selectedTask}
                 isOpen={!!selectedTask}
                 onClose={() => setSelectedTask(null)}
+                columns={boardColumns}
+                users={users}
+            />
+
+            {/* Create Task Wizard Modal */}
+            <CreateTaskWizardModal
+                isOpen={isCreateWizardOpen}
+                onClose={() => setIsCreateWizardOpen(false)}
+                projects={projects}
+                departments={departments}
+                users={users}
+                milestones={milestones}
+                boardColumns={boardColumns}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <DeleteTaskConfirmModal
+                isOpen={!!taskToDelete}
+                onClose={() => setTaskToDelete(null)}
+                onConfirm={handleConfirmDeleteTask}
+                taskTitle={taskToDelete?.title}
+                isDeleting={isDeleting}
             />
         </>
     );
