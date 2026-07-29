@@ -22,10 +22,10 @@ class TaskDirectoryController extends Controller
         $query = Task::where('workspace_id', $workspaceId)
             ->with([
                 'project',
+                'department',
                 'boardColumn',
                 'assignee',
                 'creator',
-                'sprint',
                 'milestone',
                 'checklists',
                 'comments.user',
