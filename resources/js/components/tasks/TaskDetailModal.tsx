@@ -22,6 +22,7 @@ import {
     Sparkles,
     Bookmark,
     Info,
+    Folder,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
@@ -60,6 +61,7 @@ interface TaskDocumentItem {
 interface TaskData {
     id: number;
     project_id: number;
+    project?: { id: number; name: string; code?: string };
     board_column_id: number;
     board_column?: { id: number; name: string };
     boardColumn?: { id: number; name: string };
@@ -71,6 +73,7 @@ interface TaskData {
     assignee?: UserItem;
     assignee_id?: number;
     due_date?: string;
+    created_at?: string;
     updated_at?: string;
     checklists?: ChecklistItem[];
     comments?: CommentItem[];
@@ -438,19 +441,27 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                     className="w-full max-w-4xl max-h-[92vh] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto text-foreground"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* 1. Header: Task Details (ID, Type, Project) & Action Buttons */}
-                    <div className="px-6 py-4 border-b border-border/80 flex items-center justify-between bg-muted/20 gap-4">
-                        <div className="flex items-center space-x-2 min-w-0">
+                    {/* 1. Header: Task Details (ID, Project, Type, Created Date) & Action Buttons */}
+                    <div className="px-6 py-4 border-b border-border/80 flex flex-wrap items-center justify-between bg-muted/20 gap-3">
+                        <div className="flex flex-wrap items-center gap-2 min-w-0">
                             <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-md bg-muted text-muted-foreground border border-border flex items-center gap-1">
                                 <Hash className="w-3 h-3" />
                                 TASK-{task.id}
                             </span>
-                            <span className="text-xs text-muted-foreground">•</span>
+
+                            {/* Project Badge */}
+                            {task.project && (
+                                <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5">
+                                    <Folder className="w-3.5 h-3.5" />
+                                    <span>{task.project.name}</span>
+                                </span>
+                            )}
+
                             {/* Type Switcher Badge */}
                             <select
                                 value={taskType}
                                 onChange={(e) => handleTypeChange(e.target.value)}
-                                className="text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 rounded-md px-2.5 py-1 cursor-pointer focus:outline-none"
+                                className="text-[11px] font-bold uppercase tracking-wider bg-muted/60 text-foreground border border-border rounded-md px-2.5 py-1 cursor-pointer focus:outline-none"
                             >
                                 <option value="task">Task</option>
                                 <option value="feature">Feature</option>
@@ -458,6 +469,14 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                                 <option value="improvement">Improvement</option>
                                 <option value="activity">Activity</option>
                             </select>
+
+                            {/* Created Date */}
+                            {task.created_at && (
+                                <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1 pl-1">
+                                    <Clock className="w-3 h-3 text-muted-foreground" />
+                                    <span>Created {new Date(task.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                </span>
+                            )}
                         </div>
 
                         {/* Top Right Actions */}
