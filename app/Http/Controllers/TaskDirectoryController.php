@@ -27,6 +27,8 @@ class TaskDirectoryController extends Controller
                 'creator',
                 'sprint',
                 'milestone',
+                'checklists',
+                'comments.user',
             ]);
 
         // Search text

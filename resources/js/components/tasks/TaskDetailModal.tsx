@@ -5,12 +5,10 @@ import {
     Send,
     Trash2,
     FileText,
-    Download,
     ExternalLink,
     UploadCloud,
     Loader2,
     Eye,
-    FileCheck,
     Pencil,
     Check,
     Calendar,
@@ -27,6 +25,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { isMediaFileType, MediaPreviewModal } from '@/components/departments/MediaPreviewModal';
 import { DeleteTaskConfirmModal } from '@/components/tasks/DeleteTaskConfirmModal';
 import { Button } from '@/components/ui/button';
 
@@ -47,6 +46,15 @@ interface CommentItem {
     content: string;
     user?: UserItem;
     created_at: string;
+}
+
+interface TaskDocumentItem {
+    id?: number;
+    name: string;
+    size: string;
+    type: string;
+    date: string;
+    file_path?: string;
 }
 
 interface TaskData {
@@ -100,13 +108,29 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isUploadingDoc, setIsUploadingDoc] = useState(false);
-    const [previewDoc, setPreviewDoc] = useState<{ name: string; size: string; type: string; date: string } | null>(null);
-    const [uploadedDocsList, setUploadedDocsList] = useState<{ name: string; size: string; type: string; date: string }[]>([
+
+    // Document State
+    const [editingDocIdx, setEditingDocIdx] = useState<number | null>(null);
+    const [editingDocName, setEditingDocName] = useState<string>('');
+    const [selectedMediaDoc, setSelectedMediaDoc] = useState<any | null>(null);
+    const [isMediaModalOpen, setIsMediaModalOpen] = useState<boolean>(false);
+
+    const [uploadedDocsList, setUploadedDocsList] = useState<TaskDocumentItem[]>([
         {
+            id: 1,
             name: 'Task_Specification_v1.0.pdf',
             size: '2.4 MB',
             type: 'PDF',
             date: 'Yesterday',
+            file_path: 'department-documents/Task_Specification_v1.0.pdf',
+        },
+        {
+            id: 2,
+            name: 'Architecture_Diagram.png',
+            size: '1.8 MB',
+            type: 'PNG',
+            date: 'Just now',
+            file_path: 'department-documents/Architecture_Diagram.png',
         },
     ]);
 
@@ -305,6 +329,65 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
         });
     };
 
+    // Document Handlers: View (Media Pop-up vs New Tab for Docs), Rename, Delete
+    const handleViewDocument = (doc: TaskDocumentItem) => {
+        const ext = doc.type.toLowerCase().trim();
+
+        if (isMediaFileType(ext)) {
+            // Media files: Open pop-up preview modal
+            setSelectedMediaDoc({
+                id: doc.id || 1,
+                department_id: 1,
+                name: doc.name,
+                file_path: doc.file_path || `department-documents/${doc.name}`,
+                file_type: doc.type,
+                file_size: 1024 * 1024,
+                created_at: doc.date,
+            });
+            setIsMediaModalOpen(true);
+        } else {
+            // PDFs & other docs: Open in new tab with downloadable view link
+            const viewUrl = doc.id
+                ? `/departments/documents/${doc.id}/view`
+                : `/departments/documents`;
+            window.open(viewUrl, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    const handleStartRenameDoc = (idx: number, currentName: string) => {
+        setEditingDocIdx(idx);
+        setEditingDocName(currentName);
+    };
+
+    const handleSaveRenameDoc = (idx: number, doc: TaskDocumentItem) => {
+        if (!editingDocName.trim()) {
+            setEditingDocIdx(null);
+
+            return;
+        }
+
+        const newName = editingDocName.trim();
+
+        setUploadedDocsList((prev) =>
+            prev.map((d, i) => (i === idx ? { ...d, name: newName } : d))
+        );
+        setEditingDocIdx(null);
+        toast.success(`Document renamed to "${newName}"`);
+
+        if (doc.id) {
+            router.patch(`/departments/documents/${doc.id}`, { name: newName }, { preserveScroll: true });
+        }
+    };
+
+    const handleDeleteDoc = (idx: number, doc: TaskDocumentItem) => {
+        setUploadedDocsList((prev) => prev.filter((_, i) => i !== idx));
+        toast.success(`Document "${doc.name}" deleted`);
+
+        if (doc.id) {
+            router.delete(`/departments/documents/${doc.id}`, { preserveScroll: true });
+        }
+    };
+
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
 
@@ -325,11 +408,12 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                 setIsUploadingDoc(false);
                 const fileExt = file.name.split('.').pop()?.toUpperCase() || 'FILE';
                 const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
-                const newDoc = {
+                const newDoc: TaskDocumentItem = {
                     name: file.name,
                     size: fileSize,
                     type: fileExt,
                     date: 'Just now',
+                    file_path: `department-documents/${file.name}`,
                 };
                 setUploadedDocsList((prev) => [newDoc, ...prev]);
                 toast.success(`"${file.name}" uploaded & attached to TASK-${task.id}!`);
@@ -664,7 +748,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
 
                         {/* TAB CONTENT */}
 
-                        {/* TAB 1: CHECKLIST (Styled exactly like the reference screenshot!) */}
+                        {/* TAB 1: CHECKLIST */}
                         {activeTab === 'checklist' && (
                             <div className="p-4 bg-muted/10 border border-border/80 rounded-2xl space-y-5 animate-in fade-in duration-150">
                                 {/* Checklist Metadata Header */}
@@ -717,7 +801,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                                         </div>
                                     )}
 
-                                    {/* Items List matching screenshot layout & checkboxes */}
+                                    {/* Items List */}
                                     <div className="space-y-2">
                                         {localChecklists.length === 0 ? (
                                             <div className="p-4 border border-dashed border-border/80 rounded-xl text-center text-xs text-muted-foreground italic">
@@ -762,7 +846,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                                         )}
                                     </div>
 
-                                    {/* Add an item input matching screenshot */}
+                                    {/* Add an item input */}
                                     <div className="space-y-1">
                                         <div className="flex items-center space-x-2">
                                             <input
@@ -790,7 +874,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                                     </div>
                                 </div>
 
-                                {/* Action Buttons matching screenshot */}
+                                {/* Action Buttons */}
                                 <div className="pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-3">
                                     <div className="flex items-center space-x-2">
                                         <Button
@@ -847,7 +931,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                             </div>
                         )}
 
-                        {/* TAB 2: COMMENTS (Realtime stream) */}
+                        {/* TAB 2: COMMENTS */}
                         {activeTab === 'comments' && (
                             <div className="space-y-6 animate-in fade-in duration-150">
                                 {/* Add Comment Form */}
@@ -898,13 +982,13 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                             </div>
                         )}
 
-                        {/* TAB 3: ATTACHED DOCUMENTS */}
+                        {/* TAB 3: ATTACHED DOCUMENTS (With Delete, Rename, View Media Pop-up vs PDF/Doc New Tab) */}
                         {activeTab === 'documents' && (
                             <div className="space-y-6 animate-in fade-in duration-150">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Attached Files & Documents</h3>
-                                        <p className="text-[11px] text-muted-foreground">Upload and manage files attached to this task (synced with Document Hub).</p>
+                                        <p className="text-[11px] text-muted-foreground">Upload, view, rename, or delete files attached to this task.</p>
                                     </div>
                                     <a
                                         href="/departments/documents"
@@ -958,117 +1042,132 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                                     </div>
                                 </div>
 
-                                {/* Documents List */}
+                                {/* Documents List with View, Rename & Delete Actions */}
                                 <div className="space-y-3 pt-2">
                                     <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Task Documents Directory</h4>
                                     <div className="space-y-2">
-                                        {uploadedDocsList.map((doc, idx) => (
-                                            <div key={idx} className="p-3 bg-muted/20 border border-border/60 rounded-xl flex items-center justify-between hover:border-primary/50 transition">
-                                                <div className="flex items-center space-x-3 min-w-0">
-                                                    <div className="p-2 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
-                                                        <FileText className="w-4 h-4" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <h5 className="text-xs font-bold text-foreground truncate">
-                                                            {doc.name}
-                                                        </h5>
-                                                        <span className="text-[10px] text-muted-foreground">
-                                                            {doc.type} • {doc.size} • Attached {doc.date}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center space-x-2 shrink-0">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => setPreviewDoc(doc)}
-                                                        className="h-7 text-[11px] font-semibold"
-                                                    >
-                                                        <Eye className="w-3 h-3 mr-1 text-primary" /> Quick View
-                                                    </Button>
-                                                    <a href="/departments/documents" target="_blank" rel="noopener noreferrer">
-                                                        <Button variant="ghost" size="sm" className="h-7 text-[11px] font-semibold text-muted-foreground">
-                                                            <ExternalLink className="w-3 h-3" />
-                                                        </Button>
-                                                    </a>
-                                                </div>
+                                        {uploadedDocsList.length === 0 ? (
+                                            <div className="p-4 border border-dashed border-border/80 rounded-xl text-center text-xs text-muted-foreground italic">
+                                                No documents attached to this task yet.
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Embedded Document Previewer Box */}
-                                {previewDoc && (
-                                    <div className="p-4 border border-primary/40 bg-card rounded-xl space-y-3 animate-in fade-in duration-150 shadow-lg">
-                                        <div className="flex items-center justify-between border-b border-border/60 pb-3">
-                                            <div className="flex items-center space-x-2 min-w-0">
-                                                <FileText className="w-5 h-5 text-primary shrink-0" />
-                                                <div className="min-w-0">
-                                                    <h4 className="text-xs font-bold text-foreground truncate">{previewDoc.name}</h4>
-                                                    <p className="text-[10px] text-muted-foreground">{previewDoc.type} Document • {previewDoc.size} • Attached to Task</p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => setPreviewDoc(null)}
-                                                className="p-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        </div>
-
-                                        <div className="bg-muted/30 border border-border/40 rounded-lg overflow-hidden flex flex-col items-center justify-center p-3 min-h-[220px]">
-                                            {previewDoc.type === 'PDF' ? (
-                                                <div className="w-full space-y-2">
-                                                    <div className="flex items-center justify-between px-2 text-[11px] text-muted-foreground">
-                                                        <span>PDF Reader Preview</span>
-                                                        <span className="text-[10px] text-primary font-semibold">Page 1 of 1</span>
-                                                    </div>
-                                                    <div className="p-4 bg-background border border-border rounded-lg space-y-3 font-mono text-[11px] text-foreground leading-relaxed">
-                                                        <div className="font-bold border-b border-border/60 pb-1 text-primary">DOCUMENT REVISION & TECHNICAL SCOPE</div>
-                                                        <p className="text-muted-foreground">Task: #{task.id} - {task.title}</p>
-                                                        <p className="text-muted-foreground">Status: Synced with Department Central Document Hub.</p>
-                                                        <div className="p-2 bg-muted/40 rounded border border-border/40 text-[10px]">
-                                                            [PDF Binary Content Stream Ready] • All task attachments are stored securely in storage.
+                                        ) : (
+                                            uploadedDocsList.map((doc, idx) => (
+                                                <div key={idx} className="p-3 bg-muted/20 border border-border/60 rounded-xl flex items-center justify-between hover:border-primary/50 transition gap-3">
+                                                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                                        <div className="p-2 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                                            <FileText className="w-4 h-4" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            {editingDocIdx === idx ? (
+                                                                <div className="flex items-center space-x-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={editingDocName}
+                                                                        onChange={(e) => setEditingDocName(e.target.value)}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter') {
+                                                                                handleSaveRenameDoc(idx, doc);
+                                                                            } else if (e.key === 'Escape') {
+                                                                                setEditingDocIdx(null);
+                                                                            }
+                                                                        }}
+                                                                        autoFocus
+                                                                        className="flex-1 h-7 px-2 bg-background border border-primary rounded text-xs text-foreground focus:outline-none"
+                                                                    />
+                                                                    <Button
+                                                                        size="sm"
+                                                                        onClick={() => handleSaveRenameDoc(idx, doc)}
+                                                                        className="h-7 px-2 text-[11px] font-bold bg-primary text-primary-foreground shrink-0"
+                                                                    >
+                                                                        <Check className="w-3 h-3" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() => setEditingDocIdx(null)}
+                                                                        className="h-7 px-2 text-[11px] shrink-0"
+                                                                    >
+                                                                        <X className="w-3 h-3" />
+                                                                    </Button>
+                                                                </div>
+                                                            ) : (
+                                                                <h5 className="text-xs font-bold text-foreground truncate">
+                                                                    {doc.name}
+                                                                </h5>
+                                                            )}
+                                                            <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                                                {doc.type} • {doc.size} • Attached {doc.date}
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <div className="text-center space-y-2 p-4">
-                                                    <FileCheck className="w-10 h-10 text-primary mx-auto" />
-                                                    <h5 className="text-xs font-bold text-foreground">{previewDoc.name}</h5>
-                                                    <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
-                                                        File is stored securely in Department Storage. Download to view in your native desktop application.
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
 
-                                        <div className="flex items-center justify-between pt-1">
-                                            <span className="text-[10px] text-muted-foreground">Synced with Document Hub</span>
-                                            <div className="flex items-center space-x-2">
-                                                <a href="/departments/documents" target="_blank" rel="noopener noreferrer">
-                                                    <Button variant="outline" size="sm" className="h-7 text-[11px] font-semibold">
-                                                        <ExternalLink className="w-3 h-3 mr-1" /> Open Document Hub
-                                                    </Button>
-                                                </a>
-                                                <Button
-                                                    onClick={() => {
-                                                        toast.success(`Downloading "${previewDoc.name}"...`);
-                                                    }}
-                                                    size="sm"
-                                                    className="h-7 text-[11px] font-bold bg-primary text-primary-foreground"
-                                                >
-                                                    <Download className="w-3 h-3 mr-1" /> Download
-                                                </Button>
-                                            </div>
-                                        </div>
+                                                    {/* Document Action Controls (View, Rename, Delete) */}
+                                                    <div className="flex items-center space-x-1.5 shrink-0">
+                                                        {/* View Action: Media pop-up or PDF/Doc New Tab */}
+                                                        {isMediaFileType(doc.type) ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleViewDocument(doc)}
+                                                                className="h-7 text-[11px] font-semibold border-border"
+                                                                title="View image/video preview pop-up"
+                                                            >
+                                                                <Eye className="w-3 h-3 mr-1 text-primary" /> View Preview
+                                                            </Button>
+                                                        ) : (
+                                                            <a
+                                                                href={doc.id ? `/departments/documents/${doc.id}/view` : `/departments/documents`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                            >
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-7 text-[11px] font-semibold border-border"
+                                                                    title="Open document in new tab with download link"
+                                                                >
+                                                                    <ExternalLink className="w-3 h-3 mr-1 text-primary" /> Open New Tab
+                                                                </Button>
+                                                            </a>
+                                                        )}
+
+                                                        {/* Rename Action */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleStartRenameDoc(idx, doc.name)}
+                                                            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                                                            title="Rename document"
+                                                        >
+                                                            <Pencil className="w-3.5 h-3.5" />
+                                                        </button>
+
+                                                        {/* Delete Action */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteDoc(idx, doc)}
+                                                            className="p-1.5 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition"
+                                                            title="Delete document"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Media Pop-up Preview Modal */}
+            <MediaPreviewModal
+                isOpen={isMediaModalOpen}
+                onClose={() => setIsMediaModalOpen(false)}
+                document={selectedMediaDoc}
+            />
 
             {/* Delete Task Confirmation Modal */}
             <DeleteTaskConfirmModal
