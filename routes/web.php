@@ -36,8 +36,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/work-plans/{workPlan}', [WorkPlanController::class, 'destroy'])->name('work-plans.destroy');
     Route::post('/work-plans/{workPlan}/attach-projects', [WorkPlanController::class, 'attachProjects'])->name('work-plans.attach-projects');
 
+    Route::post('/milestones', [MilestoneController::class, 'storeGlobal'])->name('milestones.store');
     Route::post('/projects/{project}/milestones', [MilestoneController::class, 'store'])->name('projects.milestones.store');
-    Route::patch('/milestones/{milestone}', [MilestoneController::class, 'update'])->name('milestones.update');
+    Route::match(['put', 'patch'], '/milestones/{milestone}', [MilestoneController::class, 'update'])->name('milestones.update');
     Route::delete('/milestones/{milestone}', [MilestoneController::class, 'destroy'])->name('milestones.destroy');
 
     // Departments & Org Structure Routes
