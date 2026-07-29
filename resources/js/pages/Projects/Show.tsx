@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 import { isMediaFileType, MediaPreviewModal  } from '@/components/departments/MediaPreviewModal';
 import type {DocumentItem} from '@/components/departments/MediaPreviewModal';
 import { CreateFolderModal } from '@/components/projects/CreateFolderModal';
@@ -223,15 +224,10 @@ export default function ProjectShow({ project, stats }: ProjectProps) {
         });
     };
 
-    const handleDeleteDocument = (docId: number) => {
-        if (!confirm('Are you sure you want to delete this document?')) {
-            return;
-        }
+    const [deletingDocId, setDeletingDocId] = useState<number | null>(null);
 
-        router.delete(`/project-documents/${docId}`, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Document deleted successfully.'),
-        });
+    const handleDeleteDocument = (docId: number) => {
+        setDeletingDocId(docId);
     };
 
     const handleViewDocument = (doc: DocumentItem) => {
@@ -1274,6 +1270,25 @@ export default function ProjectShow({ project, stats }: ProjectProps) {
                 isOpen={!!previewDocument}
                 onClose={() => setPreviewDocument(null)}
                 document={previewDocument}
+            />
+
+            {/* Confirm Delete Document Modal */}
+            <ConfirmDeleteModal
+                isOpen={!!deletingDocId}
+                onClose={() => setDeletingDocId(null)}
+                onConfirm={() => {
+                    if (deletingDocId) {
+                        router.delete(`/project-documents/${deletingDocId}`, {
+                            preserveScroll: true,
+                            onSuccess: () => {
+                                toast.success('Document deleted successfully.');
+                                setDeletingDocId(null);
+                            },
+                        });
+                    }
+                }}
+                title="Delete Document"
+                description="Are you sure you want to delete this document? This action cannot be undone."
             />
         </>
     );

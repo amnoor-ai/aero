@@ -15,6 +15,7 @@ import {
     List,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 import { CreateDepartmentModal } from '@/components/departments/CreateDepartmentModal';
 import { EditDepartmentModal } from '@/components/departments/EditDepartmentModal';
 import { Button } from '@/components/ui/button';
@@ -92,10 +93,10 @@ export default function DepartmentsIndex({
         );
     };
 
+    const [deletingDepartmentId, setDeletingDepartmentId] = useState<number | null>(null);
+
     const handleDelete = (departmentId: number) => {
-        if (confirm('Are you sure you want to delete this department?')) {
-            router.delete(`/departments/${departmentId}`);
-        }
+        setDeletingDepartmentId(departmentId);
     };
 
     return (
@@ -534,6 +535,22 @@ export default function DepartmentsIndex({
                 onClose={() => setEditingDepartment(null)}
                 department={editingDepartment}
                 workspaceUsers={workspaceUsers}
+            />
+
+            {/* Confirm Delete Modal */}
+            <ConfirmDeleteModal
+                isOpen={!!deletingDepartmentId}
+                onClose={() => setDeletingDepartmentId(null)}
+                onConfirm={() => {
+                    if (deletingDepartmentId) {
+                        router.delete(`/departments/${deletingDepartmentId}`, {
+                            preserveScroll: true,
+                            onSuccess: () => setDeletingDepartmentId(null),
+                        });
+                    }
+                }}
+                title="Delete Department"
+                description="Are you sure you want to delete this department? All associated data will be removed."
             />
         </>
     );

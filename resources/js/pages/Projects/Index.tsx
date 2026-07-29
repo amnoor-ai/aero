@@ -10,6 +10,7 @@ import {
     Eye,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 import { CreateProjectWizardModal } from '@/components/projects/CreateProjectWizardModal';
 import { DataTableHeader } from '@/components/ui/data-table-header';
 import {
@@ -52,6 +53,7 @@ interface ProjectsIndexProps {
 export default function ProjectsIndex({ projects, departments = [], workspaceUsers = [], filters = {} }: ProjectsIndexProps) {
     const projectList = projects.data || [];
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [deletingProject, setDeletingProject] = useState<ProjectItem | null>(null);
 
     const handleSearch = (query: string) => {
         router.get('/projects', { ...filters, search: query }, { preserveState: true, replace: true });
@@ -245,10 +247,7 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                                                             className="text-rose-500 focus:text-rose-500"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-
-                                                                if (confirm(`Delete project "${project.name}"?`)) {
-                                                                    router.delete(`/projects/${project.id}`);
-                                                                }
+                                                                setDeletingProject(project);
                                                             }}
                                                         >
                                                             <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
@@ -279,6 +278,21 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                 onClose={() => setIsCreateModalOpen(false)}
                 departments={departments}
                 workspaceUsers={workspaceUsers}
+            />
+
+            <ConfirmDeleteModal
+                isOpen={!!deletingProject}
+                onClose={() => setDeletingProject(null)}
+                onConfirm={() => {
+                    if (deletingProject) {
+                        router.delete(`/projects/${deletingProject.id}`, {
+                            preserveScroll: true,
+                            onSuccess: () => setDeletingProject(null),
+                        });
+                    }
+                }}
+                title="Delete Project"
+                itemName={deletingProject?.name}
             />
         </>
     );

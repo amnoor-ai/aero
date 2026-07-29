@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 import { Button } from '@/components/ui/button';
 import { AttachProjectsModal } from '@/components/workplan/AttachProjectsModal';
 import { CreateWorkPlanModal } from '@/components/workplan/CreateWorkPlanModal';
@@ -71,6 +72,7 @@ export default function WorkPlanIndex({ workPlans = [], allProjects = [] }: Work
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [selectedWorkPlanForProjects, setSelectedWorkPlanForProjects] = useState<WorkPlanItem | null>(null);
     const [expandedPlanIds, setExpandedPlanIds] = useState<number[]>(workPlans.map((wp) => wp.id));
+    const [deletingWorkPlan, setDeletingWorkPlan] = useState<WorkPlanItem | null>(null);
 
     const toggleExpandPlan = (id: number) => {
         setExpandedPlanIds((prev) =>
@@ -79,12 +81,7 @@ export default function WorkPlanIndex({ workPlans = [], allProjects = [] }: Work
     };
 
     const handleDeleteWorkPlan = (wp: WorkPlanItem) => {
-        if (confirm(`Are you sure you want to delete work plan "${wp.name}"?`)) {
-            router.delete(`/work-plans/${wp.id}`, {
-                preserveScroll: true,
-                onSuccess: () => toast.success(`Work plan "${wp.name}" deleted.`),
-            });
-        }
+        setDeletingWorkPlan(wp);
     };
 
     const formatStatusBadge = (status: string) => {
@@ -340,6 +337,25 @@ export default function WorkPlanIndex({ workPlans = [], allProjects = [] }: Work
                 onClose={() => setSelectedWorkPlanForProjects(null)}
                 workPlan={selectedWorkPlanForProjects}
                 allProjects={allProjects}
+            />
+
+            {/* Confirm Delete Modal */}
+            <ConfirmDeleteModal
+                isOpen={!!deletingWorkPlan}
+                onClose={() => setDeletingWorkPlan(null)}
+                onConfirm={() => {
+                    if (deletingWorkPlan) {
+                        router.delete(`/work-plans/${deletingWorkPlan.id}`, {
+                            preserveScroll: true,
+                            onSuccess: () => {
+                                toast.success(`Work plan "${deletingWorkPlan.name}" deleted.`);
+                                setDeletingWorkPlan(null);
+                            },
+                        });
+                    }
+                }}
+                title="Delete Work Plan"
+                itemName={deletingWorkPlan?.name}
             />
         </>
     );

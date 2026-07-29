@@ -19,6 +19,7 @@ import {
     Video,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 import { DeleteDocumentModal } from '@/components/departments/DeleteDocumentModal';
 import { EditDepartmentModal } from '@/components/departments/EditDepartmentModal';
 import type { DocumentItem } from '@/components/departments/MediaPreviewModal';
@@ -127,17 +128,10 @@ export default function DepartmentShow({
         );
     };
 
+    const [deletingMemberId, setDeletingMemberId] = useState<number | null>(null);
+
     const handleRemoveMember = (userId: number) => {
-        if (
-            confirm(
-                'Are you sure you want to remove this member from the department?',
-            )
-        ) {
-            router.delete(`/departments/${department.id}/members/${userId}`, {
-                preserveState: true,
-                preserveScroll: true,
-            });
-        }
+        setDeletingMemberId(userId);
     };
 
     const handleViewDocument = (doc: DocumentItem) => {
@@ -913,6 +907,22 @@ export default function DepartmentShow({
                     </form>
                 </DialogContent>
             </Dialog>
+            {/* Confirm Delete Member Modal */}
+            <ConfirmDeleteModal
+                isOpen={!!deletingMemberId}
+                onClose={() => setDeletingMemberId(null)}
+                onConfirm={() => {
+                    if (deletingMemberId) {
+                        router.delete(`/departments/${department.id}/members/${deletingMemberId}`, {
+                            preserveState: true,
+                            preserveScroll: true,
+                            onSuccess: () => setDeletingMemberId(null),
+                        });
+                    }
+                }}
+                title="Remove Team Member"
+                description="Are you sure you want to remove this member from the department?"
+            />
         </>
     );
 }
