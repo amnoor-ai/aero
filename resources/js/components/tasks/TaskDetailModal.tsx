@@ -142,8 +142,6 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
     const [assigneeId, setAssigneeId] = useState<string>(task?.assignee_id ? String(task.assignee_id) : '');
     const [priority, setPriority] = useState<string>(task?.priority || 'medium');
     const [statusId, setStatusId] = useState<number>(task?.board_column_id || task?.board_column?.id || task?.boardColumn?.id || 1);
-    const [storyPoints, setStoryPoints] = useState<string>(task?.story_points ? String(task.story_points) : '');
-    const [taskType, setTaskType] = useState<string>(task?.type || 'task');
     const [localChecklists, setLocalChecklists] = useState<ChecklistItem[]>(task?.checklists || []);
     const [localComments, setLocalComments] = useState<CommentItem[]>(task?.comments || []);
 
@@ -157,8 +155,6 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
         setStatusId(task?.board_column_id || task?.board_column?.id || task?.boardColumn?.id || 1);
         setDescriptionText(task?.description || '');
         setTitleText(task?.title || '');
-        setStoryPoints(task?.story_points ? String(task.story_points) : '');
-        setTaskType(task?.type || 'task');
         setLocalChecklists(task?.checklists || []);
         setLocalComments(task?.comments || []);
     }
@@ -210,17 +206,6 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
     const handleDueDateChange = (newDueDate: string) => {
         setDueDate(newDueDate);
         router.patch(`/tasks/${task.id}`, { due_date: newDueDate || null }, { preserveScroll: true, preserveState: true });
-    };
-
-    const handleStoryPointsChange = (val: string) => {
-        setStoryPoints(val);
-        const points = val ? parseInt(val, 10) : null;
-        router.patch(`/tasks/${task.id}`, { story_points: points }, { preserveScroll: true, preserveState: true });
-    };
-
-    const handleTypeChange = (newType: string) => {
-        setTaskType(newType);
-        router.patch(`/tasks/${task.id}`, { type: newType }, { preserveScroll: true, preserveState: true });
     };
 
     // Realtime Optimistic Checklist Handlers
@@ -458,7 +443,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                             )}
 
                             {/* Type Switcher Badge */}
-                            <select
+                            {/* <select
                                 value={taskType}
                                 onChange={(e) => handleTypeChange(e.target.value)}
                                 className="text-[11px] font-bold uppercase tracking-wider bg-card text-foreground border border-border rounded-md px-2.5 py-1 cursor-pointer focus:outline-none"
@@ -468,7 +453,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                                 <option value="bug">Bug Fix</option>
                                 <option value="improvement">Improvement</option>
                                 <option value="activity">Activity</option>
-                            </select>
+                            </select> */}
 
                             {/* Created Date */}
                             {task.created_at && (
@@ -624,7 +609,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                         </div>
 
                         {/* 4. Status & Rest of Metadata Fields (Status, Priority, Assignee, Due Date, Story Points) */}
-                        <div className="p-4 border border-border/80 bg-muted/10 rounded-xl grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+                        <div className="p-4 border border-border/80 bg-muted/10 rounded-xl grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                             {/* Status Switcher */}
                             <div className="space-y-1">
                                 <label className="text-[11px] font-semibold text-muted-foreground flex items-center space-x-1">
@@ -697,7 +682,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                             </div>
 
                             {/* Story Points Picker */}
-                            <div className="space-y-1 col-span-2 sm:col-span-1">
+                            {/* <div className="space-y-1 col-span-2 sm:col-span-1">
                                 <label className="text-[11px] font-semibold text-muted-foreground flex items-center space-x-1">
                                     <Clock className="w-3 h-3 text-muted-foreground" />
                                     <span>Story Points</span>
@@ -715,7 +700,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                                     <option value="8">8 Points</option>
                                     <option value="13">13 Points</option>
                                 </select>
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Navigation Tabs Header */}

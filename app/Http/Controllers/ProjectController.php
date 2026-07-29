@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BoardColumn;
 use App\Models\Department;
 use App\Models\Project;
 use App\Models\User;
@@ -29,10 +28,6 @@ class ProjectController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        if ($request->boolean('starred')) {
-            $query->where('is_starred', true);
-        }
-
         $sortBy = $request->input('sort_by', 'updated_at');
         $order = strtolower($request->input('order', 'desc')) === 'asc' ? 'asc' : 'desc';
 
@@ -50,7 +45,7 @@ class ProjectController extends Controller
             'projects' => $projects,
             'departments' => $departments,
             'workspaceUsers' => $workspaceUsers,
-            'filters' => $request->only(['search', 'status', 'starred', 'sort_by', 'order']),
+            'filters' => $request->only(['search', 'status', 'sort_by', 'order']),
         ]);
     }
 
@@ -61,8 +56,10 @@ class ProjectController extends Controller
             'members',
             'department',
             'milestones',
-            'sprints' => function ($q) {
-                $q->orderBy('created_at', 'desc');
+            'documents.uploadedBy',
+            'tasks' => function ($t) {
+                $t->latest('created_at')
+                    ->with(['boardColumn', 'assignee', 'checklists', 'comments.user', 'activities.user']);
             },
             'boardColumns' => function ($query) {
                 $query->orderBy('position')->with([
@@ -99,18 +96,6 @@ class ProjectController extends Controller
 
         $users = User::select('id', 'name', 'email')->get();
 
-        // Product Backlog tasks (tasks not assigned to any sprint or assigned to future sprints)
-        $backlogTasks = $project->tasks()
-            ->whereNull('sprint_id')
-            ->with(['assignee', 'boardColumn'])
-            ->get();
-
-        // Active sprint details
-        $activeSprint = $project->sprints->firstWhere('status', 'active');
-        if ($activeSprint) {
-            $activeSprint->load(['tasks.assignee', 'tasks.boardColumn']);
-        }
-
         // Count task stats for Header Strip
         $allTasks = $project->boardColumns->flatMap->tasks;
         $totalCount = $allTasks->count();
@@ -122,9 +107,6 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Show', [
             'project' => $project,
             'workspaceUsers' => $users,
-            'activeSprint' => $activeSprint,
-            'allSprints' => $project->sprints,
-            'backlogTasks' => $backlogTasks,
             'stats' => [
                 'total' => $totalCount,
                 'todo' => $todoCount,
@@ -148,54 +130,32 @@ class ProjectController extends Controller
             'due_date' => 'nullable|date|after_or_equal:2000-01-01',
             'budget' => 'nullable|numeric|min:0',
             'tags' => 'nullable|array',
-            'tags.*' => 'string',
             'members' => 'nullable|array',
-            'members.*.user_id' => 'required|exists:users,id',
-            'members.*.role' => 'nullable|string',
         ]);
 
         $workspaceId = 1;
-        $slug = Str::slug($validated['name']).'-'.Str::random(4);
+        $validated['slug'] = Str::slug($validated['name']).'-'.time();
+        $validated['workspace_id'] = $workspaceId;
+        $validated['lead_id'] = $validated['lead_id'] ?? $request->user()->id;
 
-        $project = Project::create([
-            'workspace_id' => $workspaceId,
-            'department_id' => $validated['department_id'] ?? null,
-            'name' => $validated['name'],
-            'slug' => $slug,
-            'description' => $validated['description'] ?? null,
-            'status' => $validated['status'],
-            'lead_id' => $validated['lead_id'] ?? ($request->user()?->id ?? 1),
-            'start_date' => $validated['start_date'] ?? null,
-            'due_date' => $validated['due_date'] ?? null,
-            'budget' => $validated['budget'] ?? null,
-            'tags' => $validated['tags'] ?? [],
-            'is_starred' => false,
-        ]);
+        $project = Project::create($validated);
 
-        // Seed default board columns
+        // Auto-create default board columns
         $defaultColumns = [
-            ['name' => 'Backlog', 'color' => '#64748B', 'position' => 1],
-            ['name' => 'To Do', 'color' => '#3B82F6', 'position' => 2],
-            ['name' => 'In Progress', 'color' => '#F59E0B', 'position' => 3],
-            ['name' => 'In Review', 'color' => '#8B5CF6', 'position' => 4],
-            ['name' => 'Done', 'color' => '#10B981', 'position' => 5],
+            ['name' => 'Backlog', 'position' => 1, 'color' => '#64748b'],
+            ['name' => 'To Do', 'position' => 2, 'color' => '#3b82f6'],
+            ['name' => 'In Progress', 'position' => 3, 'color' => '#f59e0b'],
+            ['name' => 'In Review', 'position' => 4, 'color' => '#8b5cf6'],
+            ['name' => 'Done', 'position' => 5, 'color' => '#10b981'],
         ];
 
-        foreach ($defaultColumns as $col) {
-            BoardColumn::create([
-                'project_id' => $project->id,
-                'name' => $col['name'],
-                'color' => $col['color'],
-                'position' => $col['position'],
-            ]);
+        foreach ($defaultColumns as $colData) {
+            $project->boardColumns()->create($colData);
         }
 
-        // Attach lead
-        $project->members()->syncWithoutDetaching([
-            $project->lead_id => ['role' => 'lead'],
-        ]);
+        // Attach lead as lead member
+        $project->members()->attach($project->lead_id, ['role' => 'lead']);
 
-        // Attach selected members
         if (! empty($validated['members'])) {
             foreach ($validated['members'] as $m) {
                 if ($m['user_id'] != $project->lead_id) {
@@ -226,12 +186,5 @@ class ProjectController extends Controller
         $project->update($validated);
 
         return back()->with('success', 'Project updated successfully.');
-    }
-
-    public function toggleStar(Project $project): RedirectResponse
-    {
-        $project->update(['is_starred' => ! $project->is_starred]);
-
-        return back();
     }
 }

@@ -7,7 +7,6 @@ import {
     ChevronDown,
     ChevronUp,
     Trash2,
-    Clock,
     Target,
     BarChart2,
 } from 'lucide-react';
@@ -307,17 +306,13 @@ export default function WorkPlanIndex({ workPlans = [], allProjects = [] }: Work
                                                                 />
                                                             </div>
 
-                                                            {/* Sprints & Milestones Quick Info */}
-                                                            <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground pt-1 border-t border-border/40">
-                                                                <div className="flex items-center space-x-1">
-                                                                    <Clock className="w-3 h-3 text-muted-foreground" />
-                                                                    <span>{proj.sprints?.length || 0} Sprints</span>
-                                                                </div>
-
+                                                            {/* Milestones Quick Info */}
+                                                            <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
                                                                 <div className="flex items-center space-x-1">
                                                                     <Target className="w-3 h-3 text-muted-foreground" />
                                                                     <span>{proj.milestones?.length || 0} Milestones</span>
                                                                 </div>
+                                                                <span className="text-[10px] text-muted-foreground">Active Scope</span>
                                                             </div>
                                                         </div>
                                                     ))}

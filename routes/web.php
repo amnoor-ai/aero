@@ -8,7 +8,7 @@ use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\MyDeskController;
 use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\SprintController;
+use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskDirectoryController;
 use App\Http\Controllers\Teams\TeamInvitationController;
@@ -53,19 +53,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/departments/{department}/members', [DepartmentController::class, 'addMember'])->name('departments.members.add');
     Route::delete('/departments/{department}/members/{user}', [DepartmentController::class, 'removeMember'])->name('departments.members.remove');
 
-    // Sprints & Iterations Routes
-    Route::post('/sprints', [SprintController::class, 'store'])->name('sprints.store');
-    Route::patch('/sprints/{sprint}', [SprintController::class, 'update'])->name('sprints.update');
-    Route::post('/sprints/{sprint}/start', [SprintController::class, 'start'])->name('sprints.start');
-    Route::post('/sprints/{sprint}/complete', [SprintController::class, 'complete'])->name('sprints.complete');
-    Route::post('/sprints/assign-tasks', [SprintController::class, 'assignTasks'])->name('sprints.assign-tasks');
-
     // Projects Routes
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
-    Route::post('/projects/{project}/toggle-star', [ProjectController::class, 'toggleStar'])->name('projects.toggle-star');
+
+    Route::post('/projects/{project}/documents', [ProjectDocumentController::class, 'store'])->name('projects.documents.store');
+    Route::get('/project-documents/{document}/view', [ProjectDocumentController::class, 'view'])->name('projects.documents.view');
+    Route::get('/project-documents/{document}/download', [ProjectDocumentController::class, 'download'])->name('projects.documents.download');
+    Route::delete('/project-documents/{document}', [ProjectDocumentController::class, 'destroy'])->name('projects.documents.destroy');
 
     // Tasks Routes
     Route::get('/tasks', [TaskDirectoryController::class, 'index'])->name('tasks.index');

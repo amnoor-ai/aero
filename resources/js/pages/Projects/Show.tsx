@@ -1,21 +1,40 @@
 import { Head, router } from '@inertiajs/react';
 import {
-    Star,
     FileText,
     MessageSquare,
     Pencil,
     Plus,
-    Paperclip,
-    Upload,
     Target,
-    Zap,
+    Folder,
+    Calendar,
+    Search,
+    Filter,
+    List,
+    Grid,
+    FolderPlus,
+    Upload,
+    Clock,
+    CheckSquare,
+    Key,
+    Copy,
+    Eye,
+    EyeOff,
+    Send,
+    CheckCircle2,
+    SlidersHorizontal,
+    Image,
+    Link as LinkIcon,
+    FileCode,
+    Download,
+    Trash2,
 } from 'lucide-react';
-import React, { useState } from 'react';
-import { KanbanBoard } from '@/components/board/KanbanBoard';
-import { CompleteSprintModal } from '@/components/sprints/CompleteSprintModal';
-import { CreateSprintModal } from '@/components/sprints/CreateSprintModal';
-import { SprintBacklogDrawer } from '@/components/sprints/SprintBacklogDrawer';
-import { SprintHeaderStrip } from '@/components/sprints/SprintHeaderStrip';
+import React, { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { isMediaFileType, MediaPreviewModal  } from '@/components/departments/MediaPreviewModal';
+import type {DocumentItem} from '@/components/departments/MediaPreviewModal';
+import { CreateFolderModal } from '@/components/projects/CreateFolderModal';
+import { CreateTaskWizardModal } from '@/components/tasks/CreateTaskWizardModal';
+import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -35,10 +54,6 @@ import {
 
 interface ProjectProps {
     project: any;
-    workspaceUsers: any[];
-    activeSprint?: any;
-    allSprints?: any[];
-    backlogTasks?: any[];
     stats: {
         total: number;
         todo: number;
@@ -49,13 +64,19 @@ interface ProjectProps {
     };
 }
 
-type TabType = 'board' | 'list' | 'discussions' | 'milestones' | 'timeline' | 'team' | 'files';
+type TabType = 'tasks' | 'discussions' | 'milestones' | 'timeline' | 'team' | 'files' | 'credentials';
 
-export default function ProjectShow({ project, workspaceUsers = [], activeSprint, allSprints = [], backlogTasks = [], stats }: ProjectProps) {
-    const [activeTab, setActiveTab] = useState<TabType>('board');
-    const [isBacklogDrawerOpen, setIsBacklogDrawerOpen] = useState(false);
-    const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
-    const [isCompleteSprintOpen, setIsCompleteSprintOpen] = useState(false);
+interface CredentialItem {
+    id: number;
+    key: string;
+    value: string;
+    environment: string;
+}
+
+export default function ProjectShow({ project, stats }: ProjectProps) {
+    const [activeTab, setActiveTab] = useState<TabType>('tasks');
+    const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+    const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<any | null>(null);
 
     const [isEditInfoOpen, setIsEditInfoOpen] = useState(false);
     const [editName, setEditName] = useState(project.name);
@@ -64,13 +85,161 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
     const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [statusValue, setStatusValue] = useState(project.status);
 
-    const [isDiscussionOpen, setIsDiscussionOpen] = useState(false);
-    const [discussionTitle, setDiscussionTitle] = useState('');
+    // Discussions State
+    const [discussionTab, setDiscussionTab] = useState<'media' | 'documents' | 'links'>('media');
+    const [commentText, setCommentText] = useState('');
+    const [commentsList, setCommentsList] = useState<any[]>(project.comments || []);
 
-    const [isUploadOpen, setIsUploadOpen] = useState(false);
+    // Files Tab State
+    const [fileViewMode, setFileViewMode] = useState<'grid' | 'list'>('grid');
+    const [fileTypeFilter, setFileTypeFilter] = useState('all');
+    const [fileSearchQuery, setFileSearchQuery] = useState('');
+    const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+    const [foldersList, setFoldersList] = useState<string[]>(['Design Assets', 'API Specs', 'Database Backups']);
+    const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+    const [previewDocument, setPreviewDocument] = useState<DocumentItem | null>(null);
 
-    const handleToggleStar = () => {
-        router.post(`/projects/${project.id}/toggle-star`, {}, { preserveScroll: true });
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Tasks Table View & Filter State
+    const [taskViewMode, setTaskViewMode] = useState<'list' | 'grouped'>('list');
+    const [taskSearchQuery, setTaskSearchQuery] = useState('');
+
+    // Credentials State
+    const [visibleSecretIds, setVisibleSecretIds] = useState<number[]>([]);
+    const [credentialsList, setCredentialsList] = useState<CredentialItem[]>([
+        { id: 1, key: 'STAGING_API_URL', value: 'https://staging-api.aero.internal/v1', environment: 'Staging' },
+        { id: 2, key: 'ZKTECO_DEVICE_KEY', value: 'zk_live_99834110823491', environment: 'Production' },
+        { id: 3, key: 'DATABASE_REPLICA_PORT', value: 'postgres://admin:pass@10.0.4.12:5432/db', environment: 'Staging' },
+    ]);
+    const [newCredKey, setNewCredKey] = useState('');
+    const [newCredValue, setNewCredValue] = useState('');
+    const [isAddCredOpen, setIsAddCredOpen] = useState(false);
+
+    // Calculate Days to Deadline
+    const calculateDaysRemaining = () => {
+        if (!project.due_date) {
+            return 273;
+        }
+
+        const target = new Date(project.due_date);
+        const today = new Date();
+        const diffTime = target.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        return diffDays > 0 ? diffDays : 0;
+    };
+
+    const daysToDeadline = calculateDaysRemaining();
+
+    // Use direct project.tasks (fallback to boardColumns if empty)
+    const allProjectTasks = (project.tasks && project.tasks.length > 0)
+        ? project.tasks
+        : (project.boardColumns || []).flatMap((col: any) =>
+            (col.tasks || []).map((t: any) => ({
+                ...t,
+                boardColumn: col,
+            }))
+        );
+
+    const filteredTasks = allProjectTasks.filter((t: any) =>
+        t.title.toLowerCase().includes(taskSearchQuery.toLowerCase())
+    );
+
+    const columnsToGroup = (project.boardColumns && project.boardColumns.length > 0)
+        ? project.boardColumns
+        : [
+            { id: 1, name: 'Backlog' },
+            { id: 2, name: 'To Do' },
+            { id: 3, name: 'In Progress' },
+            { id: 4, name: 'In Review' },
+            { id: 5, name: 'Done' },
+        ];
+
+    // Project Documents
+    const projectDocuments: DocumentItem[] = (project.documents || []).map((doc: any) => ({
+        id: doc.id,
+        name: doc.name,
+        file_path: doc.file_path,
+        file_size: doc.file_size,
+        file_type: doc.file_type || '',
+        formatted_size: doc.formatted_size || '0 B',
+        created_at: doc.created_at || '',
+        view_url: `/project-documents/${doc.id}/view`,
+        download_url: `/project-documents/${doc.id}/download`,
+        folder_name: doc.folder_name,
+    }));
+
+    // Realtime Filtered Project Documents for Files Tab
+    const filteredProjectDocuments = projectDocuments.filter((doc) => {
+        if (fileSearchQuery && !doc.name.toLowerCase().includes(fileSearchQuery.toLowerCase())) {
+            return false;
+        }
+
+        if (selectedFolder && doc.folder_name !== selectedFolder) {
+            return false;
+        }
+
+        if (fileTypeFilter === 'media') {
+            return isMediaFileType(doc.file_type, doc.name);
+        }
+
+        if (fileTypeFilter === 'documents') {
+            return !isMediaFileType(doc.file_type, doc.name);
+        }
+
+        return true;
+    });
+
+    const mediaDocuments = projectDocuments.filter((d) => isMediaFileType(d.file_type, d.name));
+    const nonMediaDocuments = projectDocuments.filter((d) => !isMediaFileType(d.file_type, d.name));
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        if (selectedFolder) {
+            formData.append('folder_name', selectedFolder);
+        }
+
+        router.post(`/projects/${project.id}/documents`, formData, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(`File "${file.name}" uploaded successfully!`);
+
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            },
+            onError: (err) => {
+                toast.error(err.file || 'Failed to upload file.');
+            },
+        });
+    };
+
+    const handleDeleteDocument = (docId: number) => {
+        if (!confirm('Are you sure you want to delete this document?')) {
+            return;
+        }
+
+        router.delete(`/project-documents/${docId}`, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Document deleted successfully.'),
+        });
+    };
+
+    const handleViewDocument = (doc: DocumentItem) => {
+        if (isMediaFileType(doc.file_type, doc.name)) {
+            setPreviewDocument(doc);
+        } else {
+            window.open(doc.view_url, '_blank');
+        }
     };
 
     const handleEditInfoSubmit = (e: React.FormEvent) => {
@@ -97,124 +266,238 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
         );
     };
 
+    const handleAddComment = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!commentText.trim()) {
+            return;
+        }
+
+        const newComment = {
+            id: Date.now(),
+            content: commentText.trim(),
+            user: { name: 'Current User' },
+            created_at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        setCommentsList([...commentsList, newComment]);
+        setCommentText('');
+    };
+
+    const handleAddCredential = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!newCredKey.trim() || !newCredValue.trim()) {
+            return;
+        }
+
+        setCredentialsList([
+            ...credentialsList,
+            {
+                id: Date.now(),
+                key: newCredKey.trim().toUpperCase(),
+                value: newCredValue.trim(),
+                environment: 'Production',
+            },
+        ]);
+        setNewCredKey('');
+        setNewCredValue('');
+        setIsAddCredOpen(false);
+    };
+
+    const toggleSecretVisibility = (id: number) => {
+        setVisibleSecretIds((prev) =>
+            prev.includes(id) ? prev.filter((sId) => sId !== id) : [...prev, id]
+        );
+    };
+
+    const formatStatusBadge = (statusName?: string) => {
+        const lower = (statusName || 'todo').toLowerCase();
+
+        if (lower.includes('done') || lower.includes('complete')) {
+            return <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Completed</span>;
+        }
+
+        if (lower.includes('progress')) {
+            return <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30">In Progress</span>;
+        }
+
+        if (lower.includes('review')) {
+            return <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-blue-500/10 text-blue-400 border border-blue-500/30">Lead Review</span>;
+        }
+
+        if (lower.includes('backlog')) {
+            return <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-500/10 text-slate-400 border border-slate-500/30">Backlog</span>;
+        }
+
+        return <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-muted text-muted-foreground border border-border">Todo</span>;
+    };
+
+    const renderTaskRow = (t: any) => {
+        const checklistsCount = t.checklists?.length || 0;
+        const completedChecklists = t.checklists?.filter((c: any) => c.is_completed)?.length || 0;
+
+        return (
+            <tr
+                key={t.id}
+                onClick={() => setSelectedTaskForDetail(t)}
+                className="hover:bg-muted/40 cursor-pointer transition"
+            >
+                <td className="p-3.5 font-semibold text-foreground">
+                    <div className="flex items-center space-x-2">
+                        <span className="text-[10px] font-mono text-muted-foreground">#{t.id}</span>
+                        <span className="truncate max-w-xs">{t.title}</span>
+                    </div>
+                </td>
+
+                <td className="p-3.5">
+                    {t.assignee ? (
+                        <div className="flex items-center space-x-2">
+                            <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                                {t.assignee.name?.[0] || 'U'}
+                            </div>
+                            <span className="text-foreground text-xs">{t.assignee.name}</span>
+                        </div>
+                    ) : (
+                        <span className="text-muted-foreground text-xs italic">Unassigned</span>
+                    )}
+                </td>
+
+                <td className="p-3.5 text-xs text-muted-foreground">
+                    {checklistsCount > 0 ? (
+                        <span className="px-2 py-0.5 rounded bg-muted text-foreground text-[10px] font-mono">
+                            {completedChecklists}/{checklistsCount} Done
+                        </span>
+                    ) : (
+                        <span className="text-[11px] text-muted-foreground">No Checklist</span>
+                    )}
+                </td>
+
+                <td className="p-3.5 text-xs">
+                    <span className="text-[11px] text-muted-foreground font-medium">No Stage</span>
+                </td>
+
+                <td className="p-3.5 text-xs">
+                    <div className="flex items-center space-x-1.5 text-muted-foreground font-mono text-[11px]">
+                        <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+                        <span>{t.due_date || 'No Date'}</span>
+                    </div>
+                </td>
+
+                <td className="p-3.5">
+                    {formatStatusBadge(t.board_column?.name || t.boardColumn?.name)}
+                </td>
+            </tr>
+        );
+    };
+
     return (
         <>
             <Head title={`${project.name} - Aero DevPM`} />
 
-            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground">
-                {/* Hero Header */}
-                <div className="space-y-6 border-b border-border/50 pb-6">
+            {/* Hidden File Input for Uploads */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden"
+            />
+
+            <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
+                {/* 1. Hero Header */}
+                <div className="space-y-4 border-b border-border/60 pb-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-xl font-bold tracking-tight text-foreground">{project.name}</h1>
-                                <Dialog open={isEditInfoOpen} onOpenChange={setIsEditInfoOpen}>
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2.5 bg-primary/10 text-primary rounded-xl border border-primary/20">
+                                    <Folder className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <span className="text-[11px] font-mono text-muted-foreground block">
+                                        Started {project.start_date || '28-04-26'}
+                                    </span>
+                                    <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center space-x-2">
+                                        <span>{project.name}</span>
+                                        <Dialog open={isEditInfoOpen} onOpenChange={setIsEditInfoOpen}>
+                                            <DialogTrigger asChild>
+                                                <button className="p-1 text-muted-foreground hover:text-foreground rounded transition">
+                                                    <Pencil className="w-3.5 h-3.5" />
+                                                </button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <form onSubmit={handleEditInfoSubmit}>
+                                                    <DialogHeader>
+                                                        <DialogTitle>Edit Project Details</DialogTitle>
+                                                    </DialogHeader>
+                                                    <div className="space-y-4 py-4">
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold">Project Name</label>
+                                                            <Input value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold">Description</label>
+                                                            <textarea
+                                                                className="w-full p-3 rounded-xl border border-input bg-background text-xs min-h-[100px]"
+                                                                value={editDescription}
+                                                                onChange={(e) => setEditDescription(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <Button type="submit" className="w-full h-9 bg-primary text-xs font-bold">Save Changes</Button>
+                                                    </div>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </h1>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center space-x-2 text-xs">
+                                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                    {project.status}
+                                </span>
+                                <span className="text-muted-foreground">•</span>
+                                <span className="text-muted-foreground font-medium">
+                                    Project progress • <strong className="text-foreground">{stats.completed} of {stats.total} tasks done</strong>
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Top Actions & Deadline Badge */}
+                        <div className="flex flex-col items-end gap-2">
+                            <div className="flex items-center space-x-2">
+                                <Sheet>
+                                    <SheetTrigger asChild>
+                                        <button className="px-3 py-1.5 bg-card border border-border hover:bg-muted text-foreground text-xs font-semibold rounded-lg transition flex items-center">
+                                            <FileText className="w-3.5 h-3.5 mr-1.5" /> Project brief
+                                        </button>
+                                    </SheetTrigger>
+                                    <SheetContent className="w-[400px] sm:w-[540px]">
+                                        <SheetHeader>
+                                            <SheetTitle>Project Brief</SheetTitle>
+                                        </SheetHeader>
+                                        <div className="mt-6 space-y-6">
+                                            <div>
+                                                <h3 className="font-semibold text-lg">{project.name}</h3>
+                                                <p className="text-sm text-muted-foreground mt-2">{project.description || 'No detailed description.'}</p>
+                                            </div>
+                                        </div>
+                                    </SheetContent>
+                                </Sheet>
+
+                                <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
                                     <DialogTrigger asChild>
-                                        <button className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition">
-                                            <Pencil className="w-4 h-4" />
+                                        <button className="px-3 py-1.5 bg-card border border-border hover:bg-muted text-foreground text-xs font-semibold rounded-lg transition flex items-center">
+                                            <Pencil className="w-3.5 h-3.5 mr-1.5" /> Update Status
                                         </button>
                                     </DialogTrigger>
                                     <DialogContent>
-                                        <form onSubmit={handleEditInfoSubmit}>
+                                        <form onSubmit={handleUpdateStatusSubmit}>
                                             <DialogHeader>
-                                                <DialogTitle>Edit Project Details</DialogTitle>
+                                                <DialogTitle>Update Status</DialogTitle>
                                             </DialogHeader>
                                             <div className="space-y-4 py-4">
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium">Project Name</label>
-                                                    <Input
-                                                        value={editName}
-                                                        onChange={(e) => setEditName(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-sm font-medium">Description</label>
-                                                    <textarea 
-                                                        className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm"
-                                                        value={editDescription}
-                                                        onChange={(e) => setEditDescription(e.target.value)}
-                                                        placeholder="Enter a brief overview of this project..."
-                                                    />
-                                                </div>
-                                                <Button type="submit" className="w-full">Save Changes</Button>
-                                            </div>
-                                        </form>
-                                    </DialogContent>
-                                </Dialog>
-                                <span
-                                    className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded border ${
-                                        project.status === 'ongoing'
-                                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                            : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                    }`}
-                                >
-                                    {project.status}
-                                </span>
-                            </div>
-                            
-                            <p className="text-sm text-muted-foreground max-w-3xl">
-                                {project.description || 'No project description provided. Click edit to add a brief overview of this project.'}
-                            </p>
-                        </div>
-                        
-                        <div className="flex flex-col sm:flex-row items-center gap-3">
-                            <button
-                                onClick={handleToggleStar}
-                                className={`px-4 py-2 text-xs font-semibold rounded-lg border transition-all flex items-center ${
-                                    project.is_starred
-                                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
-                                        : 'bg-card border-border hover:bg-muted text-foreground'
-                                }`}
-                            >
-                                <Star className={`w-4 h-4 mr-2 ${project.is_starred ? 'fill-amber-500' : ''}`} />
-                                {project.is_starred ? 'Starred' : 'Star Project'}
-                            </button>
-                            
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <button className="px-4 py-2 bg-card border border-border hover:bg-muted text-foreground text-xs font-semibold rounded-lg transition-all flex items-center">
-                                        <FileText className="w-4 h-4 mr-2" />
-                                        Project Brief
-                                    </button>
-                                </SheetTrigger>
-                                <SheetContent className="w-[400px] sm:w-[540px]">
-                                    <SheetHeader>
-                                        <SheetTitle>Project Brief</SheetTitle>
-                                    </SheetHeader>
-                                    <div className="mt-6 space-y-6">
-                                        <div>
-                                            <h3 className="font-semibold text-lg">{project.name}</h3>
-                                            <p className="text-sm text-muted-foreground mt-2">{project.description || 'No detailed description.'}</p>
-                                        </div>
-                                        <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                                            <h4 className="font-medium text-sm mb-2">Key Result Areas</h4>
-                                            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                                <li>Deliver MVP by Q3</li>
-                                                <li>Achieve 90% test coverage</li>
-                                                <li>Optimize database queries</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
-
-                            <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
-                                <DialogTrigger asChild>
-                                    <button className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center">
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Update Status
-                                    </button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <form onSubmit={handleUpdateStatusSubmit}>
-                                        <DialogHeader>
-                                            <DialogTitle>Update Project Status</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="space-y-4 py-4">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium">Status</label>
                                                 <select
-                                                    className="w-full p-2 rounded-md border border-input bg-background text-sm"
+                                                    className="w-full p-2.5 bg-background border border-input rounded-xl text-xs font-semibold text-foreground"
                                                     value={statusValue}
                                                     onChange={(e) => setStatusValue(e.target.value)}
                                                 >
@@ -224,419 +507,773 @@ export default function ProjectShow({ project, workspaceUsers = [], activeSprint
                                                     <option value="completed">Completed</option>
                                                     <option value="archived">Archived</option>
                                                 </select>
+                                                <Button type="submit" className="w-full h-9 bg-primary text-xs font-bold">Update Status</Button>
                                             </div>
-                                            <Button type="submit" className="w-full">Update Status</Button>
-                                        </div>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                    </div>
-
-                    {/* Progress Bar Area */}
-                    <div className="space-y-2 pt-2">
-                        <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground font-semibold">Overall Progress</span>
-                            <span className="font-bold text-primary">{stats.progress}% Completed</span>
-                        </div>
-                        <div className="w-full bg-muted h-3 rounded-full overflow-hidden border border-border/50">
-                            <div
-                                className="bg-primary h-full rounded-full transition-all duration-1000 ease-out"
-                                style={{ width: `${stats.progress}%` }}
-                            />
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[11px] font-medium text-muted-foreground pt-1">
-                            <span><strong className="text-foreground">{stats.todo}</strong> To Do</span>
-                            <span><strong className="text-foreground">{stats.inProgress}</strong> In Progress</span>
-                            <span><strong className="text-foreground">{stats.inReview}</strong> In Review</span>
-                            <span><strong className="text-foreground">{stats.completed}</strong> Completed</span>
-                            <span className="sm:ml-auto"><strong className="text-foreground">{stats.total}</strong> Total Activities</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Active Sprint Banner */}
-                <SprintHeaderStrip
-                    sprint={activeSprint}
-                    onOpenBacklogDrawer={() => setIsBacklogDrawerOpen(true)}
-                    onOpenCreateSprint={() => setIsCreateSprintOpen(true)}
-                    onOpenCompleteSprint={() => setIsCompleteSprintOpen(true)}
-                />
-
-                {/* Tabbed Navigation */}
-                <div className="flex flex-wrap border-b border-border text-sm font-medium gap-x-8 gap-y-2">
-                    <button
-                        onClick={() => setActiveTab('board')}
-                        className={`pb-4 transition border-b-2 flex items-center space-x-2 ${
-                            activeTab === 'board'
-                                ? 'border-primary text-primary font-bold'
-                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                    >
-                        <span>Activities (Board)</span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('list')}
-                        className={`pb-4 transition border-b-2 flex items-center space-x-2 ${
-                            activeTab === 'list'
-                                ? 'border-primary text-primary font-bold'
-                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                    >
-                        <span>List View</span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('discussions')}
-                        className={`pb-4 transition border-b-2 flex items-center space-x-2 ${
-                            activeTab === 'discussions'
-                                ? 'border-primary text-primary font-bold'
-                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                    >
-                        <span>Discussions</span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('milestones')}
-                        className={`pb-4 transition border-b-2 flex items-center space-x-2 ${
-                            activeTab === 'milestones'
-                                ? 'border-primary text-primary font-bold'
-                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                    >
-                        <span>Milestones</span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('timeline')}
-                        className={`pb-4 transition border-b-2 flex items-center space-x-2 ${
-                            activeTab === 'timeline'
-                                ? 'border-primary text-primary font-bold'
-                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                    >
-                        <span>Timeline</span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('team')}
-                        className={`pb-4 transition border-b-2 flex items-center space-x-2 ${
-                            activeTab === 'team'
-                                ? 'border-primary text-primary font-bold'
-                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                    >
-                        <span>Team ({project.members?.length || 0})</span>
-                    </button>
-                    
-                    <button
-                        onClick={() => setActiveTab('files')}
-                        className={`pb-4 transition border-b-2 flex items-center space-x-2 ${
-                            activeTab === 'files'
-                                ? 'border-primary text-primary font-bold'
-                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                    >
-                        <span>Files</span>
-                    </button>
-                </div>
-
-                {activeTab === 'files' && (
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-foreground">Project Documents</h3>
-                            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-                                <DialogTrigger asChild>
-                                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                                        <Upload className="w-4 h-4 mr-2" />
-                                        Add Attachment
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Upload Project File</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-4 py-4">
-                                        <div className="border-2 border-dashed border-border rounded-xl p-8 text-center space-y-2">
-                                            <Upload className="w-8 h-8 text-muted-foreground mx-auto" />
-                                            <p className="text-xs text-muted-foreground font-medium">Drag & drop files here or click to browse</p>
-                                            <input type="file" className="hidden" id="file-upload-input" onChange={() => setIsUploadOpen(false)} />
-                                            <Button size="sm" variant="outline" onClick={() => document.getElementById('file-upload-input')?.click()}>
-                                                Select Local File
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                        <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground flex flex-col items-center">
-                            <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-                                <Paperclip className="w-8 h-8 text-muted-foreground/50" />
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
-                            <h4 className="text-foreground font-semibold mb-1">No Attachments Available yet</h4>
-                            <p className="text-sm">Upload files, documents, and images to share with your team.</p>
-                            <Button variant="outline" className="mt-6" onClick={() => setIsUploadOpen(true)}>
-                                <Plus className="w-4 h-4 mr-2" />
-                                Browse Files
-                            </Button>
+
+                            <div className="text-xs text-muted-foreground font-mono font-medium">
+                                <strong>{daysToDeadline} days to deadline</strong> • <span className="text-primary font-bold">{stats.progress}%</span>
+                            </div>
                         </div>
                     </div>
-                )}
 
-                {activeTab === 'board' && (
-                    <KanbanBoard
-                        projectId={project.id}
-                        columns={project.board_columns || project.boardColumns || []}
-                        users={workspaceUsers}
-                    />
-                )}
+                    {/* Progress Bar */}
+                    <div className="w-full bg-muted/60 h-2 rounded-full overflow-hidden">
+                        <div
+                            className="bg-primary h-full rounded-full transition-all duration-700 ease-out"
+                            style={{ width: `${stats.progress}%` }}
+                        />
+                    </div>
+                </div>
 
-                {activeTab === 'list' && (
-                    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-2xs">
-                        <div className="p-4 border-b border-border/60 bg-muted/20 flex items-center justify-between">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Project Task Registry</h3>
-                            <span className="text-xs text-muted-foreground font-mono">
-                                {project.boardColumns?.flatMap((c: any) => c.tasks || [])?.length || 0} Tasks
-                            </span>
+                {/* 2. Metric Cards Grid (5 Cards) */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div className="p-3.5 rounded-xl border border-border bg-card/60 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold">
+                            <span>Total tasks</span>
+                            <CheckSquare className="w-3.5 h-3.5 text-primary" />
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs text-muted-foreground">
-                                <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
-                                    <tr>
-                                        <th className="p-4">Task Title</th>
-                                        <th className="p-4">Type</th>
-                                        <th className="p-4">Priority</th>
-                                        <th className="p-4">Column Status</th>
-                                        <th className="p-4">Assignee</th>
-                                        <th className="p-4">Target Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {(!project.boardColumns || project.boardColumns.flatMap((c: any) => c.tasks || []).length === 0) ? (
-                                        <tr>
-                                            <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                                                No tasks found in this project. Create a task in the Board view to get started.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        project.boardColumns.flatMap((col: any) =>
-                                            (col.tasks || []).map((task: any) => (
-                                                <tr key={task.id} className="hover:bg-muted/40 transition">
-                                                    <td className="p-4 font-semibold text-foreground">
-                                                        {task.title}
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                                                            {task.type}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <span className={`text-[10px] font-bold uppercase ${task.priority === 'urgent' ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                                            {task.priority}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-4 font-medium text-foreground">
-                                                        <span className="px-2.5 py-0.5 rounded-full bg-muted text-[11px] font-mono border border-border">
-                                                            {col.name}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-4 text-foreground font-medium">
-                                                        {task.assignee ? task.assignee.name : <span className="text-muted-foreground italic">Unassigned</span>}
-                                                    </td>
-                                                    <td className="p-4 font-mono text-[11px]">
-                                                        {task.due_date ? new Date(task.due_date).toLocaleDateString() : '—'}
+                        <p className="text-xl font-bold text-foreground">{stats.total}</p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-border bg-card/60 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold">
+                            <span>To do / Blocked</span>
+                            <Clock className="w-3.5 h-3.5 text-amber-500" />
+                        </div>
+                        <p className="text-xl font-bold text-foreground">{stats.todo}</p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-border bg-card/60 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold">
+                            <span>In progress</span>
+                            <Clock className="w-3.5 h-3.5 text-blue-500" />
+                        </div>
+                        <p className="text-xl font-bold text-foreground">{stats.inProgress}</p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-border bg-card/60 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold">
+                            <span>In review</span>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-500" />
+                        </div>
+                        <p className="text-xl font-bold text-foreground">{stats.inReview}</p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-border bg-card/60 space-y-1 col-span-2 sm:col-span-1">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold">
+                            <span>Completed</span>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        </div>
+                        <p className="text-xl font-bold text-foreground">{stats.completed}</p>
+                    </div>
+                </div>
+
+                {/* 3. Tabbed Navigation */}
+                <div className="flex flex-wrap border-b border-border text-xs font-semibold gap-x-6 gap-y-2 pt-2">
+                    {[
+                        { key: 'tasks', label: `Tasks (${allProjectTasks.length})` },
+                        { key: 'discussions', label: 'Discussions' },
+                        { key: 'milestones', label: 'Milestones' },
+                        { key: 'timeline', label: 'Timeline' },
+                        { key: 'team', label: `Team (${project.members?.length || 0})` },
+                        { key: 'files', label: `Files (${projectDocuments.length})` },
+                        { key: 'credentials', label: 'Credentials' },
+                    ].map((tab) => (
+                        <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key as TabType)}
+                            className={`pb-3 transition border-b-2 ${
+                                activeTab === tab.key
+                                    ? 'border-primary text-primary font-bold'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* TAB 1: Tasks Tab */}
+                {activeTab === 'tasks' && (
+                    <div className="space-y-4">
+                        {/* Header & Controls Bar */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <h2 className="text-sm font-bold text-foreground">Project Tasks</h2>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                                <div className="relative">
+                                    <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search Tasks"
+                                        value={taskSearchQuery}
+                                        onChange={(e) => setTaskSearchQuery(e.target.value)}
+                                        className="h-8 pl-8 pr-3 bg-background border border-input rounded-lg text-xs text-foreground focus:outline-none focus:border-primary w-44"
+                                    />
+                                </div>
+
+                                <Button variant="outline" size="sm" className="h-8 text-xs font-semibold border-border">
+                                    <Filter className="w-3 h-3 mr-1" /> Filter
+                                </Button>
+
+                                <div className="flex bg-muted/40 border border-border p-0.5 rounded-lg">
+                                    <button
+                                        onClick={() => setTaskViewMode('list')}
+                                        title="List View"
+                                        className={`px-2.5 py-1 text-xs font-bold rounded flex items-center gap-1 ${taskViewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <List className="w-3.5 h-3.5" />
+                                        <span>List</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setTaskViewMode('grouped')}
+                                        title="Grouped by Status View"
+                                        className={`px-2.5 py-1 text-xs font-bold rounded flex items-center gap-1 ${taskViewMode === 'grouped' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                                        <span>Grouped</span>
+                                    </button>
+                                </div>
+
+                                <Button
+                                    onClick={() => setIsCreateTaskOpen(true)}
+                                    className="h-8 px-3.5 bg-primary text-primary-foreground text-xs font-bold shadow-xs"
+                                >
+                                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Task
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Tasks Display Mode */}
+                        {taskViewMode === 'list' ? (
+                            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-2xs">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs text-muted-foreground">
+                                        <thead className="bg-muted/30 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
+                                            <tr>
+                                                <th className="p-3.5">Tasks</th>
+                                                <th className="p-3.5">Assignee</th>
+                                                <th className="p-3.5">Checklist</th>
+                                                <th className="p-3.5">Stages</th>
+                                                <th className="p-3.5">Due Date</th>
+                                                <th className="p-3.5">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/60">
+                                            {filteredTasks.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={6} className="p-8 text-center text-muted-foreground italic">
+                                                        No tasks found matching your search. Click "+ Add Task" to create one.
                                                     </td>
                                                 </tr>
-                                            ))
-                                        )
-                                    )}
-                                </tbody>
-                            </table>
+                                            ) : (
+                                                filteredTasks.map((t: any) => renderTaskRow(t))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {columnsToGroup.map((col: any) => {
+                                    const colTasks = filteredTasks.filter((t: any) => {
+                                        const statusName = t.board_column?.name || t.boardColumn?.name || 'To Do';
+
+                                        return statusName.toLowerCase() === col.name.toLowerCase();
+                                    });
+
+                                    if (colTasks.length === 0 && taskSearchQuery) {
+                                        return null;
+                                    }
+
+                                    return (
+                                        <div key={col.id || col.name} className="bg-card border border-border rounded-2xl overflow-hidden shadow-2xs">
+                                            <div className="p-3 bg-muted/20 border-b border-border flex items-center justify-between">
+                                                <div className="flex items-center space-x-2">
+                                                    {formatStatusBadge(col.name)}
+                                                    <span className="text-xs font-bold text-foreground font-mono">({colTasks.length})</span>
+                                                </div>
+                                            </div>
+                                            {colTasks.length === 0 ? (
+                                                <div className="p-4 text-xs text-muted-foreground italic">No tasks in {col.name}</div>
+                                            ) : (
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-left text-xs text-muted-foreground">
+                                                        <thead className="bg-muted/10 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
+                                                            <tr>
+                                                                <th className="p-3.5">Tasks</th>
+                                                                <th className="p-3.5">Assignee</th>
+                                                                <th className="p-3.5">Checklist</th>
+                                                                <th className="p-3.5">Stages</th>
+                                                                <th className="p-3.5">Due Date</th>
+                                                                <th className="p-3.5">Status</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-border/60">
+                                                            {colTasks.map((t: any) => renderTaskRow(t))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* TAB 2: Rich Discussions Split-Panel View */}
+                {activeTab === 'discussions' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[600px] border border-border rounded-2xl bg-card overflow-hidden">
+                        {/* Left Panel: Project Team Members */}
+                        <div className="lg:col-span-3 border-r border-border p-4 bg-muted/10 flex flex-col space-y-3">
+                            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Project Team Members</h3>
+                            <div className="flex-1 overflow-y-auto space-y-2">
+                                {(project.members && project.members.length > 0) ? (
+                                    project.members.map((m: any) => (
+                                        <div key={m.id} className="p-2.5 rounded-xl border border-border/60 bg-background flex items-center space-x-2.5">
+                                            <div className="relative">
+                                                <div className="w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">
+                                                    {m.name?.[0] || 'M'}
+                                                </div>
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500 absolute bottom-0 right-0 border border-background" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-xs font-bold text-foreground truncate">{m.name}</p>
+                                                <p className="text-[10px] text-muted-foreground capitalize">{m.pivot?.role || 'Member'}</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-xs text-muted-foreground italic p-2">No team members assigned.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Center Panel: Active Discussion Thread */}
+                        <div className="lg:col-span-6 flex flex-col h-full bg-card">
+                            <div className="p-3 border-b border-border bg-muted/20 flex items-center justify-between">
+                                <div>
+                                    <h4 className="text-xs font-bold text-foreground">{project.name} Project Discussion</h4>
+                                    <p className="text-[10px] text-muted-foreground">General team discussion thread</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                <div className="text-center">
+                                    <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                                        Jul 29, 2026
+                                    </span>
+                                </div>
+
+                                {commentsList.length === 0 ? (
+                                    <div className="p-8 text-center space-y-2">
+                                        <MessageSquare className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                                        <p className="text-xs text-muted-foreground">No messages yet. Start the conversation!</p>
+                                    </div>
+                                ) : (
+                                    commentsList.map((c) => (
+                                        <div key={c.id} className="p-3 rounded-xl border border-border/60 bg-muted/20 space-y-1">
+                                            <div className="flex items-center justify-between text-[11px]">
+                                                <span className="font-bold text-foreground">{c.user?.name || 'Team Member'}</span>
+                                                <span className="text-muted-foreground font-mono text-[10px]">{c.created_at}</span>
+                                            </div>
+                                            <p className="text-xs text-foreground leading-relaxed">{c.content}</p>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            <form onSubmit={handleAddComment} className="p-3 border-t border-border flex items-center gap-2 bg-muted/10">
+                                <input
+                                    type="text"
+                                    placeholder="Type a message or drop project updates..."
+                                    value={commentText}
+                                    onChange={(e) => setCommentText(e.target.value)}
+                                    className="flex-1 h-9 px-3 bg-background border border-input rounded-xl text-xs text-foreground focus:outline-none focus:border-primary"
+                                />
+                                <Button type="submit" size="sm" className="h-9 px-3 bg-primary text-primary-foreground font-bold text-xs">
+                                    <Send className="w-3.5 h-3.5 mr-1" /> Send
+                                </Button>
+                            </form>
+                        </div>
+
+                        {/* Right Panel: Media, Documents & Links Drawer */}
+                        <div className="lg:col-span-3 border-l border-border p-4 bg-muted/10 flex flex-col space-y-3">
+                            <div className="flex bg-muted p-1 rounded-lg border border-border">
+                                <button
+                                    onClick={() => setDiscussionTab('media')}
+                                    className={`flex-1 py-1 text-[11px] font-bold rounded-md transition ${discussionTab === 'media' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                                >
+                                    Media ({mediaDocuments.length})
+                                </button>
+                                <button
+                                    onClick={() => setDiscussionTab('documents')}
+                                    className={`flex-1 py-1 text-[11px] font-bold rounded-md transition ${discussionTab === 'documents' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                                >
+                                    Docs ({nonMediaDocuments.length})
+                                </button>
+                                <button
+                                    onClick={() => setDiscussionTab('links')}
+                                    className={`flex-1 py-1 text-[11px] font-bold rounded-md transition ${discussionTab === 'links' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                                >
+                                    Links
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto space-y-2">
+                                {discussionTab === 'media' && (
+                                    mediaDocuments.length === 0 ? (
+                                        <div className="p-8 text-center space-y-2">
+                                            <Image className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                                            <p className="text-xs text-muted-foreground italic">No images shared yet</p>
+                                        </div>
+                                    ) : (
+                                        mediaDocuments.map((doc) => (
+                                            <div
+                                                key={doc.id}
+                                                onClick={() => handleViewDocument(doc)}
+                                                className="p-2 border border-border/80 rounded-xl bg-card hover:border-primary/50 cursor-pointer flex items-center space-x-2 transition"
+                                            >
+                                                <Image className="w-4 h-4 text-primary shrink-0" />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-xs font-bold text-foreground truncate">{doc.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground">{doc.formatted_size}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )
+                                )}
+
+                                {discussionTab === 'documents' && (
+                                    nonMediaDocuments.length === 0 ? (
+                                        <div className="p-8 text-center space-y-2">
+                                            <FileCode className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                                            <p className="text-xs text-muted-foreground italic">No documents attached</p>
+                                        </div>
+                                    ) : (
+                                        nonMediaDocuments.map((doc) => (
+                                            <div
+                                                key={doc.id}
+                                                onClick={() => handleViewDocument(doc)}
+                                                className="p-2 border border-border/80 rounded-xl bg-card hover:border-primary/50 cursor-pointer flex items-center space-x-2 transition"
+                                            >
+                                                <FileCode className="w-4 h-4 text-amber-500 shrink-0" />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-xs font-bold text-foreground truncate">{doc.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground">{doc.formatted_size}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )
+                                )}
+
+                                {discussionTab === 'links' && (
+                                    <div className="p-8 text-center space-y-2">
+                                        <LinkIcon className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                                        <p className="text-xs text-muted-foreground italic">No shared web links</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
 
+                {/* TAB 3: Milestones Tab */}
+                {activeTab === 'milestones' && (
+                    <div className="bg-card border border-border rounded-2xl p-6 space-y-3">
+                        <div className="flex items-center space-x-2">
+                            <Target className="w-5 h-5 text-primary" />
+                            <h3 className="font-bold text-foreground">Project Milestones</h3>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Deliverables and target dates for this project.</p>
+                    </div>
+                )}
+
+                {/* TAB 4: Timeline Tab */}
+                {activeTab === 'timeline' && (
+                    <div className="bg-card border border-border rounded-2xl p-6 space-y-3">
+                        <h3 className="font-bold text-foreground">Project Timeline & Execution Roadmap</h3>
+                        <p className="text-xs text-muted-foreground">Progress track: {stats.progress}% complete across all project tasks.</p>
+                    </div>
+                )}
+
+                {/* TAB 5: Team Tab */}
                 {activeTab === 'team' && (
-                    <div className="p-6 bg-card border border-border rounded-xl space-y-4 max-w-xl">
-                        <h3 className="text-sm font-bold text-foreground">Project Members & Permissions</h3>
-                        <div className="divide-y divide-border">
-                            {project.members?.map((member: any) => (
-                                <div key={member.id} className="py-3 flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-foreground text-xs">
-                                            {member.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <span className="font-semibold text-sm text-foreground block">{member.name}</span>
-                                            <span className="text-xs text-muted-foreground">{member.email}</span>
-                                        </div>
+                    <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+                        <h3 className="font-bold text-foreground text-sm">Assigned Project Members ({project.members?.length || 0})</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            {(project.members || []).map((m: any) => (
+                                <div key={m.id} className="p-3 border border-border/80 rounded-xl bg-muted/20 flex items-center space-x-3">
+                                    <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">
+                                        {m.name?.[0] || 'U'}
                                     </div>
-                                    <span className="text-xs font-mono uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/30">
-                                        {member.pivot?.role || 'contributor'}
-                                    </span>
+                                    <div>
+                                        <p className="text-xs font-bold text-foreground">{m.name}</p>
+                                        <p className="text-[10px] text-muted-foreground">{m.email || 'Team Member'}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
-                {activeTab === 'discussions' && (
+                {/* TAB 6: Enhanced Files Tab with Functional File Upload & Realtime Search/Folder Filter */}
+                {activeTab === 'files' && (
                     <div className="space-y-4">
-                        <div className="p-6 bg-card border border-border rounded-xl space-y-4">
-                            <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                                <div>
-                                    <h3 className="font-bold text-base text-foreground">Project Team Discussions</h3>
-                                    <p className="text-xs text-muted-foreground">Architectural RFCs, sprint retrospectives, and technical syncs</p>
+                        {/* Files Toolbar */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center space-x-2">
+                                <Button
+                                    onClick={() => setIsCreateFolderOpen(true)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs font-bold border-border"
+                                >
+                                    <FolderPlus className="w-3.5 h-3.5 mr-1 text-primary" /> New folder
+                                </Button>
+
+                                <select
+                                    value={fileTypeFilter}
+                                    onChange={(e) => setFileTypeFilter(e.target.value)}
+                                    className="h-8 px-2 bg-background border border-input rounded-lg text-xs font-semibold text-foreground focus:outline-none focus:border-primary"
+                                >
+                                    <option value="all">Files Type (All)</option>
+                                    <option value="media">Media (Images/Videos)</option>
+                                    <option value="documents">Documents (PDFs/Docs)</option>
+                                </select>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <div className="relative">
+                                    <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search files..."
+                                        value={fileSearchQuery}
+                                        onChange={(e) => setFileSearchQuery(e.target.value)}
+                                        className="h-8 pl-8 pr-3 bg-background border border-input rounded-lg text-xs text-foreground focus:outline-none focus:border-primary w-44"
+                                    />
                                 </div>
-                                <Dialog open={isDiscussionOpen} onOpenChange={setIsDiscussionOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button size="sm" className="bg-primary text-primary-foreground text-xs">
-                                            + Start Discussion
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
+
+                                <div className="flex bg-muted/40 border border-border p-0.5 rounded-lg">
+                                    <button
+                                        onClick={() => setFileViewMode('list')}
+                                        className={`p-1.5 rounded ${fileViewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                                    >
+                                        <List className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setFileViewMode('grid')}
+                                        className={`p-1.5 rounded ${fileViewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                                    >
+                                        <Grid className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+
+                                <Button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    size="sm"
+                                    className="h-8 px-3.5 bg-primary text-primary-foreground text-xs font-bold shadow-xs"
+                                >
+                                    <Upload className="w-3.5 h-3.5 mr-1" /> Upload
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Folders & Uploaded Files List/Grid */}
+                        <div className="space-y-4">
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Folders</h4>
+                                    {selectedFolder && (
+                                        <button
+                                            onClick={() => setSelectedFolder(null)}
+                                            className="text-xs font-bold text-primary hover:underline"
+                                        >
+                                            Show All Folders ({projectDocuments.length} files)
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    {foldersList.map((fName, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => setSelectedFolder(selectedFolder === fName ? null : fName)}
+                                            className={`p-3 border rounded-xl transition flex items-center justify-between cursor-pointer ${
+                                                selectedFolder === fName
+                                                    ? 'border-primary bg-primary/10 text-primary'
+                                                    : 'border-border/80 bg-card hover:border-primary/40 text-foreground'
+                                            }`}
+                                        >
+                                            <div className="flex items-center space-x-2.5 min-w-0">
+                                                <Folder className="w-4 h-4 text-primary shrink-0" />
+                                                <span className="text-xs font-bold truncate">{fName}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Files Section */}
+                            <div>
+                                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                                    Uploaded Files ({filteredProjectDocuments.length}) {selectedFolder ? `in "${selectedFolder}"` : ''}
+                                </h4>
+
+                                {filteredProjectDocuments.length === 0 ? (
+                                    <div className="bg-card border border-border rounded-2xl p-10 text-center space-y-2">
+                                        <Folder className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                                        <p className="text-xs text-muted-foreground">
+                                            {fileSearchQuery
+                                                ? `No files match "${fileSearchQuery}".`
+                                                : selectedFolder
+                                                    ? `No files uploaded in folder "${selectedFolder}".`
+                                                    : 'No files uploaded yet. Click "Upload" above to add documents or images.'}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    fileViewMode === 'grid' ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                            {filteredProjectDocuments.map((doc) => (
+                                                <div key={doc.id} className="p-3 border border-border/80 rounded-2xl bg-card hover:border-primary/40 transition flex flex-col justify-between space-y-3">
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                                                            {isMediaFileType(doc.file_type, doc.name) ? (
+                                                                <Image className="w-5 h-5 text-primary" />
+                                                            ) : (
+                                                                <FileCode className="w-5 h-5 text-amber-500" />
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleDeleteDocument(doc.id)}
+                                                            className="p-1 rounded text-muted-foreground hover:text-rose-500 transition"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-xs font-bold text-foreground truncate" title={doc.name}>{doc.name}</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5">{doc.formatted_size}</p>
+                                                    </div>
+
+                                                    <div className="pt-2 border-t border-border/60 flex items-center justify-between">
+                                                        <button
+                                                            onClick={() => handleViewDocument(doc)}
+                                                            className="text-primary text-[11px] font-bold hover:underline flex items-center"
+                                                        >
+                                                            <Eye className="w-3 h-3 mr-1" /> View
+                                                        </button>
+                                                        <a
+                                                            href={doc.download_url}
+                                                            download
+                                                            className="text-muted-foreground hover:text-foreground text-[11px] font-bold flex items-center"
+                                                        >
+                                                            <Download className="w-3 h-3 mr-1" /> Download
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-2xs">
+                                            <table className="w-full text-left text-xs text-muted-foreground">
+                                                <thead className="bg-muted/30 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
+                                                    <tr>
+                                                        <th className="p-3.5">Document Name</th>
+                                                        <th className="p-3.5">Size</th>
+                                                        <th className="p-3.5">Uploaded</th>
+                                                        <th className="p-3.5 text-right">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-border/60">
+                                                    {filteredProjectDocuments.map((doc) => (
+                                                        <tr key={doc.id} className="hover:bg-muted/30 transition">
+                                                            <td className="p-3.5 font-bold text-foreground flex items-center space-x-2">
+                                                                {isMediaFileType(doc.file_type, doc.name) ? (
+                                                                    <Image className="w-4 h-4 text-primary shrink-0" />
+                                                                ) : (
+                                                                    <FileCode className="w-4 h-4 text-amber-500 shrink-0" />
+                                                                )}
+                                                                <span className="truncate max-w-xs">{doc.name}</span>
+                                                            </td>
+                                                            <td className="p-3.5 font-mono text-xs">{doc.formatted_size}</td>
+                                                            <td className="p-3.5 text-xs">{doc.created_at || 'Just now'}</td>
+                                                            <td className="p-3.5 text-right">
+                                                                <div className="flex items-center justify-end space-x-2">
+                                                                    <button
+                                                                        onClick={() => handleViewDocument(doc)}
+                                                                        className="p-1.5 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-bold text-[11px] transition"
+                                                                    >
+                                                                        View
+                                                                    </button>
+                                                                    <a
+                                                                        href={doc.download_url}
+                                                                        download
+                                                                        className="p-1.5 rounded bg-muted text-foreground hover:bg-muted/80 font-bold text-[11px] transition"
+                                                                    >
+                                                                        Download
+                                                                    </a>
+                                                                    <button
+                                                                        onClick={() => handleDeleteDocument(doc.id)}
+                                                                        className="p-1.5 text-muted-foreground hover:text-rose-500 transition"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* TAB 7: Credentials Tab */}
+                {activeTab === 'credentials' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                                    <Key className="w-4 h-4 text-primary" />
+                                    <span>Project Access Credentials & Secrets</span>
+                                </h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Secure storage for API keys, database connection strings, and staging endpoints.
+                                </p>
+                            </div>
+
+                            <Dialog open={isAddCredOpen} onOpenChange={setIsAddCredOpen}>
+                                <DialogTrigger asChild>
+                                    <Button size="sm" className="h-8 px-3.5 bg-primary text-primary-foreground text-xs font-bold">
+                                        <Plus className="w-3.5 h-3.5 mr-1" /> Add Credential
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <form onSubmit={handleAddCredential}>
                                         <DialogHeader>
-                                            <DialogTitle>Start Discussion Topic</DialogTitle>
+                                            <DialogTitle>Add Secret Credential</DialogTitle>
                                         </DialogHeader>
                                         <div className="space-y-4 py-4">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium">Topic Title</label>
+                                            <div>
+                                                <label className="text-xs font-bold">Key / Variable Name</label>
                                                 <Input
-                                                    placeholder="e.g. Architecture decision RFC for microservices"
-                                                    value={discussionTitle}
-                                                    onChange={(e) => setDiscussionTitle(e.target.value)}
+                                                    placeholder="e.g. STAGING_API_KEY"
+                                                    value={newCredKey}
+                                                    onChange={(e) => setNewCredKey(e.target.value)}
+                                                    required
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium">Initial Message</label>
-                                                <textarea
-                                                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm"
-                                                    placeholder="Share context and initial notes for discussion..."
+                                            <div>
+                                                <label className="text-xs font-bold">Value / Secret Token</label>
+                                                <Input
+                                                    placeholder="e.g. secret_token_xyz123"
+                                                    value={newCredValue}
+                                                    onChange={(e) => setNewCredValue(e.target.value)}
+                                                    required
                                                 />
                                             </div>
-                                            <Button className="w-full" onClick={() => setIsDiscussionOpen(false)}>
-                                                Post Topic
-                                            </Button>
+                                            <Button type="submit" className="w-full h-9 bg-primary text-xs font-bold">Save Credential</Button>
                                         </div>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-
-                            <div className="p-8 text-center text-muted-foreground space-y-2 bg-muted/20 border border-dashed border-border rounded-xl">
-                                <MessageSquare className="w-8 h-8 text-muted-foreground/50 mx-auto" />
-                                <h4 className="text-xs font-bold text-foreground">No Discussion Threads Active</h4>
-                                <p className="text-[11px] text-muted-foreground max-w-md mx-auto">
-                                    Post technical notes or architectural decisions to keep all team members aligned.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'milestones' && (
-                    <div className="space-y-4">
-                        {(!project.milestones || project.milestones.length === 0) ? (
-                            <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground text-sm space-y-2">
-                                <Target className="w-8 h-8 text-muted-foreground/50 mx-auto" />
-                                <h4 className="font-bold text-foreground text-sm">No Milestones Defined Yet</h4>
-                                <p className="text-xs text-muted-foreground max-w-sm mx-auto">Create release gates to track phase progress.</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {project.milestones.map((m: any) => (
-                                    <div key={m.id} className="bg-card border border-border rounded-xl p-5 space-y-3 shadow-sm">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="font-bold text-foreground text-sm">{m.name}</h4>
-                                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${m.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
-                                                {m.status}
-                                            </span>
-                                        </div>
-                                        {m.description && <p className="text-xs text-muted-foreground line-clamp-2">{m.description}</p>}
-                                        <div className="space-y-1.5 pt-2 border-t border-border/50">
-                                            <div className="flex items-center justify-between text-xs">
-                                                <span className="text-muted-foreground">Progress</span>
-                                                <span className="font-mono font-bold text-foreground">{m.progress || 0}%</span>
-                                            </div>
-                                            <div className="w-full bg-muted h-2 rounded-full overflow-hidden border border-border/40">
-                                                <div className="bg-rose-500 h-full rounded-full transition-all duration-500" style={{ width: `${m.progress || 0}%` }} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {activeTab === 'timeline' && (
-                    <div className="p-6 bg-card border border-border rounded-xl space-y-4">
-                        <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                            <div>
-                                <h3 className="font-bold text-base text-foreground">Project Sprint & Milestone Roadmap</h3>
-                                <p className="text-xs text-muted-foreground font-mono">
-                                    📅 {project.start_date ? new Date(project.start_date).toLocaleDateString() : 'Start Date'} → {project.due_date ? new Date(project.due_date).toLocaleDateString() : 'Target Date'}
-                                </p>
-                            </div>
-                            <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-                                {stats.progress}% Complete
-                            </span>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
                         </div>
 
-                        <div className="space-y-3 pt-2">
-                            <h4 className="text-xs font-bold text-muted-foreground uppercase">Sprint Iterations</h4>
-                            {(!project.sprints || project.sprints.length === 0) ? (
-                                <p className="text-xs text-muted-foreground italic">No active sprints created for this project.</p>
-                            ) : (
-                                project.sprints.map((sprint: any) => (
-                                    <div key={sprint.id} className="p-3 rounded-xl bg-muted/30 border border-border flex items-center justify-between text-xs">
-                                        <div className="flex items-center space-x-2">
-                                            <Zap className="w-4 h-4 text-emerald-400" />
-                                            <span className="font-bold text-foreground">{sprint.name}</span>
-                                        </div>
-                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${sprint.status === 'active' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-muted text-muted-foreground border-border'}`}>
-                                            {sprint.status}
-                                        </span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                )}
+                        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-2xs">
+                            <table className="w-full text-left text-xs text-muted-foreground">
+                                <thead className="bg-muted/30 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
+                                    <tr>
+                                        <th className="p-3.5">Variable Name</th>
+                                        <th className="p-3.5">Secret Value</th>
+                                        <th className="p-3.5">Environment</th>
+                                        <th className="p-3.5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/60">
+                                    {credentialsList.map((c) => {
+                                        const isVisible = visibleSecretIds.includes(c.id);
 
-                {activeTab === 'files' && (
-                    <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground text-sm">
-                        No files uploaded to this project yet. Share documents, designs, and specs here.
+                                        return (
+                                            <tr key={c.id} className="hover:bg-muted/30 transition">
+                                                <td className="p-3.5 font-mono font-bold text-foreground">{c.key}</td>
+                                                <td className="p-3.5 font-mono text-xs">
+                                                    {isVisible ? (
+                                                        <span className="text-foreground bg-muted/40 px-2 py-0.5 rounded border border-border">{c.value}</span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">••••••••••••••••</span>
+                                                    )}
+                                                </td>
+                                                <td className="p-3.5">
+                                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
+                                                        {c.environment}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3.5 text-right">
+                                                    <div className="flex items-center justify-end space-x-1">
+                                                        <button
+                                                            onClick={() => toggleSecretVisibility(c.id)}
+                                                            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                                                        >
+                                                            {isVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => navigator.clipboard.writeText(c.value)}
+                                                            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                                                        >
+                                                            <Copy className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
             </div>
 
-            {/* Sprint Planning Drawer */}
-            <SprintBacklogDrawer
-                isOpen={isBacklogDrawerOpen}
-                onClose={() => setIsBacklogDrawerOpen(false)}
-                backlogTasks={backlogTasks}
-                sprints={allSprints}
-                onOpenCreateSprint={() => {
-                    setIsBacklogDrawerOpen(false);
-                    setIsCreateSprintOpen(true);
-                }}
+            {/* Create Task Modal (Pre-selected for this Project) */}
+            <CreateTaskWizardModal
+                isOpen={isCreateTaskOpen}
+                onClose={() => setIsCreateTaskOpen(false)}
+                defaultProjectId={project.id}
+                projects={[{ id: project.id, name: project.name }]}
+                users={project.members || []}
             />
 
-            {/* Create Sprint Modal */}
-            <CreateSprintModal
-                isOpen={isCreateSprintOpen}
-                onClose={() => setIsCreateSprintOpen(false)}
-                projectId={project.id}
+            {/* Create Folder Modal */}
+            <CreateFolderModal
+                isOpen={isCreateFolderOpen}
+                onClose={() => setIsCreateFolderOpen(false)}
+                onCreateFolder={(fName) => setFoldersList([...foldersList, fName])}
             />
 
-            {/* Complete Sprint Modal */}
-            <CompleteSprintModal
-                isOpen={isCompleteSprintOpen}
-                onClose={() => setIsCompleteSprintOpen(false)}
-                sprint={activeSprint}
-                futureSprints={allSprints.filter((s: any) => s.status === 'future')}
+            {/* Task Detail Modal */}
+            <TaskDetailModal
+                isOpen={!!selectedTaskForDetail}
+                onClose={() => setSelectedTaskForDetail(null)}
+                task={selectedTaskForDetail}
+            />
+
+            {/* Media Preview Modal */}
+            <MediaPreviewModal
+                isOpen={!!previewDocument}
+                onClose={() => setPreviewDocument(null)}
+                document={previewDocument}
             />
         </>
     );

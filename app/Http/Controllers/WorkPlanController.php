@@ -16,7 +16,7 @@ class WorkPlanController extends Controller
         $workspaceId = 1;
 
         $workPlans = WorkPlan::where('workspace_id', $workspaceId)
-            ->with(['projects.sprints', 'projects.milestones'])
+            ->with(['projects.milestones'])
             ->latest()
             ->get()
             ->map(function ($wp) {
@@ -36,13 +36,6 @@ class WorkPlanController extends Controller
                         'start_date' => $p->start_date?->toDateString() ?? $p->created_at->toDateString(),
                         'due_date' => $p->due_date?->toDateString() ?? $p->created_at->addDays(30)->toDateString(),
                         'progress' => $p->progress,
-                        'sprints' => $p->sprints->map(fn ($s) => [
-                            'id' => $s->id,
-                            'name' => $s->name,
-                            'status' => $s->status,
-                            'start_date' => $s->start_date?->toDateString() ?? $p->created_at->toDateString(),
-                            'end_date' => $s->end_date?->toDateString() ?? $p->created_at->addDays(14)->toDateString(),
-                        ]),
                         'milestones' => $p->milestones->map(fn ($m) => [
                             'id' => $m->id,
                             'name' => $m->name,

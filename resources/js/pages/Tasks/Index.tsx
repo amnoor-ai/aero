@@ -165,7 +165,7 @@ return;
 
     return (
         <>
-            <Head title="Tasks Directory & Master Grid - Aero DevPM" />
+            <Head title="Tasks Directory" />
 
             <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
                 {/* Header (Clean title layout without icons) */}

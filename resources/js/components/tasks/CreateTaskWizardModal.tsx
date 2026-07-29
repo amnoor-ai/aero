@@ -29,6 +29,7 @@ interface CreateTaskWizardModalProps {
     users?: { id: number; name: string }[];
     milestones?: { id: number; name: string; project_id: number }[];
     boardColumns?: { id: number; name: string; project_id: number }[];
+    defaultProjectId?: number;
 }
 
 export function CreateTaskWizardModal({
@@ -39,6 +40,7 @@ export function CreateTaskWizardModal({
     users = [],
     milestones = [],
     boardColumns = [],
+    defaultProjectId,
 }: CreateTaskWizardModalProps) {
     const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
     const [descTab, setDescTab] = useState<'write' | 'preview'>('write');
@@ -49,7 +51,7 @@ export function CreateTaskWizardModal({
         type: 'task', // 'task' | 'activity'
         priority: 'medium', // 'low' | 'medium' | 'high' | 'urgent'
         description: '',
-        project_id: projects[0]?.id || '',
+        project_id: defaultProjectId || projects[0]?.id || '',
         department_id: '',
         milestone_id: '',
         board_column_id: '',

@@ -81,6 +81,11 @@ class Project extends Model
         return $this->hasMany(Task::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ProjectDocument::class)->latest();
+    }
+
     public function workPlans(): BelongsToMany
     {
         return $this->belongsToMany(WorkPlan::class, 'project_work_plan')

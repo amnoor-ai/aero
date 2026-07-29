@@ -88,17 +88,17 @@ return;
 
     return (
         <>
-            <Head title="Milestones & Release Gates - Aero DevPM" />
+            <Head title="Milestones" />
 
             <div className="p-6 md:p-8 space-y-6 bg-background text-foreground min-h-screen">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div>
                         <h1 className="text-xl font-bold tracking-tight text-foreground">
-                            Milestones & Release Gates
+                            Milestones
                         </h1>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Track project phase targets, delivery deadlines, and task completion progress.
+                            Track project milestones, delivery deadlines, and task completion progress.
                         </p>
                     </div>
 

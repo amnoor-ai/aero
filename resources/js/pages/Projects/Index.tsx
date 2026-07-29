@@ -1,34 +1,30 @@
-import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     Folder,
     Search,
-    Star,
     Plus,
     MoreVertical,
     Users,
-    LayoutGrid,
-    List,
     Pencil,
     Trash2,
     Eye,
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { CreateProjectWizardModal } from '@/components/projects/CreateProjectWizardModal';
+import { DataTableHeader } from '@/components/ui/data-table-header';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DataTableHeader } from '@/components/ui/data-table-header';
 import { PaginationBar } from '@/components/ui/pagination-bar';
-import { CreateProjectWizardModal } from '@/components/projects/CreateProjectWizardModal';
 
 interface ProjectItem {
     id: number;
     name: string;
     description?: string;
     status: 'draft' | 'planned' | 'ongoing' | 'completed' | 'archived';
-    is_starred: boolean;
     progress: number;
     tasks_count: number;
     budget?: number;
@@ -65,12 +61,6 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
         router.get('/projects', { ...filters, status: val }, { preserveState: true, replace: true });
     };
 
-    const handleToggleStar = (e: React.MouseEvent, projectId: number) => {
-        e.preventDefault();
-        e.stopPropagation();
-        router.post(`/projects/${projectId}/toggle-star`, {}, { preserveScroll: true });
-    };
-
     const handleSort = (columnKey: string, order: 'asc' | 'desc') => {
         router.get('/projects', { ...filters, sort_by: columnKey, order }, { preserveState: true, replace: true });
     };
@@ -98,7 +88,7 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                     </div>
                 </div>
 
-                {/* Filter & Controls Bar (Borderless, Page Canvas Native) */}
+                {/* Filter & Controls Bar */}
                 <div className="py-1 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center space-x-3 w-full sm:w-auto">
                         <div className="relative w-full sm:w-64">
@@ -125,10 +115,16 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                                 All
                             </button>
                             <button
-                                onClick={() => handleStatusFilter('favorites')}
-                                className={`px-3 py-1 text-xs font-semibold rounded-md transition flex items-center ${filters.status === 'favorites' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                onClick={() => handleStatusFilter('ongoing')}
+                                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'ongoing' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
                             >
-                                <Star className="w-3 h-3 mr-1" /> Favorites
+                                Ongoing
+                            </button>
+                            <button
+                                onClick={() => handleStatusFilter('completed')}
+                                className={`px-3 py-1 text-xs font-semibold rounded-md transition ${filters.status === 'completed' ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'}`}
+                            >
+                                Completed
                             </button>
                             <button
                                 onClick={() => handleStatusFilter('archived')}
@@ -175,16 +171,6 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                                         >
                                             <td className="p-4 font-semibold text-foreground group-hover:text-primary transition">
                                                 <div className="flex items-center space-x-3">
-                                                    <button
-                                                        onClick={(e) => handleToggleStar(e, project.id)}
-                                                        className="text-muted-foreground hover:text-amber-400 transition"
-                                                    >
-                                                        <Star
-                                                            className={`w-4 h-4 ${
-                                                                project.is_starred ? 'fill-amber-400 text-amber-400' : ''
-                                                            }`}
-                                                        />
-                                                    </button>
                                                     <div className="p-2 rounded-lg bg-primary/10 text-primary">
                                                         <Folder className="w-4 h-4" />
                                                     </div>
@@ -248,34 +234,24 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                                                             <MoreVertical className="w-4 h-4" />
                                                         </button>
                                                     </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-48">
-                                                        <DropdownMenuItem 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                router.visit(`/projects/${project.id}`);
-                                                            }}
-                                                        >
-                                                            <Eye className="w-4 h-4 mr-2" />
-                                                            View Details
+                                                    <DropdownMenuContent align="end" className="w-36">
+                                                        <DropdownMenuItem onClick={() => router.visit(`/projects/${project.id}`)}>
+                                                            <Eye className="w-3.5 h-3.5 mr-2" /> View
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                // Future: edit project logic
-                                                            }}
-                                                        >
-                                                            <Pencil className="w-4 h-4 mr-2" />
-                                                            Edit Project
+                                                        <DropdownMenuItem onClick={() => router.visit(`/projects/${project.id}?edit=true`)}>
+                                                            <Pencil className="w-3.5 h-3.5 mr-2" /> Edit
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem 
-                                                            className="text-destructive focus:bg-destructive/10"
+                                                        <DropdownMenuItem
+                                                            className="text-rose-500 focus:text-rose-500"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                // Future: delete project logic
+
+                                                                if (confirm(`Delete project "${project.name}"?`)) {
+                                                                    router.delete(`/projects/${project.id}`);
+                                                                }
                                                             }}
                                                         >
-                                                            <Trash2 className="w-4 h-4 mr-2" />
-                                                            Delete
+                                                            <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
@@ -286,9 +262,15 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
                             </tbody>
                         </table>
                     </div>
-                    <div className="p-4 border-t border-border/50 bg-muted/20">
-                        <PaginationBar pagination={projects} />
-                    </div>
+
+                    <PaginationBar
+                        currentPage={projects.current_page}
+                        lastPage={projects.last_page}
+                        from={projects.from}
+                        to={projects.to}
+                        total={projects.total}
+                        links={projects.links}
+                    />
                 </div>
             </div>
 
@@ -301,12 +283,3 @@ export default function ProjectsIndex({ projects, departments = [], workspaceUse
         </>
     );
 }
-
-ProjectsIndex.layout = {
-    breadcrumbs: [
-        {
-            title: 'Projects',
-            href: '/projects',
-        },
-    ],
-};
