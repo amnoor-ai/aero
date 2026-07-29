@@ -461,7 +461,7 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
                             <select
                                 value={taskType}
                                 onChange={(e) => handleTypeChange(e.target.value)}
-                                className="text-[11px] font-bold uppercase tracking-wider bg-muted/60 text-foreground border border-border rounded-md px-2.5 py-1 cursor-pointer focus:outline-none"
+                                className="text-[11px] font-bold uppercase tracking-wider bg-card text-foreground border border-border rounded-md px-2.5 py-1 cursor-pointer focus:outline-none"
                             >
                                 <option value="task">Task</option>
                                 <option value="feature">Feature</option>

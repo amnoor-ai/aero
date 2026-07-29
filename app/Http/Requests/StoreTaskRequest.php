@@ -23,7 +23,8 @@ class StoreTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'project_id' => 'required|exists:projects,id',
+            'project_id' => 'nullable|exists:projects,id',
+            'department_id' => 'nullable|exists:departments,id',
             'board_column_id' => 'nullable|exists:board_columns,id',
             'sprint_id' => 'nullable|exists:sprints,id',
             'milestone_id' => 'nullable|exists:milestones,id',

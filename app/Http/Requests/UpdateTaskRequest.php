@@ -25,6 +25,8 @@ class UpdateTaskRequest extends FormRequest
         return [
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
+            'project_id' => 'nullable|exists:projects,id',
+            'department_id' => 'nullable|exists:departments,id',
             'board_column_id' => 'sometimes|required|exists:board_columns,id',
             'priority' => 'sometimes|required|string|in:low,medium,high,urgent',
             'type' => 'sometimes|required|string|in:bug,feature,improvement,task',

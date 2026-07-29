@@ -48,4 +48,9 @@ class Department extends Model
     {
         return $this->hasMany(DepartmentDocument::class);
     }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
 }

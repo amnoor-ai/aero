@@ -31,6 +31,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
     Route::get('/milestones', [MilestoneController::class, 'globalIndex'])->name('milestones.global');
     Route::get('/work-plan', [WorkPlanController::class, 'index'])->name('work-plan.index');
+    Route::post('/work-plans', [WorkPlanController::class, 'store'])->name('work-plans.store');
+    Route::patch('/work-plans/{workPlan}', [WorkPlanController::class, 'update'])->name('work-plans.update');
+    Route::delete('/work-plans/{workPlan}', [WorkPlanController::class, 'destroy'])->name('work-plans.destroy');
+    Route::post('/work-plans/{workPlan}/attach-projects', [WorkPlanController::class, 'attachProjects'])->name('work-plans.attach-projects');
 
     Route::post('/projects/{project}/milestones', [MilestoneController::class, 'store'])->name('projects.milestones.store');
     Route::patch('/milestones/{milestone}', [MilestoneController::class, 'update'])->name('milestones.update');

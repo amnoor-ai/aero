@@ -15,6 +15,7 @@ class Task extends Model
     protected $fillable = [
         'workspace_id',
         'project_id',
+        'department_id',
         'board_column_id',
         'sprint_id',
         'milestone_id',
@@ -44,6 +45,11 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function boardColumn(): BelongsTo

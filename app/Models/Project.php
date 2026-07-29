@@ -81,6 +81,12 @@ class Project extends Model
         return $this->hasMany(Task::class);
     }
 
+    public function workPlans(): BelongsToMany
+    {
+        return $this->belongsToMany(WorkPlan::class, 'project_work_plan')
+            ->withTimestamps();
+    }
+
     protected function progress(): Attribute
     {
         return Attribute::make(
