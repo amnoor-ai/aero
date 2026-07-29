@@ -50,8 +50,10 @@ export function RenameDocumentModal({
         setIsSubmitting(true);
         setError(null);
 
+        const updateUrl = document.view_url ? document.view_url.replace('/view', '') : `/departments/documents/${document.id}`;
+
         router.patch(
-            `/departments/documents/${document.id}`,
+            updateUrl,
             { name: name.trim() },
             {
                 preserveState: true,

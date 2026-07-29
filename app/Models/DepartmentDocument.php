@@ -24,6 +24,11 @@ class DepartmentDocument extends Model
         'uploaded_by_id',
     ];
 
+    protected $appends = [
+        'view_url',
+        'download_url',
+    ];
+
     /**
      * Get the department that owns the document.
      */
@@ -38,5 +43,15 @@ class DepartmentDocument extends Model
     public function uploadedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by_id');
+    }
+
+    public function getViewUrlAttribute(): string
+    {
+        return "/departments/documents/{$this->id}/view";
+    }
+
+    public function getDownloadUrlAttribute(): string
+    {
+        return "/departments/documents/{$this->id}/download";
     }
 }

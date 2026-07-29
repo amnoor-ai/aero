@@ -30,7 +30,8 @@ export function DeleteDocumentModal({
 
     const handleDelete = () => {
         setIsDeleting(true);
-        router.delete(`/departments/documents/${document.id}`, {
+        const deleteUrl = document.delete_url || (document.view_url ? document.view_url.replace('/view', '') : `/departments/documents/${document.id}`);
+        router.delete(deleteUrl, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {

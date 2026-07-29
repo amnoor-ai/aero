@@ -23,6 +23,8 @@ class ProjectDocument extends Model
     protected $appends = [
         'is_media',
         'formatted_size',
+        'view_url',
+        'download_url',
     ];
 
     public function project(): BelongsTo
@@ -61,5 +63,15 @@ class ProjectDocument extends Model
         }
 
         return $bytes.' B';
+    }
+
+    public function getViewUrlAttribute(): string
+    {
+        return "/project-documents/{$this->id}/view";
+    }
+
+    public function getDownloadUrlAttribute(): string
+    {
+        return "/project-documents/{$this->id}/download";
     }
 }

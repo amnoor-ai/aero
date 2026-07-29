@@ -10,12 +10,15 @@ import {
 
 export interface DocumentItem {
     id: number;
-    department_id: number;
+    department_id?: number;
     name: string;
     file_path: string;
     file_type: string | null;
     file_size: number;
     created_at: string;
+    view_url?: string;
+    download_url?: string;
+    delete_url?: string;
     uploaded_by?: { id: number; name: string };
     department?: { id: number; name: string; code: string };
 }
@@ -26,12 +29,53 @@ interface MediaPreviewModalProps {
     onClose: () => void;
 }
 
-export function isMediaFileType(fileType?: string | null): boolean {
-    if (!fileType) {
-        return false;
+function extractExtension(fileType?: string | null, fileName?: string | null): string {
+    if (fileType) {
+        const lower = fileType.toLowerCase().trim();
+
+        if (lower.includes('/')) {
+            return lower; // e.g. "image/png", "application/pdf"
+        }
+
+        if (lower.startsWith('.')) {
+            return lower.substring(1);
+        }
+
+        return lower;
     }
 
-    const ext = fileType.toLowerCase().trim();
+    if (fileName) {
+        const parts = fileName.split('.');
+
+        if (parts.length > 1) {
+            return parts.pop()!.toLowerCase().trim();
+        }
+    }
+
+    return '';
+}
+
+export function isMediaFileType(fileType?: string | null, fileName?: string | null): boolean {
+    return isImageFileType(fileType, fileName) || isVideoFileType(fileType, fileName);
+}
+
+export function isVideoFileType(fileType?: string | null, fileName?: string | null): boolean {
+    const ext = extractExtension(fileType, fileName);
+
+    return [
+        'mp4',
+        'webm',
+        'ogg',
+        'mov',
+        'video/mp4',
+        'video/webm',
+        'video/quicktime',
+        'video/ogg',
+    ].includes(ext);
+}
+
+export function isImageFileType(fileType?: string | null, fileName?: string | null): boolean {
+    const ext = extractExtension(fileType, fileName);
 
     return [
         'jpg',
@@ -40,47 +84,31 @@ export function isMediaFileType(fileType?: string | null): boolean {
         'gif',
         'webp',
         'svg',
-        'mp4',
-        'webm',
-        'ogg',
-        'mov',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/svg+xml',
     ].includes(ext);
 }
 
-export function isVideoFileType(fileType?: string | null): boolean {
-    if (!fileType) {
-        return false;
-    }
+export function isPdfFileType(fileType?: string | null, fileName?: string | null): boolean {
+    const ext = extractExtension(fileType, fileName);
 
-    const ext = fileType.toLowerCase().trim();
-
-    return ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
+    return ext === 'pdf' || ext === 'application/pdf';
 }
 
-export function isImageFileType(fileType?: string | null): boolean {
-    if (!fileType) {
-        return false;
-    }
-
-    const ext = fileType.toLowerCase().trim();
-
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
-}
-
-export function isPdfFileType(fileType?: string | null): boolean {
-    if (!fileType) {
-        return false;
-    }
-
-    return fileType.toLowerCase().trim() === 'pdf';
-}
-
-export function formatUploadedDate(dateString: string): string {
+export function formatUploadedDate(dateString?: string): string {
     if (!dateString) {
         return '';
     }
 
     const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+        return dateString;
+    }
+
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
@@ -138,12 +166,12 @@ export function MediaPreviewModal({
         return null;
     }
 
-    const viewUrl = `/departments/documents/${document.id}/view`;
-    const downloadUrl = `/departments/documents/${document.id}/download`;
+    const viewUrl = document.view_url || `/departments/documents/${document.id}/view`;
+    const downloadUrl = document.download_url || `/departments/documents/${document.id}/download`;
 
-    const isVideo = isVideoFileType(document.file_type);
-    const isImage = isImageFileType(document.file_type);
-    const isPdf = isPdfFileType(document.file_type);
+    const isVideo = isVideoFileType(document.file_type, document.name);
+    const isImage = isImageFileType(document.file_type, document.name);
+    const isPdf = isPdfFileType(document.file_type, document.name);
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -203,7 +231,7 @@ export function MediaPreviewModal({
                         >
                             <source
                                 src={viewUrl}
-                                type={`video/${document.file_type || 'mp4'}`}
+                                type={document.file_type && document.file_type.includes('/') ? document.file_type : `video/${document.file_type || 'mp4'}`}
                             />
                             Your browser does not support playing this video.
                         </video>

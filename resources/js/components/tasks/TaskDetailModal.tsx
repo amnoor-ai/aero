@@ -56,6 +56,9 @@ interface TaskDocumentItem {
     type: string;
     date: string;
     file_path?: string;
+    view_url?: string;
+    download_url?: string;
+    delete_url?: string;
 }
 
 interface TaskData {
@@ -321,23 +324,24 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
     const handleViewDocument = (doc: TaskDocumentItem) => {
         const ext = doc.type.toLowerCase().trim();
 
-        if (isMediaFileType(ext)) {
+        if (isMediaFileType(ext, doc.name)) {
             // Media files: Open pop-up preview modal
             setSelectedMediaDoc({
                 id: doc.id || 1,
-                department_id: 1,
                 name: doc.name,
-                file_path: doc.file_path || `department-documents/${doc.name}`,
+                file_path: doc.file_path || `project-documents/${doc.name}`,
                 file_type: doc.type,
                 file_size: 1024 * 1024,
-                created_at: doc.date,
+                created_at: doc.date && doc.date !== 'Invalid Date' ? doc.date : new Date().toISOString(),
+                view_url: doc.view_url || (doc.id ? `/project-documents/${doc.id}/view` : undefined),
+                download_url: doc.download_url || (doc.id ? `/project-documents/${doc.id}/download` : undefined),
             });
             setIsMediaModalOpen(true);
         } else {
             // PDFs & other docs: Open in new tab with downloadable view link
-            const viewUrl = doc.id
-                ? `/departments/documents/${doc.id}/view`
-                : `/departments/documents`;
+            const viewUrl = doc.view_url || (doc.id
+                ? `/project-documents/${doc.id}/view`
+                : `/departments/documents`);
             window.open(viewUrl, '_blank', 'noopener,noreferrer');
         }
     };
@@ -363,7 +367,8 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
         toast.success(`Document renamed to "${newName}"`);
 
         if (doc.id) {
-            router.patch(`/departments/documents/${doc.id}`, { name: newName }, { preserveScroll: true });
+            const updateUrl = doc.delete_url ? doc.delete_url : (doc.view_url ? doc.view_url.replace('/view', '') : `/departments/documents/${doc.id}`);
+            router.patch(updateUrl, { name: newName }, { preserveScroll: true });
         }
     };
 
@@ -372,7 +377,8 @@ export function TaskDetailModal({ isOpen, onClose, task, columns = [], users = [
         toast.success(`Document "${doc.name}" deleted`);
 
         if (doc.id) {
-            router.delete(`/departments/documents/${doc.id}`, { preserveScroll: true });
+            const deleteUrl = doc.delete_url ? doc.delete_url : (doc.view_url ? doc.view_url.replace('/view', '') : `/departments/documents/${doc.id}`);
+            router.delete(deleteUrl, { preserveScroll: true });
         }
     };
 
