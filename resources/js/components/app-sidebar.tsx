@@ -9,8 +9,11 @@ import {
     Target,
     BarChart3,
     FileText,
+    Users,
+    ChevronDown,
+    UserCheck,
 } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -28,6 +31,13 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 
 export function AppSidebar() {
     const { isCurrentUrl } = useCurrentUrl();
+
+    const isOrgActive =
+        isCurrentUrl('/staff') ||
+        isCurrentUrl('/teams') ||
+        isCurrentUrl('/departments');
+
+    const [isOrgOpen, setIsOrgOpen] = useState(isOrgActive);
 
     return (
         <Sidebar collapsible="icon" className="border-r border-border">
@@ -84,18 +94,6 @@ export function AppSidebar() {
                             </SidebarMenuItem>
                             <SidebarMenuItem>
                                 <SidebarMenuButton 
-                                    isActive={isCurrentUrl('/departments')} 
-                                    className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
-                                    asChild
-                                >
-                                    <Link href="/departments" className="group/link flex items-center gap-2">
-                                        <Building2 className="w-4 h-4 text-muted-foreground group-hover/link:text-primary transition-colors" />
-                                        <span className="font-medium">Departments</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton 
                                     isActive={isCurrentUrl('/documentation')} 
                                     className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:[&_svg]:text-primary-foreground font-semibold rounded-md transition-all shadow-xs"
                                     asChild
@@ -105,6 +103,69 @@ export function AppSidebar() {
                                         <span className="font-medium">Documentation</span>
                                     </Link>
                                 </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                {/* PEOPLE SECTION */}
+                <SidebarGroup>
+                    <SidebarGroupLabel>People</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    isActive={isOrgActive}
+                                    onClick={() => setIsOrgOpen(!isOrgOpen)}
+                                    className="w-full justify-between font-semibold rounded-md transition-all"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Building2 className="w-4 h-4 text-primary" />
+                                        <span className="font-medium">Organization Structure</span>
+                                    </div>
+                                    <ChevronDown
+                                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                            isOrgOpen ? 'rotate-180' : ''
+                                        }`}
+                                    />
+                                </SidebarMenuButton>
+
+                                {isOrgOpen && (
+                                    <div className="ml-4 pl-3 border-l border-border/60 my-1 space-y-1">
+                                        <SidebarMenuButton
+                                            isActive={isCurrentUrl('/staff')}
+                                            className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground font-semibold rounded-md transition-all text-xs h-8"
+                                            asChild
+                                        >
+                                            <Link href="/staff" className="flex items-center gap-2">
+                                                <UserCheck className="w-3.5 h-3.5" />
+                                                <span>Staff</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+
+                                        <SidebarMenuButton
+                                            isActive={isCurrentUrl('/teams')}
+                                            className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground font-semibold rounded-md transition-all text-xs h-8"
+                                            asChild
+                                        >
+                                            <Link href="/teams" className="flex items-center gap-2">
+                                                <Users className="w-3.5 h-3.5" />
+                                                <span>Teams</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+
+                                        <SidebarMenuButton
+                                            isActive={isCurrentUrl('/departments')}
+                                            className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground font-semibold rounded-md transition-all text-xs h-8"
+                                            asChild
+                                        >
+                                            <Link href="/departments" className="flex items-center gap-2">
+                                                <Building2 className="w-3.5 h-3.5" />
+                                                <span>Departments</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </div>
+                                )}
                             </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>

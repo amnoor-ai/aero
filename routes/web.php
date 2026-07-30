@@ -9,8 +9,10 @@ use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\MyDeskController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectDocumentController;
+use App\Http\Controllers\StaffController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskDirectoryController;
+use App\Http\Controllers\Teams\TeamController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\WorkPlanController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +42,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/projects/{project}/milestones', [MilestoneController::class, 'store'])->name('projects.milestones.store');
     Route::match(['put', 'patch'], '/milestones/{milestone}', [MilestoneController::class, 'update'])->name('milestones.update');
     Route::delete('/milestones/{milestone}', [MilestoneController::class, 'destroy'])->name('milestones.destroy');
+
+    // Staff & People Routes
+    Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+    Route::match(['put', 'patch'], '/staff/{user}', [StaffController::class, 'update'])->name('staff.update');
+    Route::delete('/staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    Route::get('/teams', [TeamController::class, 'index'])->name('teams.direct');
 
     // Departments & Org Structure Routes
     Route::get('/departments/documents', [DepartmentDocumentController::class, 'index'])->name('departments.documents.index');
