@@ -196,19 +196,19 @@ export default function MilestonesIndex({
         switch (statusName) {
             case 'completed':
                 return (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 w-fit">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary border border-primary/30 flex items-center gap-1 w-fit">
                         <CheckCircle2 className="w-3 h-3" /> Completed
                     </span>
                 );
             case 'upcoming':
                 return (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-500/10 text-blue-400 border border-blue-500/30 flex items-center gap-1 w-fit">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-secondary text-secondary-foreground border border-border flex items-center gap-1 w-fit">
                         <Clock className="w-3 h-3" /> Upcoming
                     </span>
                 );
             case 'on_hold':
                 return (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-fit">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-accent text-accent-foreground border border-border flex items-center gap-1 w-fit">
                         <AlertCircle className="w-3 h-3" /> On Hold
                     </span>
                 );
@@ -356,11 +356,11 @@ export default function MilestonesIndex({
                                     {/* Belonging Badge */}
                                     <div className="flex items-center space-x-2 text-xs font-semibold text-foreground pt-1">
                                         {m.work_plan ? (
-                                            <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1.5">
+                                            <span className="px-2.5 py-1 rounded-lg bg-secondary text-secondary-foreground border border-border flex items-center gap-1.5 font-bold">
                                                 <Layers className="w-3.5 h-3.5" /> Work Plan: {m.work_plan.name}
                                             </span>
                                         ) : m.project ? (
-                                            <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5">
+                                            <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5 font-bold">
                                                 <Folder className="w-3.5 h-3.5" /> Project: {m.project.name}
                                             </span>
                                         ) : (
@@ -420,7 +420,7 @@ export default function MilestonesIndex({
 
                                             <td className="p-3.5">
                                                 {m.work_plan ? (
-                                                    <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 font-bold text-[11px] border border-purple-500/20">
+                                                    <span className="px-2 py-0.5 rounded bg-secondary text-secondary-foreground font-bold text-[11px] border border-border">
                                                         Work Plan: {m.work_plan.name}
                                                     </span>
                                                 ) : m.project ? (
